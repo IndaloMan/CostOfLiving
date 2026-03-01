@@ -7,6 +7,50 @@
     <a href="{{ url_for('main.scan') }}" class="btn">+ Scan New</a>
 </div>
 
+{% if pending %}
+<div class="card" style="margin-bottom:1.5rem; border-left:4px solid #e67e22;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <h2 style="color:#e67e22; margin:0;">&#9203; Pending Review ({{ pending|length }})</h2>
+        <form method="POST" action="{{ url_for('main.process_all_pending') }}"
+              onsubmit="return confirm('Confirm all {{ pending|length }} pending receipt(s) without reviewing? This cannot be undone.')">
+            <button type="submit" class="btn" style="background:#e67e22;">&#10003; Process All</button>
+        </form>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Uploaded</th>
+                    <th>Company</th>
+                    <th>File</th>
+                    <th style="text-align:right">Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in pending %}
+                <tr>
+                    <td>{{ r.created_at.strftime('%d %b %Y %H:%M') }}</td>
+                    <td>{{ r.company.name if r.company else '—' }}</td>
+                    <td>
+                        <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
+                           target="_blank" class="file-tag" style="text-decoration:none; color:inherit;">{{ r.filename }} &#8599;</a>
+                    </td>
+                    <td style="text-align:right">
+                        {% if r.total_amount %}€{{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.review', receipt_id=r.id) }}"
+                           class="btn btn-sm" style="background:#e67e22;">Review</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 {% if receipts %}
 <div class="card">
     <div class="table-wrap">
@@ -34,7 +78,10 @@
                             {{ r.currency }} {{ '%.2f' % r.total_amount }}
                         {% else %}—{% endif %}
                     </td>
-                    <td><span class="file-tag">{{ r.filename }}</span></td>
+                    <td>
+                        <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
+                           target="_blank" class="file-tag" style="text-decoration:none; color:inherit;">{{ r.filename }} &#8599;</a>
+                    </td>
                     <td>
                         <a href="{{ url_for('main.edit_receipt', receipt_id=r.id) }}"
                            class="btn btn-secondary btn-sm">Edit</a>

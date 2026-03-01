@@ -53,43 +53,42 @@ def index():
 # Scan — upload
 # ---------------------------------------------------------------------------
 
-@main.route("/scan", methods=["GET", "POST"])
-def scan():
-    if request.method == "GET":
-        return render_template("scan.html")
-
-    if "file" not in request.files or request.files["file"].filename == "":
-        flash("No file selected.", "error")
-        return redirect(url_for("main.scan"))
-
-    f = request.files["file"]
+def _process_one_file(f):
+    """
+    Save, extract and persist a single uploaded file as a pending receipt.
+    Returns (receipt, error_string) — one of which will be None.
+    Does NOT commit; caller must call db.session.commit().
+    """
     if not _allowed_file(f.filename):
-        flash("Only JPG, PNG and PDF files are supported.", "error")
-        return redirect(url_for("main.scan"))
+        return None, f"Unsupported file type: {f.filename}"
 
     filename = secure_filename(f.filename)
+
+    # Duplicate check — skip API call entirely if already in DB
+    existing = Receipt.query.filter_by(filename=filename).first()
+    if existing:
+        if existing.status == "pending":
+            # Return the receipt so the caller can offer a Review link
+            return existing, f"'{filename}' already uploaded (pending — not yet reviewed)"
+        return None, f"'{filename}' already uploaded (confirmed)"
+
     upload_folder = current_app.config["UPLOAD_FOLDER"]
     os.makedirs(upload_folder, exist_ok=True)
     filepath = os.path.join(upload_folder, filename)
     f.save(filepath)
 
-    # Run extraction (no template yet — company unknown at this point)
     try:
         extracted = extract_from_file(filepath)
     except ExtractionError as e:
-        flash(f"Extraction failed: {e}", "error")
-        return redirect(url_for("main.scan"))
+        return None, f"{f.filename}: extraction failed — {e}"
     except Exception as e:
-        flash(f"Unexpected error during extraction: {e}", "error")
-        return redirect(url_for("main.scan"))
+        return None, f"{f.filename}: unexpected error — {e}"
 
-    # Normalise company name (e.g. full legal name → preferred short name)
     company_name = canonical_name(extracted.get("company_name") or "Unknown")
     company = Company.query.filter(
         db.func.lower(Company.name) == company_name.lower()
     ).first()
 
-    # Parse date
     receipt_date = None
     raw_date = extracted.get("date")
     if raw_date:
@@ -98,7 +97,6 @@ def scan():
         except ValueError:
             pass
 
-    # Save receipt to DB as pending
     receipt = Receipt(
         company=company,
         receipt_date=receipt_date,
@@ -112,7 +110,6 @@ def scan():
     db.session.add(receipt)
     db.session.flush()
 
-    # Save line items
     line_items = []
     for item in extracted.get("line_items", []):
         li = LineItem(
@@ -126,12 +123,33 @@ def scan():
         db.session.add(li)
         line_items.append(li)
 
-    # Apply template hints for known companies — fills in missing categories
     if company:
         template_items = get_template_items(company.id)
         if template_items:
             apply_template_hints(line_items, template_items)
-            matched = sum(1 for li in line_items if li.category)
+
+    return receipt, None
+
+
+@main.route("/scan", methods=["GET", "POST"])
+def scan():
+    if request.method == "GET":
+        return render_template("scan.html")
+
+    if "file" not in request.files or request.files["file"].filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("main.scan"))
+
+    receipt, error = _process_one_file(request.files["file"])
+    if error:
+        flash(error, "error")
+        return redirect(url_for("main.scan"))
+
+    company = receipt.company
+    if company:
+        template_items = get_template_items(company.id)
+        if template_items:
+            matched = sum(1 for li in receipt.line_items if li.category)
             if matched:
                 flash(
                     f"Template applied: {matched} item(s) auto-categorised from previous {company.name} receipts.",
@@ -141,6 +159,35 @@ def scan():
     db.session.commit()
     flash("Receipt scanned. Review and confirm the details below.", "info")
     return redirect(url_for("main.review", receipt_id=receipt.id))
+
+
+@main.route("/scan/batch", methods=["GET", "POST"])
+def scan_batch():
+    if request.method == "GET":
+        return render_template("scan_batch.html")
+
+    files = [f for f in request.files.getlist("files") if f.filename]
+    if not files:
+        flash("No files selected.", "error")
+        return redirect(url_for("main.scan_batch"))
+
+    results = []
+    for f in files:
+        receipt, error = _process_one_file(f)
+        results.append({
+            "filename": f.filename,
+            "receipt": receipt,
+            "error": error,
+        })
+
+    db.session.commit()
+
+    ok_count      = sum(1 for r in results if r["receipt"] and not r["error"])
+    pending_count = sum(1 for r in results if r["receipt"] and r["error"])
+    err_count     = sum(1 for r in results if not r["receipt"] and r["error"])
+    return render_template("scan_batch.html", results=results,
+                           ok_count=ok_count, pending_count=pending_count,
+                           err_count=err_count)
 
 
 # ---------------------------------------------------------------------------
@@ -263,13 +310,78 @@ def confirm(receipt_id):
 
 @main.route("/receipts")
 def receipts():
-    all_receipts = (
+    confirmed = (
         Receipt.query
         .filter_by(status="confirmed")
         .order_by(Receipt.receipt_date.desc())
         .all()
     )
-    return render_template("receipts.html", receipts=all_receipts)
+    pending = (
+        Receipt.query
+        .filter_by(status="pending")
+        .order_by(Receipt.created_at.desc())
+        .all()
+    )
+    return render_template("receipts.html", receipts=confirmed, pending=pending)
+
+
+# ---------------------------------------------------------------------------
+# Process all pending receipts without individual review
+# ---------------------------------------------------------------------------
+
+@main.route("/receipts/process-all-pending", methods=["POST"])
+def process_all_pending():
+    pending = Receipt.query.filter_by(status="pending").all()
+    if not pending:
+        flash("No pending receipts to process.", "info")
+        return redirect(url_for("main.receipts"))
+
+    done = 0
+    analysis_done = 0
+    analysis_errors = []
+
+    for receipt in pending:
+        receipt.status = "confirmed"
+        company = receipt.company
+
+        # Update company template with the extracted line items
+        if company and receipt.line_items:
+            update_template(company.id, receipt.line_items)
+
+        db.session.commit()
+
+        # Run company-specific analysis
+        if company:
+            analyser_key = get_analyser_key(company.name)
+            if analyser_key == "energy_nordic":
+                from .company_analysers.energy_nordic import analyse, AnalysisError
+                filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], receipt.filename)
+                if os.path.exists(filepath):
+                    try:
+                        data = analyse(filepath)
+                        if receipt.analysis:
+                            receipt.analysis.data = json.dumps(data)
+                        else:
+                            db.session.add(ReceiptAnalysis(
+                                receipt_id=receipt.id,
+                                analyser="energy_nordic",
+                                data=json.dumps(data),
+                            ))
+                        db.session.commit()
+                        analysis_done += 1
+                    except AnalysisError as e:
+                        analysis_errors.append(f"{receipt.filename}: {e}")
+
+        done += 1
+
+    msg = f"{done} receipt(s) confirmed."
+    if analysis_done:
+        msg += f" {analysis_done} energy analysis run."
+    flash(msg, "success")
+    for err in analysis_errors:
+        flash(f"Analysis error — {err}", "error")
+
+    return redirect(url_for("main.receipts"))
 
 
 # ---------------------------------------------------------------------------
@@ -511,14 +623,29 @@ def analysis_energy_nordic():
         db.func.lower(Company.name) == "energy nordic"
     ).first_or_404()
 
-    receipts = (
+    # Date range — default last 12 months
+    today = date.today()
+    start_str = request.args.get("start", default_start().isoformat())
+    end_str   = request.args.get("end",   today.isoformat())
+    start_date = parse_date(start_str, default_start())
+    end_date   = parse_date(end_str,   today)
+
+    all_receipts = (
         Receipt.query
         .filter_by(company_id=company.id, status="confirmed")
         .order_by(Receipt.receipt_date)
         .all()
     )
 
-    # Build analysed rows — only those with analysis data
+    # Pending = any confirmed receipt across ALL dates that has no analysis
+    pending = [r for r in all_receipts if not r.analysis]
+
+    # Apply date filter for stats, table and charts
+    receipts = [
+        r for r in all_receipts
+        if r.receipt_date and start_date <= r.receipt_date <= end_date
+    ]
+
     analysed = []
     for r in receipts:
         if r.analysis:
@@ -532,14 +659,14 @@ def analysis_energy_nordic():
             except (ValueError, TypeError):
                 pass
 
-    pending = [r for r in receipts if not r.analysis]
-
     return render_template(
         "analysis_energy_nordic.html",
         company=company,
         analysed=analysed,
         pending=pending,
         total_receipts=len(receipts),
+        start=start_str,
+        end=end_str,
     )
 
 
@@ -591,6 +718,16 @@ def analysis_energy_nordic_run():
             flash(err, "error")
     flash(f"Analysis complete: {done} bill(s) processed.", "success")
     return redirect(url_for("main.analysis_energy_nordic"))
+
+
+# ---------------------------------------------------------------------------
+# Serve uploaded receipt files
+# ---------------------------------------------------------------------------
+
+@main.route("/uploads/<path:filename>")
+def uploaded_file(filename):
+    from flask import send_from_directory
+    return send_from_directory(current_app.config["UPLOAD_FOLDER"], filename)
 
 
 # ---------------------------------------------------------------------------

@@ -12,6 +12,21 @@
     </form>
 </div>
 
+<!-- Filters -->
+<div class="filters-bar card">
+    <form method="GET" action="{{ url_for('main.analysis_energy_nordic') }}" class="filters-inner">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" name="start" value="{{ start }}">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" name="end" value="{{ end }}">
+        </div>
+        <button type="submit" class="btn">Apply</button>
+    </form>
+</div>
+
 {% if pending and not analysed %}
 <div class="card empty-state">
     <p>No analysis data yet. Click <strong>Run Analysis</strong> to extract detailed data from your bills.</p>
@@ -21,9 +36,14 @@
 {% if analysed %}
 
 {# ── Summary stats ─────────────────────────────────────────────────── #}
-{% set total_kwh = analysed | sum(attribute='data.energy.P1.kwh') +
-                   analysed | sum(attribute='data.energy.P2.kwh') +
-                   analysed | sum(attribute='data.energy.P3.kwh') %}
+{% set p1_kwh   = analysed | sum(attribute='data.energy.P1.kwh') %}
+{% set p2_kwh   = analysed | sum(attribute='data.energy.P2.kwh') %}
+{% set p3_kwh   = analysed | sum(attribute='data.energy.P3.kwh') %}
+{% set total_kwh = p1_kwh + p2_kwh + p3_kwh %}
+{% set p1_cost  = analysed | sum(attribute='data.energy.P1.total') %}
+{% set p2_cost  = analysed | sum(attribute='data.energy.P2.total') %}
+{% set p3_cost  = analysed | sum(attribute='data.energy.P3.total') %}
+{% set energy_cost = p1_cost + p2_cost + p3_cost %}
 {% set total_cost = analysed | sum(attribute='data.total') %}
 
 <div class="stats-row" style="margin-bottom:1.5rem;">
@@ -40,8 +60,20 @@
         <div class="stat-label">Total Cost</div>
     </div>
     <div class="stat-box">
-        <div class="stat-num">€{{ "%.4f"|format(total_cost / total_kwh) if total_kwh else '—' }}</div>
+        <div class="stat-num">€{{ "%.2f"|format(energy_cost / total_kwh) if total_kwh else '—' }}</div>
         <div class="stat-label">Avg Cost/kWh</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(p1_cost / p1_kwh) if p1_kwh else '—' }}</div>
+        <div class="stat-label">P1 Avg €/kWh</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(p2_cost / p2_kwh) if p2_kwh else '—' }}</div>
+        <div class="stat-label">P2 Avg €/kWh</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(p3_cost / p3_kwh) if p3_kwh else '—' }}</div>
+        <div class="stat-label">P3 Avg €/kWh</div>
     </div>
 </div>
 
@@ -126,4 +158,27 @@ const billData = {{ analysed | tojson }};
 <script src="{{ url_for('static', filename='js/analysis_energy_nordic.js') }}"></script>
 
 {% endif %}
+
+<script>
+(function () {
+    const S = 'filter_energy_nordic_start';
+    const E = 'filter_energy_nordic_end';
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('start') || params.has('end')) {
+        // User just applied a filter — save it
+        if (params.get('start')) localStorage.setItem(S, params.get('start'));
+        if (params.get('end'))   localStorage.setItem(E, params.get('end'));
+    } else {
+        // Fresh page load — restore saved filter if available
+        const s = localStorage.getItem(S);
+        const e = localStorage.getItem(E);
+        if (s || e) {
+            const p = new URLSearchParams();
+            if (s) p.set('start', s);
+            if (e) p.set('end', e);
+            window.location.search = p.toString();
+        }
+    }
+})();
+</script>
 {% endblock %}

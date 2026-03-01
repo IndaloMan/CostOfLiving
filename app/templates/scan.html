@@ -2,7 +2,12 @@
 {% block title %}Scan Receipt{% endblock %}
 
 {% block content %}
-<h1>Scan a Receipt</h1>
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+    <h1 style="margin:0">Scan a Receipt</h1>
+    <a href="{{ url_for('main.scan_batch') }}" class="btn btn-secondary" style="margin-left:auto;">
+        &#128247; Batch Upload
+    </a>
+</div>
 
 <div class="card upload-card">
     <form method="POST" enctype="multipart/form-data" id="uploadForm">

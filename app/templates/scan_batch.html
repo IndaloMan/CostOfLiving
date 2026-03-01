@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Batch Upload{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+    <a href="{{ url_for('main.scan') }}" style="color:#888; text-decoration:none;">&#8592; Single Scan</a>
+    <h1 style="margin:0">Batch Upload</h1>
+</div>
+
+{% if results %}
+{# ── Results after processing ─────────────────────────────────────── #}
+<div class="card" style="margin-bottom:1.5rem;">
+    <h2>
+        Results &mdash;
+        <span style="color:#27ae60">{{ ok_count }} processed</span>
+        {% if pending_count %}<span style="color:#e67e22; margin-left:1rem;">{{ pending_count }} awaiting review</span>{% endif %}
+        {% if err_count %}<span style="color:#e74c3c; margin-left:1rem;">{{ err_count }} already confirmed</span>{% endif %}
+    </h2>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Company</th>
+                    <th>Date</th>
+                    <th style="text-align:right">Total</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in results %}
+                <tr>
+                    <td style="font-size:0.85rem;">
+                        {% if r.receipt %}
+                        <a href="{{ url_for('main.uploaded_file', filename=r.receipt.filename) }}"
+                           target="_blank" class="file-tag" style="text-decoration:none; color:inherit;">{{ r.filename }} &#8599;</a>
+                        {% else %}
+                        <span style="color:#555;">{{ r.filename }}</span>
+                        {% endif %}
+                    </td>
+                    {% if r.receipt and not r.error %}
+                        {# New upload — processed successfully #}
+                        <td>{{ r.receipt.company.name if r.receipt.company else '—' }}</td>
+                        <td>{{ r.receipt.receipt_date or '—' }}</td>
+                        <td style="text-align:right">
+                            {% if r.receipt.total_amount %}€{{ "%.2f"|format(r.receipt.total_amount) }}{% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('main.review', receipt_id=r.receipt.id) }}"
+                               class="btn btn-sm">Review</a>
+                        </td>
+                    {% elif r.receipt and r.error %}
+                        {# Pending duplicate — already uploaded but not yet reviewed #}
+                        <td>{{ r.receipt.company.name if r.receipt.company else '—' }}</td>
+                        <td>{{ r.receipt.receipt_date or '—' }}</td>
+                        <td style="text-align:right; color:#e67e22; font-size:0.85rem;">pending</td>
+                        <td>
+                            <a href="{{ url_for('main.review', receipt_id=r.receipt.id) }}"
+                               class="btn btn-sm" style="background:#e67e22;">Review</a>
+                        </td>
+                    {% else %}
+                        {# Already confirmed or real error #}
+                        <td colspan="3" style="color:#e74c3c;">{{ r.error }}</td>
+                        <td></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<a href="{{ url_for('main.scan_batch') }}" class="btn btn-secondary">Upload Another Batch</a>
+
+{% else %}
+{# ── Upload form ───────────────────────────────────────────────────── #}
+<div class="card upload-card">
+    <form method="POST" enctype="multipart/form-data" id="batchForm">
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">&#128247;</div>
+            <p class="drop-label">Drag &amp; drop files here</p>
+            <p class="drop-sub">or</p>
+            <label class="btn" for="fileInput">Choose Files</label>
+            <input type="file" id="fileInput" name="files"
+                   accept=".jpg,.jpeg,.png,.pdf" multiple style="display:none">
+            <p class="drop-hint">JPG, PNG or PDF &mdash; select as many as you like</p>
+        </div>
+
+        <div id="fileList" style="display:none; margin-top:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                <strong id="fileCount"></strong>
+                <button type="button" class="btn btn-secondary btn-sm" id="clearFiles">&#x2715; Clear</button>
+            </div>
+            <ul id="fileNames" style="margin:0; padding-left:1.25rem; font-size:0.9rem; color:#555;"></ul>
+        </div>
+
+        <div style="margin-top:1.5rem">
+            <button type="submit" class="btn" id="submitBtn" disabled>
+                &#128269; Extract All
+            </button>
+        </div>
+
+        <div id="loadingMsg" style="display:none; margin-top:1rem; color:#666;">
+            &#9203; Extracting data for all files, please wait&hellip;
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<script>
+const dropZone  = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileList  = document.getElementById('fileList');
+const fileNames = document.getElementById('fileNames');
+const fileCount = document.getElementById('fileCount');
+const clearBtn  = document.getElementById('clearFiles');
+const submitBtn = document.getElementById('submitBtn');
+const loadingMsg= document.getElementById('loadingMsg');
+const batchForm = document.getElementById('batchForm');
+
+if (dropZone) {
+    function showFiles(files) {
+        fileNames.innerHTML = '';
+        Array.from(files).forEach(f => {
+            const li = document.createElement('li');
+            li.textContent = f.name;
+            fileNames.appendChild(li);
+        });
+        fileCount.textContent = `${files.length} file${files.length !== 1 ? 's' : ''} selected`;
+        fileList.style.display = 'block';
+        submitBtn.disabled = files.length === 0;
+    }
+
+    function clearFiles() {
+        fileInput.value = '';
+        fileList.style.display = 'none';
+        submitBtn.disabled = true;
+    }
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length) showFiles(fileInput.files);
+    });
+
+    clearBtn.addEventListener('click', clearFiles);
+
+    dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const dt = new DataTransfer();
+        Array.from(e.dataTransfer.files).forEach(f => dt.items.add(f));
+        fileInput.files = dt.files;
+        if (fileInput.files.length) showFiles(fileInput.files);
+    });
+
+    batchForm.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Extracting…';
+        loadingMsg.style.display = 'block';
+    });
+}
+</script>
+{% endblock %}

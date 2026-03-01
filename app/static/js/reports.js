@@ -280,6 +280,8 @@ document.getElementById('itemSearch').addEventListener('keydown', e => {
 
 async function loadAll() {
     const { start, end, groupBy, companyId } = getFilters();
+    localStorage.setItem('filter_reports_start', start);
+    localStorage.setItem('filter_reports_end',   end);
     try {
         await Promise.all([
             loadSummary(start, end, companyId),
@@ -293,16 +295,16 @@ async function loadAll() {
 }
 
 // ---------------------------------------------------------------------------
-// Initialise with last 12 months
+// Initialise — restore saved dates or default to last 12 months
 // ---------------------------------------------------------------------------
 
 window.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
-    const start = new Date(today);
-    start.setFullYear(start.getFullYear() - 1);
+    const defStart = new Date(today);
+    defStart.setFullYear(defStart.getFullYear() - 1);
 
-    document.getElementById('endDate').value   = today.toISOString().split('T')[0];
-    document.getElementById('startDate').value = start.toISOString().split('T')[0];
+    document.getElementById('endDate').value   = localStorage.getItem('filter_reports_end')   || today.toISOString().split('T')[0];
+    document.getElementById('startDate').value = localStorage.getItem('filter_reports_start') || defStart.toISOString().split('T')[0];
 
     loadAll();
 });

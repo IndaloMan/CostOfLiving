@@ -70,7 +70,9 @@
 
             <div class="form-group">
                 <label>File</label>
-                <span class="file-tag">{{ receipt.filename }}</span>
+                <a href="{{ url_for('main.uploaded_file', filename=receipt.filename) }}"
+                   target="_blank" class="file-tag"
+                   style="text-decoration:none; color:inherit;">{{ receipt.filename }} &#8599;</a>
             </div>
 
         </div>

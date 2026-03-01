@@ -67,14 +67,18 @@ async function loadVisitChart(start, end) {
 
     const ctx = document.getElementById('visitChart').getContext('2d');
     visitChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: data.labels,
             datasets: [{
                 label: 'Basket Total (€)',
                 data: data.values,
-                backgroundColor: COLORS[0],
-                borderRadius: 4,
+                borderColor: COLORS[0],
+                backgroundColor: COLORS[0] + '22',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.2,
+                fill: true,
             }],
         },
         options: {
@@ -259,6 +263,8 @@ document.getElementById('itemSearch').addEventListener('keydown', e => {
 
 async function loadAll() {
     const { start, end } = getFilters();
+    localStorage.setItem('filter_mercadona_start', start);
+    localStorage.setItem('filter_mercadona_end',   end);
     try {
         await Promise.all([
             loadSummary(start, end),
@@ -271,12 +277,12 @@ async function loadAll() {
     }
 }
 
-// Initialise with last 12 months
+// Initialise — restore saved dates or default to last 12 months
 window.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
-    const start = new Date(today);
-    start.setFullYear(start.getFullYear() - 1);
-    document.getElementById('endDate').value   = today.toISOString().split('T')[0];
-    document.getElementById('startDate').value = start.toISOString().split('T')[0];
+    const defStart = new Date(today);
+    defStart.setFullYear(defStart.getFullYear() - 1);
+    document.getElementById('endDate').value   = localStorage.getItem('filter_mercadona_end')   || today.toISOString().split('T')[0];
+    document.getElementById('startDate').value = localStorage.getItem('filter_mercadona_start') || defStart.toISOString().split('T')[0];
     loadAll();
 });
