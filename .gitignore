@@ -1,0 +1,32 @@
+# Environment & secrets
+.env
+
+# Database — contains personal financial data, do not commit
+database.db
+
+# Uploaded receipts — personal documents, do not commit
+Receipts/
+TestReceipts/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

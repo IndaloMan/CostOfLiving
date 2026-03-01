@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}{% if editing %}Edit Receipt{% else %}Review Receipt{% endif %}{% endblock %}
+
+{% block content %}
+{% if editing %}
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+    <a href="{{ url_for('main.receipts') }}" style="color:#888; text-decoration:none;">&#8592; Receipts</a>
+    <h1 style="margin:0">Edit Receipt</h1>
+</div>
+<div class="alert alert-info" style="margin-bottom:1.5rem;">
+    You are editing a confirmed receipt. Changes will be saved and any linked analysis will be updated automatically.
+</div>
+{% else %}
+<h1>Review Extracted Data</h1>
+<p style="color:#666; margin-bottom:1.5rem;">
+    Check the details below. Edit anything that looks wrong, then click <strong>Confirm &amp; Save</strong>.
+</p>
+{% endif %}
+
+<form method="POST" action="{{ url_for('main.confirm', receipt_id=receipt.id) }}">
+
+    <!-- Receipt details -->
+    <div class="card" style="margin-bottom:1.5rem;">
+        <h2>Receipt Details</h2>
+        <div class="form-grid">
+
+            <div class="form-group">
+                <label>Company / Vendor</label>
+                <input type="text" name="company_name"
+                       value="{{ receipt.company.name if receipt.company else (receipt.raw_extraction | fromjson).get('company_name', '') }}"
+                       list="companySuggestions" required>
+                <datalist id="companySuggestions">
+                    {% for c in companies %}
+                    <option value="{{ c.name }}">
+                    {% endfor %}
+                </datalist>
+            </div>
+
+            <div class="form-group">
+                <label>Document Type</label>
+                <select name="document_type">
+                    {% for dt in ['receipt','invoice','utility_bill','other'] %}
+                    <option value="{{ dt }}" {% if receipt.document_type == dt %}selected{% endif %}>
+                        {{ dt.replace('_',' ').title() }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="receipt_date"
+                       value="{{ receipt.receipt_date.isoformat() if receipt.receipt_date else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label>Currency</label>
+                <select name="currency">
+                    {% for cur in ['EUR','GBP','USD','CHF','other'] %}
+                    <option value="{{ cur }}" {% if receipt.currency == cur %}selected{% endif %}>{{ cur }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Total Amount</label>
+                <input type="number" name="total_amount" step="0.01"
+                       value="{{ '%.2f' % receipt.total_amount if receipt.total_amount else '' }}">
+            </div>
+
+            <div class="form-group">
+                <label>File</label>
+                <span class="file-tag">{{ receipt.filename }}</span>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Line items -->
+    <div class="card" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h2>Line Items</h2>
+            <button type="button" class="btn btn-secondary btn-sm" id="addRow">+ Add Row</button>
+        </div>
+
+        <div class="table-wrap">
+            <table class="items-table" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th style="width:35%">Description</th>
+                        <th style="width:8%">Qty</th>
+                        <th style="width:12%">Unit Price</th>
+                        <th style="width:12%">Total</th>
+                        <th style="width:18%">Category</th>
+                        <th style="width:5%"></th>
+                    </tr>
+                </thead>
+                <tbody id="itemsBody">
+                    {% for item in receipt.line_items %}
+                    <tr>
+                        <td><input type="text"   name="description[]" value="{{ item.description }}" required></td>
+                        <td><input type="number" name="quantity[]"    value="{{ item.quantity }}"    step="0.001" min="0"></td>
+                        <td><input type="number" name="unit_price[]"  value="{{ '%.2f' % item.unit_price if item.unit_price else '' }}"  step="0.01" min="0"></td>
+                        <td><input type="number" name="total_price[]" value="{{ '%.2f' % item.total_price if item.total_price else '' }}" step="0.01" min="0"></td>
+                        <td>
+                            <select name="category[]">
+                                <option value="">— none —</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if item.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td><button type="button" class="btn-remove" title="Remove row">&#x2715;</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="display:flex; gap:1rem;">
+        <button type="submit" class="btn">&#10003; Confirm &amp; Save</button>
+        {% if editing %}
+        <a href="{{ url_for('main.receipts') }}" class="btn btn-secondary">&#8592; Cancel</a>
+        {% else %}
+        <a href="{{ url_for('main.scan') }}" class="btn btn-secondary">&#8592; Scan Another</a>
+        {% endif %}
+    </div>
+
+</form>
+
+<script>
+// Category options for new rows
+const categories = {{ categories | tojson }};
+
+function categoryOptions(selected) {
+    let opts = '<option value="">— none —</option>';
+    categories.forEach(c => {
+        opts += `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`;
+    });
+    return opts;
+}
+
+function newRow() {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text"   name="description[]" required></td>
+        <td><input type="number" name="quantity[]"    value="1" step="0.001" min="0"></td>
+        <td><input type="number" name="unit_price[]"  step="0.01" min="0"></td>
+        <td><input type="number" name="total_price[]" step="0.01" min="0"></td>
+        <td><select name="category[]">${categoryOptions('')}</select></td>
+        <td><button type="button" class="btn-remove" title="Remove row">&#x2715;</button></td>
+    `;
+    return tr;
+}
+
+document.getElementById('addRow').addEventListener('click', () => {
+    document.getElementById('itemsBody').appendChild(newRow());
+});
+
+document.getElementById('itemsBody').addEventListener('click', e => {
+    if (e.target.classList.contains('btn-remove')) {
+        e.target.closest('tr').remove();
+    }
+});
+</script>
+{% endblock %}

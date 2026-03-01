@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Scan Receipt{% endblock %}
+
+{% block content %}
+<h1>Scan a Receipt</h1>
+
+<div class="card upload-card">
+    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">&#128247;</div>
+            <p class="drop-label">Drag &amp; drop a receipt here</p>
+            <p class="drop-sub">or</p>
+            <label class="btn" for="fileInput">Choose File</label>
+            <input type="file" id="fileInput" name="file"
+                   accept=".jpg,.jpeg,.png,.pdf" style="display:none">
+            <p class="drop-hint">JPG, PNG or PDF &mdash; max 20 MB</p>
+        </div>
+
+        <div id="filePreview" style="display:none">
+            <div class="preview-row">
+                <span id="fileName"></span>
+                <button type="button" class="btn btn-secondary btn-sm" id="clearFile">&#x2715; Remove</button>
+            </div>
+        </div>
+
+        <div style="margin-top:1.5rem">
+            <button type="submit" class="btn" id="submitBtn" disabled>
+                &#128269; Extract Data
+            </button>
+        </div>
+
+        <div id="loadingMsg" style="display:none; margin-top:1rem; color:#666;">
+            &#9203; Extracting data, please wait&hellip;
+        </div>
+    </form>
+</div>
+
+<script>
+const dropZone   = document.getElementById('dropZone');
+const fileInput  = document.getElementById('fileInput');
+const filePreview= document.getElementById('filePreview');
+const fileName   = document.getElementById('fileName');
+const clearBtn   = document.getElementById('clearFile');
+const submitBtn  = document.getElementById('submitBtn');
+const uploadForm = document.getElementById('uploadForm');
+const loadingMsg = document.getElementById('loadingMsg');
+
+function setFile(file) {
+    fileName.textContent = file.name;
+    filePreview.style.display = 'flex';
+    submitBtn.disabled = false;
+}
+
+function clearFile() {
+    fileInput.value = '';
+    filePreview.style.display = 'none';
+    submitBtn.disabled = true;
+}
+
+fileInput.addEventListener('change', () => {
+    if (fileInput.files.length) setFile(fileInput.files[0]);
+});
+
+clearBtn.addEventListener('click', clearFile);
+
+dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        fileInput.files = dt.files;
+        setFile(file);
+    }
+});
+
+uploadForm.addEventListener('submit', () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Extracting…';
+    loadingMsg.style.display = 'block';
+});
+</script>
+{% endblock %}

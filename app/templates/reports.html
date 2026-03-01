@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<h1>Reports &amp; Charts</h1>
+
+<!-- Filters -->
+<div class="filters-bar card">
+    <div class="filters-inner">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" id="endDate">
+        </div>
+        <div class="filter-group">
+            <label>Company</label>
+            <select id="companyFilter">
+                <option value="">All Companies</option>
+                {% for c in companies %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Group by</label>
+            <select id="groupBy">
+                <option value="month">Month</option>
+                <option value="quarter">Quarter</option>
+                <option value="year">Year</option>
+            </select>
+        </div>
+        <button class="btn" onclick="loadAll()">Apply</button>
+    </div>
+</div>
+
+<!-- Summary cards -->
+<div class="stats-row" id="summaryRow">
+    <div class="stat-box" id="statTotal">
+        <div class="stat-num">—</div>
+        <div class="stat-label">Total Spent</div>
+    </div>
+    <div class="stat-box" id="statCount">
+        <div class="stat-num">—</div>
+        <div class="stat-label">Receipts</div>
+    </div>
+    <div class="stat-box" id="statAvg">
+        <div class="stat-num">—</div>
+        <div class="stat-label">Avg per Receipt</div>
+    </div>
+    <div class="stat-box" id="statTop">
+        <div class="stat-num" style="font-size:1.3rem">—</div>
+        <div class="stat-label">Top Category</div>
+    </div>
+</div>
+
+<!-- Spending over time -->
+<div class="card chart-card">
+    <h2>Spending Over Time</h2>
+    <div class="chart-container tall">
+        <canvas id="timeChart"></canvas>
+    </div>
+    <div id="timeEmpty" class="chart-empty" style="display:none">No data for this period.</div>
+</div>
+
+<!-- Category + Company side by side -->
+<div class="charts-row">
+    <div class="card chart-card">
+        <h2>By Category</h2>
+        <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
+        <div id="categoryEmpty" class="chart-empty" style="display:none">No categorised items for this period.</div>
+    </div>
+    <div class="card chart-card">
+        <h2>Top Companies</h2>
+        <div class="chart-container">
+            <canvas id="companyChart"></canvas>
+        </div>
+        <div id="companyEmpty" class="chart-empty" style="display:none">No receipts for this period.</div>
+    </div>
+</div>
+
+<!-- Price tracker -->
+<div class="card chart-card">
+    <h2>Price Tracker</h2>
+    <p style="color:#888; font-size:0.88rem; margin-bottom:1rem;">
+        Track how the price of a specific item has changed over time.
+    </p>
+    <div class="search-row">
+        <div style="position:relative; flex:1">
+            <input type="text" id="itemSearch" placeholder="Type an item name…"
+                   autocomplete="off" oninput="suggestItems(this.value)">
+            <ul id="suggestions" class="suggestions-list" style="display:none"></ul>
+        </div>
+        <button class="btn" onclick="loadPriceTrend()">Track</button>
+    </div>
+    <div class="chart-container tall" id="priceChartWrap" style="display:none">
+        <canvas id="priceChart"></canvas>
+    </div>
+    <div id="priceEmpty" class="chart-empty" style="display:none">No price data found for that item.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+{% endblock %}

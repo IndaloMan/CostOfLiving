@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Receipts{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+    <h1>Receipts</h1>
+    <a href="{{ url_for('main.scan') }}" class="btn">+ Scan New</a>
+</div>
+
+{% if receipts %}
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Company</th>
+                    <th>Type</th>
+                    <th>Items</th>
+                    <th style="text-align:right">Total</th>
+                    <th>File</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in receipts %}
+                <tr>
+                    <td>{{ r.receipt_date.strftime('%d %b %Y') if r.receipt_date else '—' }}</td>
+                    <td>{{ r.company.name if r.company else '—' }}</td>
+                    <td><span class="badge">{{ r.document_type.replace('_',' ').title() }}</span></td>
+                    <td>{{ r.line_items | length }}</td>
+                    <td style="text-align:right">
+                        {% if r.total_amount %}
+                            {{ r.currency }} {{ '%.2f' % r.total_amount }}
+                        {% else %}—{% endif %}
+                    </td>
+                    <td><span class="file-tag">{{ r.filename }}</span></td>
+                    <td>
+                        <a href="{{ url_for('main.edit_receipt', receipt_id=r.id) }}"
+                           class="btn btn-secondary btn-sm">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card empty-state">
+    <p>No receipts yet. <a href="{{ url_for('main.scan') }}">Scan your first receipt.</a></p>
+</div>
+{% endif %}
+{% endblock %}

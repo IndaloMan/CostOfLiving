@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Companies{% endblock %}
+
+{% block content %}
+<h1>Companies</h1>
+
+{% if companies %}
+<div class="card">
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Type</th>
+                    <th style="text-align:center">Receipts</th>
+                    <th style="text-align:center">Template Items</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in companies %}
+                <tr>
+                    <td><strong>{{ c.name }}</strong></td>
+                    <td>{{ c.type or '—' }}</td>
+                    <td style="text-align:center">
+                        {{ c.receipts | selectattr('status','equalto','confirmed') | list | length }}
+                    </td>
+                    <td style="text-align:center">
+                        {% if c.template and c.template.known_items %}
+                            {% set items = c.template.known_items | fromjson %}
+                            {% if items | length > 0 %}
+                                <span class="badge">{{ items | length }} known</span>
+                            {% else %}
+                                <span style="color:#aaa">—</span>
+                            {% endif %}
+                        {% else %}
+                            <span style="color:#aaa">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="display:flex; gap:0.5rem;">
+                        <a href="{{ url_for('main.company_detail', company_id=c.id) }}"
+                           class="btn btn-secondary btn-sm">Edit Template</a>
+                        {% if c.name | lower == 'energy nordic' %}
+                        <a href="{{ url_for('main.analysis_energy_nordic') }}"
+                           class="btn btn-sm" style="background:#16a085;">&#9889; Analysis</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card empty-state">
+    <p>No companies yet. They are created automatically when you confirm your first receipt.</p>
+</div>
+{% endif %}
+{% endblock %}

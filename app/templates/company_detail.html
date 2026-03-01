@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{{ company.name }} — Template{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+    <a href="{{ url_for('main.companies') }}" style="color:#888; text-decoration:none;">&#8592; Companies</a>
+    <h1 style="margin:0">{{ company.name }}</h1>
+    <span class="badge">{{ receipt_count }} receipt{{ 's' if receipt_count != 1 }}</span>
+</div>
+
+<p style="color:#666; margin-bottom:1.5rem;">
+    This template maps product descriptions to categories. It grows automatically
+    whenever you confirm a receipt from this company. You can also edit it manually below.
+</p>
+
+<form method="POST">
+    <div class="card" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h2>Known Items ({{ template_items | length }})</h2>
+            <button type="button" class="btn btn-secondary btn-sm" id="addRow">+ Add Row</button>
+        </div>
+
+        {% if template_items %}
+        <div class="table-wrap">
+            <table class="items-table" id="tmplTable">
+                <thead>
+                    <tr>
+                        <th style="width:55%">Description</th>
+                        <th style="width:35%">Category</th>
+                        <th style="width:10%"></th>
+                    </tr>
+                </thead>
+                <tbody id="tmplBody">
+                    {% for item in template_items %}
+                    <tr>
+                        <td><input type="text" name="tmpl_description[]" value="{{ item.description }}" required></td>
+                        <td>
+                            <select name="tmpl_category[]">
+                                <option value="">— none —</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat }}" {% if item.category == cat %}selected{% endif %}>{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td><button type="button" class="btn-remove" title="Remove">&#x2715;</button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div id="emptyMsg" style="color:#aaa; padding:1rem 0;">
+            No items yet. They will appear here automatically after you confirm receipts
+            from {{ company.name }}, or you can add them manually.
+        </div>
+        <div class="table-wrap" style="display:none">
+            <table class="items-table" id="tmplTable">
+                <thead>
+                    <tr>
+                        <th style="width:55%">Description</th>
+                        <th style="width:35%">Category</th>
+                        <th style="width:10%"></th>
+                    </tr>
+                </thead>
+                <tbody id="tmplBody"></tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="display:flex; gap:1rem;">
+        <button type="submit" class="btn">&#10003; Save Template</button>
+        <a href="{{ url_for('main.companies') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+<script>
+const categories = {{ categories | tojson }};
+
+function categoryOptions(selected) {
+    let opts = '<option value="">— none —</option>';
+    categories.forEach(c => {
+        opts += `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`;
+    });
+    return opts;
+}
+
+function newRow() {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" name="tmpl_description[]" required></td>
+        <td><select name="tmpl_category[]">${categoryOptions('')}</select></td>
+        <td><button type="button" class="btn-remove" title="Remove">&#x2715;</button></td>
+    `;
+    return tr;
+}
+
+document.getElementById('addRow').addEventListener('click', () => {
+    const emptyMsg = document.getElementById('emptyMsg');
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    // Show table if it was hidden
+    const tableWrap = document.querySelector('.table-wrap[style*="none"]');
+    if (tableWrap) tableWrap.style.display = '';
+
+    document.getElementById('tmplBody').appendChild(newRow());
+});
+
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('btn-remove')) {
+        e.target.closest('tr').remove();
+    }
+});
+</script>
+{% endblock %}
