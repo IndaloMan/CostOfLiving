@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Mercadona — Shopping Analysis{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <a href="{{ url_for('main.companies') }}" style="color:#888; text-decoration:none;">&#8592; Companies</a>
+    <h1 style="margin:0">Mercadona — Shopping Analysis</h1>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar card">
+    <div class="filters-inner">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" id="endDate">
+        </div>
+        <button class="btn" onclick="loadAll()">Apply</button>
+    </div>
+</div>
+
+<!-- Summary stats -->
+<div class="stats-row">
+    <div class="stat-box">
+        <div class="stat-num" id="statVisits">—</div>
+        <div class="stat-label">Visits</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statTotal">—</div>
+        <div class="stat-label">Total Spent</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statAvg">—</div>
+        <div class="stat-label">Avg Basket</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statItems">—</div>
+        <div class="stat-label">Items Bought</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statTopCat">—</div>
+        <div class="stat-label">Top Category</div>
+    </div>
+</div>
+
+<!-- Spend per visit -->
+<div class="card chart-card">
+    <h2>Spend per Visit</h2>
+    <div class="chart-container"><canvas id="visitChart"></canvas></div>
+    <div id="visitEmpty" class="chart-empty" style="display:none">No data for this period.</div>
+</div>
+
+<!-- Category + Top items side by side -->
+<div class="charts-row">
+    <div class="card chart-card">
+        <h2>By Category</h2>
+        <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+        <div id="categoryEmpty" class="chart-empty" style="display:none">No categorised items for this period.</div>
+    </div>
+    <div class="card chart-card">
+        <h2>Top Items by Spend</h2>
+        <div class="chart-container"><canvas id="topItemsChart"></canvas></div>
+        <div id="topItemsEmpty" class="chart-empty" style="display:none">No items for this period.</div>
+    </div>
+</div>
+
+<!-- Price tracker -->
+<div class="card chart-card">
+    <h2>Price Tracker</h2>
+    <p style="color:#888; font-size:0.88rem; margin-bottom:1rem;">
+        Track how the price of a specific Mercadona item has changed over time.
+    </p>
+    <div class="search-row">
+        <div style="position:relative; flex:1">
+            <input type="text" id="itemSearch" placeholder="Type an item name…"
+                   autocomplete="off" oninput="suggestItems(this.value)">
+            <ul id="suggestions" class="suggestions-list" style="display:none"></ul>
+        </div>
+        <button class="btn" onclick="loadPriceTrend()">Track</button>
+    </div>
+    <div class="chart-container tall" id="priceChartWrap" style="display:none">
+        <canvas id="priceChart"></canvas>
+    </div>
+    <div id="priceEmpty" class="chart-empty" style="display:none">No price data found for that item.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/analysis_mercadona.js') }}"></script>
+{% endblock %}

@@ -13,12 +13,13 @@ from .template_manager import (
     update_template, set_template_items
 )
 from .models import Company, Receipt, LineItem, ReceiptAnalysis
-from .company_analysers import get_analyser_key, canonical_name
+from .company_analysers import get_analyser_key, canonical_name, get_analysis_endpoint
 from .reports_data import (
     parse_date, default_start,
     get_summary, get_spending_over_time,
     get_by_category, get_by_company,
     get_price_trend, get_item_suggestions,
+    get_spend_per_visit, get_top_items,
 )
 
 main = Blueprint("main", __name__)
@@ -295,7 +296,11 @@ def edit_receipt(receipt_id):
 @main.route("/companies")
 def companies():
     all_companies = Company.query.order_by(Company.name).all()
-    return render_template("companies.html", companies=all_companies)
+    return render_template(
+        "companies.html",
+        companies=all_companies,
+        get_analysis_endpoint=get_analysis_endpoint,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -407,6 +412,93 @@ def api_item_suggestions():
     if len(q) < 2:
         return jsonify([])
     return jsonify(get_item_suggestions(q))
+
+
+# ---------------------------------------------------------------------------
+# Company-specific analysis — Mercadona
+# ---------------------------------------------------------------------------
+
+def _get_mercadona():
+    """Return the Mercadona company record or 404."""
+    company = Company.query.filter(
+        db.func.lower(Company.name).like("%mercadona%")
+    ).first_or_404()
+    return company
+
+
+@main.route("/analysis/mercadona")
+def analysis_mercadona():
+    company = _get_mercadona()
+    return render_template("analysis_mercadona.html", company=company)
+
+
+@main.route("/api/analysis/mercadona/summary")
+def api_mercadona_summary():
+    company = _get_mercadona()
+    start = parse_date(request.args.get("start"), default_start())
+    end   = parse_date(request.args.get("end"),   date.today())
+    base  = get_summary(start, end, company.id)
+
+    # Add visit count and total items
+    from .models import LineItem as LI
+    total_items = (
+        db.session.query(db.func.count(LI.id))
+        .join(Receipt, LI.receipt_id == Receipt.id)
+        .filter(
+            Receipt.company_id == company.id,
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+        )
+        .scalar() or 0
+    )
+    base["total_items"] = total_items
+    return jsonify(base)
+
+
+@main.route("/api/analysis/mercadona/per-visit")
+def api_mercadona_per_visit():
+    company = _get_mercadona()
+    start = parse_date(request.args.get("start"), default_start())
+    end   = parse_date(request.args.get("end"),   date.today())
+    return jsonify(get_spend_per_visit(start, end, company.id))
+
+
+@main.route("/api/analysis/mercadona/by-category")
+def api_mercadona_by_category():
+    company = _get_mercadona()
+    start = parse_date(request.args.get("start"), default_start())
+    end   = parse_date(request.args.get("end"),   date.today())
+    return jsonify(get_by_category(start, end, company.id))
+
+
+@main.route("/api/analysis/mercadona/top-items")
+def api_mercadona_top_items():
+    company = _get_mercadona()
+    start = parse_date(request.args.get("start"), default_start())
+    end   = parse_date(request.args.get("end"),   date.today())
+    limit = int(request.args.get("limit", 15))
+    return jsonify(get_top_items(start, end, company.id, limit))
+
+
+@main.route("/api/analysis/mercadona/price-trend")
+def api_mercadona_price_trend():
+    company     = _get_mercadona()
+    description = request.args.get("description", "").strip()
+    start = parse_date(request.args.get("start"), default_start())
+    end   = parse_date(request.args.get("end"),   date.today())
+    if not description:
+        return jsonify({"labels": [], "values": [], "description": ""})
+    return jsonify(get_price_trend(description, start, end, company.id))
+
+
+@main.route("/api/analysis/mercadona/item-suggestions")
+def api_mercadona_item_suggestions():
+    company = _get_mercadona()
+    q = request.args.get("q", "").strip()
+    if len(q) < 2:
+        return jsonify([])
+    return jsonify(get_item_suggestions(q, company_id=company.id))
 
 
 # ---------------------------------------------------------------------------

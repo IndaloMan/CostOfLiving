@@ -248,14 +248,79 @@ def get_price_trend(description: str, start: date, end: date, company_id: int = 
 
 
 # ---------------------------------------------------------------------------
+# Spend per visit (one data point per receipt)
+# ---------------------------------------------------------------------------
+
+def get_spend_per_visit(start: date, end: date, company_id: int) -> dict:
+    """Return each confirmed receipt as a labelled data point — used for basket-size charts."""
+    rows = (
+        db.session.query(Receipt.receipt_date, Receipt.total_amount, Receipt.id)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.company_id == company_id,
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            Receipt.total_amount.isnot(None),
+            Receipt.receipt_date.isnot(None),
+        )
+        .order_by(Receipt.receipt_date)
+        .all()
+    )
+    return {
+        "labels": [r.receipt_date.isoformat() for r in rows],
+        "values": [round(float(r.total_amount), 2) for r in rows],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Top items by total spend
+# ---------------------------------------------------------------------------
+
+def get_top_items(start: date, end: date, company_id: int, limit: int = 15) -> dict:
+    """Most purchased items ranked by total spend, with purchase count and avg unit price."""
+    rows = (
+        db.session.query(
+            LineItem.description,
+            func.count(LineItem.id).label("purchase_count"),
+            func.sum(LineItem.total_price).label("total_spent"),
+            func.avg(LineItem.unit_price).label("avg_unit_price"),
+        )
+        .join(Receipt, LineItem.receipt_id == Receipt.id)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.company_id == company_id,
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            LineItem.total_price.isnot(None),
+        )
+        .group_by(func.lower(LineItem.description))
+        .order_by(func.sum(LineItem.total_price).desc())
+        .limit(limit)
+        .all()
+    )
+    return {
+        "labels":         [r.description for r in rows],
+        "total_spent":    [round(float(r.total_spent), 2) for r in rows],
+        "purchase_count": [int(r.purchase_count) for r in rows],
+        "avg_unit_price": [round(float(r.avg_unit_price), 2) if r.avg_unit_price else None for r in rows],
+    }
+
+
+# ---------------------------------------------------------------------------
 # Item autocomplete suggestions
 # ---------------------------------------------------------------------------
 
-def get_item_suggestions(q: str, limit: int = 12) -> list:
+def get_item_suggestions(q: str, limit: int = 12, company_id: int = None) -> list:
     """Return distinct item descriptions matching a search string, most frequent first."""
-    rows = (
+    query = (
         db.session.query(LineItem.description)
+        .join(Receipt, LineItem.receipt_id == Receipt.id)
         .filter(LineItem.description.ilike(f"%{q}%"))
+    )
+    if company_id:
+        query = query.filter(Receipt.company_id == company_id)
+    rows = (
+        query
         .group_by(func.lower(LineItem.description))
         .order_by(func.count(LineItem.id).desc())
         .limit(limit)

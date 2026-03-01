@@ -6,6 +6,18 @@ ANALYSER_MAP = {
     "energy nordic (energía nórdica gas y electricidad s.l.u)": "energy_nordic",
 }
 
+# Maps canonical company name (lowercase) → Flask endpoint for its analysis page
+ANALYSIS_ENDPOINTS = {
+    "energy nordic": ("main.analysis_energy_nordic", "⚡"),
+    "mercadona, s.a.": ("main.analysis_mercadona",   "🛒"),
+    "mercadona":       ("main.analysis_mercadona",   "🛒"),
+}
+
+
+def get_analysis_endpoint(company_name: str):
+    """Return (endpoint, icon) for a company's analysis page, or None."""
+    return ANALYSIS_ENDPOINTS.get(company_name.lower().strip())
+
 # Maps known aliases to the preferred display name stored in the DB
 CANONICAL_NAMES = {
     "energía nórdica gas y electricidad s.l.u": "Energy Nordic",

@@ -40,9 +40,10 @@
                     <td style="display:flex; gap:0.5rem;">
                         <a href="{{ url_for('main.company_detail', company_id=c.id) }}"
                            class="btn btn-secondary btn-sm">Edit Template</a>
-                        {% if c.name | lower == 'energy nordic' %}
-                        <a href="{{ url_for('main.analysis_energy_nordic') }}"
-                           class="btn btn-sm" style="background:#16a085;">&#9889; Analysis</a>
+                        {% set analysis = get_analysis_endpoint(c.name) %}
+                        {% if analysis %}
+                        <a href="{{ url_for(analysis[0]) }}"
+                           class="btn btn-sm" style="background:#16a085;">{{ analysis[1] }} Analysis</a>
                         {% endif %}
                     </td>
                 </tr>
