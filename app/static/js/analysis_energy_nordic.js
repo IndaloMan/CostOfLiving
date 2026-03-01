@@ -6,30 +6,42 @@ const P2COLOR = '#27ae60';
 const P3COLOR = '#e67e22';
 
 // ---------------------------------------------------------------------------
-// Chart 1: Consumption per period — stacked bar
+// Chart 1: Consumption per period — line chart
 // ---------------------------------------------------------------------------
 new Chart(document.getElementById('consumptionChart').getContext('2d'), {
-    type: 'bar',
+    type: 'line',
     data: {
         labels,
         datasets: [
             {
                 label: 'P1 (peak)',
                 data: billData.map(r => r.data.energy.P1?.kwh ?? 0),
-                backgroundColor: P1COLOR,
-                borderRadius: 3,
+                borderColor: P1COLOR,
+                backgroundColor: P1COLOR + '22',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.2,
+                fill: false,
             },
             {
                 label: 'P2 (shoulder)',
                 data: billData.map(r => r.data.energy.P2?.kwh ?? 0),
-                backgroundColor: P2COLOR,
-                borderRadius: 3,
+                borderColor: P2COLOR,
+                backgroundColor: P2COLOR + '22',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.2,
+                fill: false,
             },
             {
                 label: 'P3 (off-peak)',
                 data: billData.map(r => r.data.energy.P3?.kwh ?? 0),
-                backgroundColor: P3COLOR,
-                borderRadius: 3,
+                borderColor: P3COLOR,
+                backgroundColor: P3COLOR + '22',
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.2,
+                fill: false,
             },
         ],
     },
@@ -48,8 +60,7 @@ new Chart(document.getElementById('consumptionChart').getContext('2d'), {
             },
         },
         scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true, ticks: { callback: v => v + ' kWh' } },
+            y: { beginAtZero: true, ticks: { callback: v => v + ' kWh' } },
         },
     },
 });
