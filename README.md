@@ -9,11 +9,15 @@ Built with Python, Flask, SQLite, and the Anthropic Claude API.
 ## Features
 
 - **Scan receipts & invoices** — upload JPG, PNG or PDF files; Claude Vision extracts the company name, date, and all line items automatically
-- **Review & confirm** — check and edit extracted data before it is saved; edit any confirmed receipt at any time
+- **Batch upload** — upload multiple files at once; duplicate detection skips already-imported files; results table shows company, date and total with a Review link per file
+- **Pending queue** — unreviewed uploads appear in an orange Pending section on the Receipts page; **Process All** confirms the whole batch without individual review (runs company analysis automatically)
+- **Review & confirm** — check and edit extracted data before it is saved; edit any confirmed receipt at any time; click the filename to open the original PDF in a new tab
 - **Company templates** — categories are learned from confirmed receipts and auto-applied to future scans from the same company
 - **Reports & charts** — spending over time (month/quarter/year), by category, by company, and a price tracker for individual items
 - **Company filter** — filter all reports to a single company or view all companies together
-- **Company-specific analysis** — deep analysis for utility bills; currently implemented for Energy Nordic electricity bills (consumption per tariff period, energy price trends, bill component breakdown)
+- **Persistent date filters** — each analysis page (Reports, Mercadona, Energy Nordic) remembers the last date range you used via browser localStorage
+- **Company-specific analysis** — deep analysis for utility bills; currently implemented for Energy Nordic electricity bills (consumption per tariff period, energy price trends, bill component breakdown, per-period avg €/kWh stats)
+- **Mercadona shopping analysis** — spend per visit, category breakdown, top items, and price tracker with item autocomplete
 
 ---
 
@@ -45,6 +49,8 @@ CostOfLiving/
 │   │   ├── __init__.py           # Analyser registry + name normalisation
 │   │   └── energy_nordic.py      # Energy Nordic electricity bill analyser
 │   ├── templates/                # Jinja2 HTML templates
+│   │   ├── scan_batch.html       # Batch upload + results
+│   │   └── ...                   # Other templates
 │   └── static/                   # CSS and JavaScript
 ├── Receipts/                     # Uploaded receipt files (not committed)
 ├── config.py                     # App configuration
@@ -88,21 +94,35 @@ Open **http://127.0.0.1:5000** in your browser.
 
 ## Usage
 
-### Scanning a receipt
+### Scanning a single receipt
 1. Go to **Scan** and upload a receipt image or PDF
 2. Claude extracts the company, date, and all line items
-3. Review and correct anything on the Review page
+3. Review and correct anything on the Review page (click the filename to view the original)
 4. Click **Confirm & Save** — data is stored and the company template is updated
+
+### Batch upload
+1. Go to **Scan → Batch Upload** and drag in multiple files (or use the file chooser)
+2. All files are extracted in one go — already-uploaded files are detected and skipped
+3. The results table shows a **Review** button for each new file
+4. Alternatively, go to **Receipts** and click **Process All** to confirm everything at once without reviewing
 
 ### Reports
 - Go to **Reports** to see spending charts
 - Use the **Company** dropdown to filter by a specific company
 - Use the **Price Tracker** to search for any item and see its price trend over time
+- Date range is remembered between visits
 
 ### Energy Nordic analysis
 - Go to **Companies → ⚡ Analysis** for a detailed breakdown of electricity bills
 - Tracks consumption per tariff period (P1/P2/P3), energy prices, and bill components
+- Shows overall and per-period average €/kWh (energy costs only, excluding standing charges)
 - Analysis runs automatically when a new Energy Nordic bill is confirmed
+- Date filter is remembered between visits
+
+### Mercadona shopping analysis
+- Go to **Companies → 🛒 Analysis** for shopping trends
+- Spend per visit, category breakdown, top items by total spend, and an item price tracker
+- Type the first few characters of any item in the Price Tracker to search by autocomplete
 
 ---
 
