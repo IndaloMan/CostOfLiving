@@ -42,6 +42,7 @@ Return ONLY valid JSON — no explanation, no markdown — using this exact stru
     "P2": {"kwh": number, "energy_price": number, "toll": number, "total": number},
     "P3": {"kwh": number, "energy_price": number, "toll": number, "total": number}
   },
+  "_energy_units_note": "energy_price and toll are RATES in €/kWh (e.g. 0.1595), NOT total costs in €. They should be small decimals well below 1.0.",
   "handle_fee": number,
   "electricity_tax": {
     "base": number,
@@ -68,6 +69,9 @@ Rules:
 - Use null for any value not present in the text
 - Dates in YYYY-MM-DD format
 - Comma is used as decimal separator in the source — convert to decimal point
+- IMPORTANT: energy_price and toll must be the per-unit RATES in €/kWh as printed
+  on the bill (e.g. 0.1595 and 0.0925), NOT the calculated totals in €.
+  Spanish electricity rates are always between 0.01 and 0.99 €/kWh.
 """
 
 
@@ -110,7 +114,31 @@ def analyse(filepath: str) -> dict:
     except json.JSONDecodeError as e:
         raise AnalysisError(f"Could not parse response as JSON: {e}\n\nRaw:\n{raw}")
 
+    data.pop("_energy_units_note", None)
+    _correct_energy_rates(data)
     return data
+
+
+def _correct_energy_rates(data: dict):
+    """
+    Guard against Claude returning total € costs instead of €/kWh rates.
+
+    Spanish electricity rates are always in the range 0.01–0.99 €/kWh.
+    If energy_price or toll for any period exceeds 2.0 it must be a total cost,
+    so we divide by the period's kWh consumption to recover the correct rate.
+    """
+    energy = data.get("energy", {})
+    for period in ("P1", "P2", "P3"):
+        p = energy.get(period)
+        if not p:
+            continue
+        kwh = p.get("kwh") or 0
+        if kwh <= 0:
+            continue
+        for field in ("energy_price", "toll"):
+            val = p.get(field)
+            if val is not None and val > 2.0:
+                p[field] = round(val / kwh, 6)
 
 
 def _extract_page_text(filepath: str, page_index: int) -> str:
