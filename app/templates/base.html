@@ -9,7 +9,10 @@
 <body>
     <nav>
         <div class="nav-brand">Cost of Living Tracker</div>
-        <ul class="nav-links">
+        <button class="nav-hamburger" id="navToggle" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links" id="navLinks">
             <li><a href="/">Dashboard</a></li>
             <li><a href="/scan">Scan Receipt</a></li>
             <li><a href="/receipts">Receipts</a></li>
@@ -17,6 +20,11 @@
             <li><a href="/reports">Reports</a></li>
         </ul>
     </nav>
+    <script>
+        document.getElementById('navToggle').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('open');
+        });
+    </script>
 
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}

@@ -398,3 +398,105 @@ h2 {
 .alert-success { background: #d5f5e3; color: #1e8449; }
 .alert-error   { background: #fadbd8; color: #922b21; }
 .alert-info    { background: #d6eaf8; color: #1a5276; }
+
+/* Hamburger — hidden on desktop */
+.nav-hamburger { display: none; }
+
+/* =========================================================
+   Mobile — 768px and below
+   ========================================================= */
+@media (max-width: 768px) {
+
+    /* --- Navigation --- */
+    nav { padding: 0 1rem; position: relative; flex-wrap: wrap; }
+
+    .nav-hamburger {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+    }
+
+    .nav-hamburger span {
+        display: block;
+        width: 24px;
+        height: 2px;
+        background: white;
+        border-radius: 2px;
+    }
+
+    .nav-links {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 56px;
+        left: 0;
+        right: 0;
+        background: #2c3e50;
+        padding: 0.25rem 0 0.75rem;
+        z-index: 1000;
+        gap: 0;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .nav-links.open { display: flex; }
+
+    .nav-links li { border-top: 1px solid rgba(255,255,255,0.07); }
+
+    .nav-links a {
+        display: block;
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    /* --- Layout --- */
+    main { margin: 1rem auto; padding: 0 0.75rem; }
+
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    h2 { font-size: 1rem; }
+
+    .card { padding: 1rem; }
+
+    /* --- Stats row — 2 per row grid --- */
+    .stats-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stat-box { min-width: 0; }
+    .stat-num  { font-size: 1.4rem; }
+
+    /* --- Upload --- */
+    .upload-card { max-width: 100%; }
+
+    /* --- Filters bar --- */
+    .filters-inner { flex-direction: column; align-items: stretch; }
+    .filter-group input,
+    .filter-group select { width: 100%; }
+    .filters-inner .btn { width: 100%; text-align: center; }
+
+    /* --- Charts --- */
+    .charts-row { grid-template-columns: 1fr; }
+    .chart-container      { height: 220px; }
+    .chart-container.tall { height: 260px; }
+
+    /* --- Price tracker search --- */
+    .search-row { flex-direction: column; align-items: stretch; }
+    .search-row .btn { width: 100%; text-align: center; }
+
+    /* --- Page header rows (title + action button) --- */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    /* --- Data tables: scroll horizontally --- */
+    .table-wrap { -webkit-overflow-scrolling: touch; }
+
+    /* --- Form grid: single column --- */
+    .form-grid { grid-template-columns: 1fr; }
+}
