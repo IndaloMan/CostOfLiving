@@ -1,6 +1,10 @@
 # Environment & secrets
 .env
 
+# Tailscale TLS certificates — do not commit
+*.crt
+*.key
+
 # Database — contains personal financial data, do not commit
 database.db
 
