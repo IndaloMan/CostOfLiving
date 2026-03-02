@@ -2,11 +2,21 @@
 {% block title %}Receipts{% endblock %}
 
 {% block content %}
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-    <h1>Receipts</h1>
-    <a href="{{ url_for('main.scan') }}" class="btn">+ Scan New</a>
+{% set grouped = request.args.get('view') == 'grouped' %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
+    <h1 style="margin:0">Receipts</h1>
+    <div style="display:flex; gap:0.5rem;">
+        {% if grouped %}
+            <a href="{{ url_for('main.receipts') }}" class="btn btn-secondary">&#9776; All Receipts</a>
+        {% else %}
+            <a href="{{ url_for('main.receipts', view='grouped') }}" class="btn btn-secondary">&#9783; Group by Company</a>
+        {% endif %}
+        <a href="{{ url_for('main.scan') }}" class="btn">+ Scan New</a>
+    </div>
 </div>
 
+{# ── Pending section ───────────────────────────────────────────────── #}
 {% if pending %}
 <div class="card" style="margin-bottom:1.5rem; border-left:4px solid #e67e22;">
     <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
@@ -51,7 +61,66 @@
 </div>
 {% endif %}
 
+{# ── Confirmed receipts ────────────────────────────────────────────── #}
 {% if receipts %}
+
+{% if grouped %}
+
+{# ── Grouped by company ──────────────────────────────────────────── #}
+{% for company_name, group in receipts | groupby('company.name', default='Unknown') %}
+{% set group_list = group | list %}
+{% set group_total = namespace(val=0) %}
+{% for r in group_list %}{% if r.total_amount %}{% set group_total.val = group_total.val + r.total_amount %}{% endif %}{% endfor %}
+
+<details class="card receipt-group" style="margin-bottom:1rem;" open>
+    <summary class="receipt-group-summary">
+        <span class="receipt-group-name">{{ company_name }}</span>
+        <span class="receipt-group-meta">
+            {{ group_list | length }} receipt{{ 's' if group_list | length != 1 }}
+            &mdash; €{{ '%.2f' % group_total.val }}
+        </span>
+        <span class="receipt-group-chevron">&#9660;</span>
+    </summary>
+    <div class="table-wrap" style="margin-top:1rem;">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Items</th>
+                    <th style="text-align:right">Total</th>
+                    <th>File</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in group_list %}
+                <tr>
+                    <td>{{ r.receipt_date.strftime('%d %b %Y') if r.receipt_date else '—' }}</td>
+                    <td><span class="badge">{{ r.document_type.replace('_',' ').title() }}</span></td>
+                    <td>{{ r.line_items | length }}</td>
+                    <td style="text-align:right">
+                        {% if r.total_amount %}{{ r.currency }} {{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
+                           target="_blank" class="file-tag" style="text-decoration:none; color:inherit;">{{ r.filename }} &#8599;</a>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('main.edit_receipt', receipt_id=r.id) }}"
+                           class="btn btn-secondary btn-sm">Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</details>
+{% endfor %}
+
+{% else %}
+
+{# ── Flat list ───────────────────────────────────────────────────── #}
 <div class="card">
     <div class="table-wrap">
         <table class="data-table">
@@ -74,9 +143,7 @@
                     <td><span class="badge">{{ r.document_type.replace('_',' ').title() }}</span></td>
                     <td>{{ r.line_items | length }}</td>
                     <td style="text-align:right">
-                        {% if r.total_amount %}
-                            {{ r.currency }} {{ '%.2f' % r.total_amount }}
-                        {% else %}—{% endif %}
+                        {% if r.total_amount %}{{ r.currency }} {{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
                     </td>
                     <td>
                         <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
@@ -92,6 +159,9 @@
         </table>
     </div>
 </div>
+
+{% endif %}
+
 {% else %}
 <div class="card empty-state">
     <p>No receipts yet. <a href="{{ url_for('main.scan') }}">Scan your first receipt.</a></p>

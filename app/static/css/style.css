@@ -399,6 +399,40 @@ h2 {
 .alert-error   { background: #fadbd8; color: #922b21; }
 .alert-info    { background: #d6eaf8; color: #1a5276; }
 
+/* Receipt groups (grouped by company) */
+.receipt-group { padding: 1rem 1.5rem; }
+
+.receipt-group-summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+.receipt-group-summary::-webkit-details-marker { display: none; }
+
+.receipt-group-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    flex: 1;
+}
+
+.receipt-group-meta {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.receipt-group-chevron {
+    font-size: 0.75rem;
+    color: #aaa;
+    transition: transform 0.2s;
+}
+
+details[open] .receipt-group-chevron { transform: rotate(180deg); }
+
 /* Hamburger — hidden on desktop */
 .nav-hamburger { display: none; }
 

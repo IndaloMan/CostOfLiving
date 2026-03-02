@@ -31,6 +31,12 @@ CATEGORIES = [
     "restaurant", "takeaway", "other",
 ]
 
+COMPANY_TYPES = [
+    "Supermarket", "Petrol", "Utility", "Restaurant",
+    "Pharmacy", "Household", "Transport", "Other",
+]
+
+
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "pdf"}
 
 
@@ -424,6 +430,9 @@ def company_detail(company_id):
     company = Company.query.get_or_404(company_id)
 
     if request.method == "POST":
+        # Save company type
+        company.type = request.form.get("company_type", "").strip() or None
+
         # Save manually edited template
         descs = request.form.getlist("tmpl_description[]")
         cats  = request.form.getlist("tmpl_category[]")
@@ -448,6 +457,7 @@ def company_detail(company_id):
         template_items=template_items,
         receipt_count=receipt_count,
         categories=CATEGORIES,
+        company_types=COMPANY_TYPES,
     )
 
 

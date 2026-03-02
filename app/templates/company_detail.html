@@ -15,6 +15,22 @@
 
 <form method="POST">
     <div class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-bottom:1rem;">Company Type</h2>
+        <div class="form-group" style="max-width:280px;">
+            <label>Type</label>
+            <select name="company_type">
+                <option value="">— unset —</option>
+                {% for t in company_types %}
+                <option value="{{ t }}" {% if company.type == t %}selected{% endif %}>{{ t }}</option>
+                {% endfor %}
+                {% if company.type and company.type not in company_types %}
+                <option value="{{ company.type }}" selected>{{ company.type }}</option>
+                {% endif %}
+            </select>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
             <h2>Known Items ({{ template_items | length }})</h2>
             <button type="button" class="btn btn-secondary btn-sm" id="addRow">+ Add Row</button>
