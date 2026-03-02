@@ -306,5 +306,13 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('endDate').value   = localStorage.getItem('filter_reports_end')   || today.toISOString().split('T')[0];
     document.getElementById('startDate').value = localStorage.getItem('filter_reports_start') || defStart.toISOString().split('T')[0];
 
+    // Save immediately when either date input changes (even without clicking Apply)
+    document.getElementById('startDate').addEventListener('change', function () {
+        localStorage.setItem('filter_reports_start', this.value);
+    });
+    document.getElementById('endDate').addEventListener('change', function () {
+        localStorage.setItem('filter_reports_end', this.value);
+    });
+
     loadAll();
 });

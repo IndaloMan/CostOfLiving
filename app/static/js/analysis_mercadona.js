@@ -284,5 +284,14 @@ window.addEventListener('DOMContentLoaded', () => {
     defStart.setFullYear(defStart.getFullYear() - 1);
     document.getElementById('endDate').value   = localStorage.getItem('filter_mercadona_end')   || today.toISOString().split('T')[0];
     document.getElementById('startDate').value = localStorage.getItem('filter_mercadona_start') || defStart.toISOString().split('T')[0];
+
+    // Save immediately when either date input changes (even without clicking Apply)
+    document.getElementById('startDate').addEventListener('change', function () {
+        localStorage.setItem('filter_mercadona_start', this.value);
+    });
+    document.getElementById('endDate').addEventListener('change', function () {
+        localStorage.setItem('filter_mercadona_end', this.value);
+    });
+
     loadAll();
 });
