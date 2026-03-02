@@ -18,6 +18,7 @@
 {% endif %}
 
 <form method="POST" action="{{ url_for('main.confirm', receipt_id=receipt.id) }}">
+{% if from_grouped %}<input type="hidden" name="from_grouped" value="1">{% endif %}
 
     <!-- Receipt details -->
     <div class="card" style="margin-bottom:1.5rem;">

@@ -346,6 +346,8 @@ def confirm(receipt_id):
                     flash(f"Analysis could not run: {e}", "error")
 
     flash("Receipt confirmed and saved.", "success")
+    if request.form.get("from_grouped"):
+        return redirect(url_for("main.receipts", view="grouped"))
     return redirect(url_for("main.receipts"))
 
 
@@ -465,6 +467,7 @@ def edit_receipt(receipt_id):
         company_types=_get_company_types(),
         type_categories=_get_type_categories(),
         editing=True,
+        from_grouped=bool(request.args.get("grouped")),
     )
 
 
