@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import date
+from datetime import date, datetime
 from flask import (
     Blueprint, render_template, request, redirect,
     url_for, flash, current_app, jsonify
