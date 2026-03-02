@@ -13,11 +13,14 @@ Built with Python, Flask, SQLite, and the Anthropic Claude API.
 - **Pending queue** — unreviewed uploads appear in an orange Pending section on the Receipts page; **Process All** confirms the whole batch without individual review (runs company analysis automatically)
 - **Review & confirm** — check and edit extracted data before it is saved; edit any confirmed receipt at any time; click the filename to open the original PDF in a new tab
 - **Company templates** — categories are learned from confirmed receipts and auto-applied to future scans from the same company; template descriptions use prefix matching so short stable strings (e.g. `Energy P1`) match any bill regardless of variable values
-- **Company types** — assign a type (Supermarket, Petrol, Utility, etc.) to each company via the Companies page
-- **Grouped receipts** — toggle between flat list and Group by Company view with collapsible sections showing receipt count and total per company
-- **Reports & charts** — spending over time (month/quarter/year), by category, by company, and a price tracker for individual items
+- **Company types & categories** — assign a type (Supermarket, Petrol, Utility, etc.) to each company; manage company types and categories from the **Settings** page without touching code
+- **Grouped receipts** — toggle between flat list and Group by Company view; groups start collapsed showing name/count/total; expanded state and view preference persist across page loads and receipt edits
+- **Receipt modified timestamp** — receipts table shows the date and time of the last edit in a Modified column
+- **Reports & charts** — spending over time (month/quarter/year), by category and by company
+- **Price Tracker** — on the Dashboard; search any item to see its price trend over the last 12 months
 - **Company filter** — filter all reports to a single company or view all companies together
-- **Persistent date filters** — each analysis page (Reports, Mercadona, Energy Nordic) remembers the last date range you used via browser localStorage
+- **Persistent date filters** — each analysis page (Reports, Mercadona, Energy Nordic) remembers the last date range you used; saved immediately when dates are changed
+- **Save indicator** — a spinner and message appear while a receipt is being confirmed, since AI analysis can take several seconds
 - **Company-specific analysis** — deep analysis for utility bills; currently implemented for Energy Nordic electricity bills (consumption per tariff period, energy price trends, bill component breakdown, per-period avg €/kWh stats)
 - **Mercadona shopping analysis** — spend per visit, category breakdown, top items, and price tracker with item autocomplete
 - **Mobile responsive** — hamburger nav, stacked stats and full-width charts on screens 768px and below; access securely from anywhere via Tailscale HTTPS
@@ -124,8 +127,11 @@ To access the app securely from any device (including mobile):
 ### Reports
 - Go to **Reports** to see spending charts
 - Use the **Company** dropdown to filter by a specific company
-- Use the **Price Tracker** to search for any item and see its price trend over time
 - Date range is remembered between visits
+
+### Price Tracker
+- Available on the **Dashboard** — type any item name and click **Track Item**
+- Shows price trend over the last 12 months with autocomplete suggestions
 
 ### Energy Nordic analysis
 - Go to **Companies → ⚡ Analysis** for a detailed breakdown of electricity bills
@@ -143,7 +149,13 @@ To access the app securely from any device (including mobile):
 - Go to **Companies** to see all companies with receipt counts and template sizes
 - Click **Edit Template** to set the company type and manage known line item descriptions
 - Keep template descriptions short and stable (e.g. `Energy P1` not the full line with kWh values) so they match future receipts with different figures
-- The **Group by Company** toggle on the Receipts page collapses the list into expandable company sections
+- The **Group by Company** toggle on the Receipts page collapses the list into expandable company sections; expanded state is remembered
+
+### Settings
+- Go to **Settings** to manage the Company Types and Categories dropdown lists
+- Add, rename or delete any value without touching code
+- Renaming cascades automatically to existing receipts, line items and company templates
+- Deleting a category clears it from existing line items; deleting a company type clears it from existing companies
 
 ---
 
@@ -166,3 +178,25 @@ To access the app securely from any device (including mobile):
 - The `database.db` file (personal financial data) is excluded from git
 - The `Receipts/` folder (uploaded documents) is excluded from git
 - This app is intended for local use only — do not deploy to a public server without adding authentication
+
+---
+
+## Release Notes
+
+### v1.1 — 2 March 2026
+- **Settings page** — add, rename and delete Company Types and Categories from the UI; renames cascade to all existing receipts, line items and templates
+- **Price Tracker moved to Dashboard** — removed from Reports page; now a self-contained card on the Dashboard with a Track Item button
+- **Grouped receipts improvements** — groups start collapsed (name/count/total visible); expanded state persists in localStorage; view preference (grouped/flat) survives receipt edits
+- **Modified column** — receipts tables show date and time of last edit; `updated_at` column added via automatic DB migration on startup
+- **Save indicator** — spinner + "Saving… this may take a few seconds" shown while confirm is processing
+- **Date filter persistence fix** — date inputs now save to localStorage on change, not only on Apply click
+- **Quantity formatting** — whole-number quantities no longer show `.0` (28.0 → 28)
+
+### v1.0 — February 2026
+- Initial release
+- Receipt scanning via Claude Vision (single and batch upload)
+- Review, edit and confirm workflow; company templates with auto-categorisation
+- Flat and grouped receipts views; pending queue with Process All
+- Reports & Charts — spending over time, by category, by company
+- Company-specific deep analysis — Energy Nordic electricity bills, Mercadona shopping
+- Mobile-responsive UI; HTTPS via Tailscale
