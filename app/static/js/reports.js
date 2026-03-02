@@ -9,7 +9,6 @@ const COLORS = [
 let timeChart     = null;
 let categoryChart = null;
 let companyChart  = null;
-let priceChart    = null;
 
 // ---------------------------------------------------------------------------
 // Utilities
@@ -177,102 +176,6 @@ async function loadCompanyChart(start, end, companyId) {
         },
     });
 }
-
-// ---------------------------------------------------------------------------
-// Price tracker — line chart
-// ---------------------------------------------------------------------------
-
-async function loadPriceTrend() {
-    const description = document.getElementById('itemSearch').value.trim();
-    if (!description) return;
-
-    const { start, end, companyId } = getFilters();
-    const data = await fetchJSON(`/api/price-trend?${qs({ description, start, end, company_id: companyId })}`);
-
-    const wrap  = document.getElementById('priceChartWrap');
-    const empty = document.getElementById('priceEmpty');
-    priceChart = destroyChart(priceChart);
-
-    if (!data.labels.length) {
-        wrap.style.display  = 'none';
-        empty.style.display = 'block';
-        return;
-    }
-    empty.style.display = 'none';
-    wrap.style.display  = 'block';
-
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    priceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.labels,
-            datasets: [{
-                label: data.description,
-                data: data.values,
-                borderColor: COLORS[3],
-                backgroundColor: COLORS[3] + '22',
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                tension: 0.2,
-                fill: true,
-            }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => ` ${fmt(ctx.parsed.y)} per unit`,
-                    },
-                },
-            },
-            scales: {
-                y: { beginAtZero: false, ticks: { callback: v => '€' + v } },
-            },
-        },
-    });
-}
-
-// ---------------------------------------------------------------------------
-// Item autocomplete
-// ---------------------------------------------------------------------------
-
-let suggestTimer = null;
-
-async function suggestItems(q) {
-    clearTimeout(suggestTimer);
-    const list = document.getElementById('suggestions');
-    if (q.length < 2) { list.style.display = 'none'; return; }
-
-    suggestTimer = setTimeout(async () => {
-        const items = await fetchJSON(`/api/item-suggestions?${qs({ q })}`);
-        list.innerHTML = '';
-        if (!items.length) { list.style.display = 'none'; return; }
-        items.forEach(item => {
-            const li = document.createElement('li');
-            li.textContent = item;
-            li.addEventListener('mousedown', () => {
-                document.getElementById('itemSearch').value = item;
-                list.style.display = 'none';
-                loadPriceTrend();
-            });
-            list.appendChild(li);
-        });
-        list.style.display = 'block';
-    }, 250);
-}
-
-document.addEventListener('click', e => {
-    if (!e.target.closest('#itemSearch')) {
-        document.getElementById('suggestions').style.display = 'none';
-    }
-});
-
-document.getElementById('itemSearch').addEventListener('keydown', e => {
-    if (e.key === 'Enter') { loadPriceTrend(); }
-});
 
 // ---------------------------------------------------------------------------
 // Load all charts
