@@ -12,12 +12,15 @@ Built with Python, Flask, SQLite, and the Anthropic Claude API.
 - **Batch upload** — upload multiple files at once; duplicate detection skips already-imported files; results table shows company, date and total with a Review link per file
 - **Pending queue** — unreviewed uploads appear in an orange Pending section on the Receipts page; **Process All** confirms the whole batch without individual review (runs company analysis automatically)
 - **Review & confirm** — check and edit extracted data before it is saved; edit any confirmed receipt at any time; click the filename to open the original PDF in a new tab
-- **Company templates** — categories are learned from confirmed receipts and auto-applied to future scans from the same company
+- **Company templates** — categories are learned from confirmed receipts and auto-applied to future scans from the same company; template descriptions use prefix matching so short stable strings (e.g. `Energy P1`) match any bill regardless of variable values
+- **Company types** — assign a type (Supermarket, Petrol, Utility, etc.) to each company via the Companies page
+- **Grouped receipts** — toggle between flat list and Group by Company view with collapsible sections showing receipt count and total per company
 - **Reports & charts** — spending over time (month/quarter/year), by category, by company, and a price tracker for individual items
 - **Company filter** — filter all reports to a single company or view all companies together
 - **Persistent date filters** — each analysis page (Reports, Mercadona, Energy Nordic) remembers the last date range you used via browser localStorage
 - **Company-specific analysis** — deep analysis for utility bills; currently implemented for Energy Nordic electricity bills (consumption per tariff period, energy price trends, bill component breakdown, per-period avg €/kWh stats)
 - **Mercadona shopping analysis** — spend per visit, category breakdown, top items, and price tracker with item autocomplete
+- **Mobile responsive** — hamburger nav, stacked stats and full-width charts on screens 768px and below; access securely from anywhere via Tailscale HTTPS
 
 ---
 
@@ -90,6 +93,18 @@ python run.py
 
 Open **http://127.0.0.1:5000** in your browser.
 
+### 5. Optional — HTTPS via Tailscale
+
+To access the app securely from any device (including mobile):
+
+1. Install [Tailscale](https://tailscale.com) on your PC and phone, sign in with the same account
+2. Enable HTTPS in the [Tailscale admin DNS settings](https://login.tailscale.com/admin/dns)
+3. Generate a certificate (run as Administrator):
+   ```powershell
+   tailscale cert your-machine-name.your-tailnet.ts.net
+   ```
+4. Place the `.crt` and `.key` files in the project root — `run.py` detects them automatically and starts in HTTPS mode
+
 ---
 
 ## Usage
@@ -123,6 +138,12 @@ Open **http://127.0.0.1:5000** in your browser.
 - Go to **Companies → 🛒 Analysis** for shopping trends
 - Spend per visit, category breakdown, top items by total spend, and an item price tracker
 - Type the first few characters of any item in the Price Tracker to search by autocomplete
+
+### Managing companies
+- Go to **Companies** to see all companies with receipt counts and template sizes
+- Click **Edit Template** to set the company type and manage known line item descriptions
+- Keep template descriptions short and stable (e.g. `Energy P1` not the full line with kWh values) so they match future receipts with different figures
+- The **Group by Company** toggle on the Receipts page collapses the list into expandable company sections
 
 ---
 
