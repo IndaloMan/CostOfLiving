@@ -49,9 +49,14 @@
                     <td style="text-align:right">
                         {% if r.total_amount %}€{{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
                     </td>
-                    <td>
+                    <td style="white-space:nowrap;">
                         <a href="{{ url_for('main.review', receipt_id=r.id) }}"
                            class="btn btn-sm" style="background:#e67e22;">Review</a>
+                        <form method="POST" action="{{ url_for('main.delete_receipt', receipt_id=r.id) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete {{ r.filename }}? This cannot be undone.')">
+                            <button type="submit" class="btn btn-sm" style="background:#c0392b;">Delete</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}

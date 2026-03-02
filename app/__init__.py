@@ -35,5 +35,48 @@ def create_app():
     with app.app_context():
         from . import models  # noqa: F401 — ensures tables are registered
         db.create_all()
+        _seed_list_items(db)
 
     return app
+
+
+def _seed_list_items(db):
+    """Populate list_items with default values if the table is empty."""
+    from .models import ListItem
+    if ListItem.query.first():
+        return
+
+    default_categories = [
+        "food", "drink", "dairy", "meat", "fish", "bakery", "produce", "frozen",
+        "household", "cleaning", "personal_care", "pet",
+        "electricity", "water", "gas", "internet", "phone",
+        "petrol", "odometer",
+        "restaurant", "takeaway", "other",
+    ]
+
+    default_type_categories = {
+        "Supermarket": ["food", "drink", "dairy", "meat", "fish", "bakery", "produce", "frozen",
+                        "household", "cleaning", "personal_care", "pet", "other"],
+        "Petrol":      ["petrol", "odometer", "other"],
+        "Utility":     ["electricity", "water", "gas", "internet", "phone", "other"],
+        "Restaurant":  ["food", "drink", "other"],
+        "Pharmacy":    ["personal_care", "other"],
+        "Household":   ["household", "cleaning", "other"],
+        "Transport":   ["other"],
+        "Other":       [],
+    }
+
+    import json
+
+    for i, cat in enumerate(default_categories):
+        db.session.add(ListItem(list_name="categories", value=cat, sort_order=i))
+
+    for i, (type_name, cats) in enumerate(default_type_categories.items()):
+        db.session.add(ListItem(
+            list_name="company_types",
+            value=type_name,
+            sort_order=i,
+            meta=json.dumps(cats) if cats else None,
+        ))
+
+    db.session.commit()

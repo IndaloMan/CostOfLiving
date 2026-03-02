@@ -106,6 +106,14 @@ h2 {
     background: #6c7a7b;
 }
 
+.btn-danger {
+    background: #c0392b;
+}
+
+.btn-danger:hover {
+    background: #a93226;
+}
+
 /* Stats row */
 .stats-row {
     display: flex;

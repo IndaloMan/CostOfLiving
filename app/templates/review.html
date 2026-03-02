@@ -24,16 +24,30 @@
         <h2>Receipt Details</h2>
         <div class="form-grid">
 
-            <div class="form-group">
+            <!-- Company name — full width, 80 chars max -->
+            <div class="form-group" style="grid-column: 1 / -1;">
                 <label>Company / Vendor</label>
-                <input type="text" name="company_name"
+                <input type="text" name="company_name" id="companyName"
                        value="{{ receipt.company.name if receipt.company else (receipt.raw_extraction | fromjson).get('company_name', '') }}"
-                       list="companySuggestions" required>
+                       list="companySuggestions" maxlength="80" required>
                 <datalist id="companySuggestions">
                     {% for c in companies %}
                     <option value="{{ c.name }}">
                     {% endfor %}
                 </datalist>
+            </div>
+
+            <div class="form-group">
+                <label>Company Type</label>
+                <select name="company_type" id="companyType">
+                    <option value="">— unset —</option>
+                    {% for t in company_types %}
+                    <option value="{{ t }}"
+                        {% if receipt.company and receipt.company.type == t %}selected{% endif %}>
+                        {{ t }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="form-group">
@@ -75,6 +89,21 @@
                    style="text-decoration:none; color:inherit;">{{ receipt.filename }} &#8599;</a>
             </div>
 
+            <!-- Odometer reading — shown only for Petrol companies -->
+            {% set ns = namespace(odom_qty='') %}
+            {% for item in receipt.line_items %}
+                {% if item.description == 'Odometer Reading' %}
+                    {% set ns.odom_qty = item.quantity | int %}
+                {% endif %}
+            {% endfor %}
+            <div class="form-group" id="odometerGroup" style="display:none;">
+                <label>Odometer Reading (km)</label>
+                <input type="number" name="odometer_km" id="odometerKm"
+                       step="1" min="0"
+                       value="{{ ns.odom_qty }}"
+                       placeholder="Current km reading">
+            </div>
+
         </div>
     </div>
 
@@ -99,6 +128,7 @@
                 </thead>
                 <tbody id="itemsBody">
                     {% for item in receipt.line_items %}
+                    {% if item.description != 'Odometer Reading' %}
                     <tr>
                         <td><input type="text"   name="description[]" value="{{ item.description }}" required></td>
                         <td><input type="number" name="quantity[]"    value="{{ item.quantity }}"    step="0.001" min="0"></td>
@@ -114,6 +144,7 @@
                         </td>
                         <td><button type="button" class="btn-remove" title="Remove row">&#x2715;</button></td>
                     </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -132,25 +163,70 @@
 </form>
 
 <script>
-// Category options for new rows
-const categories = {{ categories | tojson }};
+const categories    = {{ categories | tojson }};
+const typeCategories = {{ type_categories | tojson }};
+const companiesData  = {{ companies_data | tojson }};
 
-function categoryOptions(selected) {
+function filteredCats(type) {
+    const list = typeCategories[type];
+    return (list && list.length) ? list : categories;
+}
+
+function categoryOptions(selected, type) {
+    const cats = filteredCats(type !== undefined ? type : document.getElementById('companyType').value);
     let opts = '<option value="">— none —</option>';
-    categories.forEach(c => {
+    cats.forEach(c => {
         opts += `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`;
     });
     return opts;
 }
 
+function updateAllCategorySelects() {
+    const type = document.getElementById('companyType').value;
+    const cats = filteredCats(type);
+    document.querySelectorAll('select[name="category[]"]').forEach(sel => {
+        const current = sel.value;
+        sel.innerHTML = '<option value="">— none —</option>';
+        cats.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            opt.textContent = c;
+            if (c === current) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    });
+}
+
+function updateOdometerVisibility() {
+    const type = document.getElementById('companyType').value;
+    document.getElementById('odometerGroup').style.display = (type === 'Petrol') ? '' : 'none';
+}
+
+document.getElementById('companyType').addEventListener('change', () => {
+    updateAllCategorySelects();
+    updateOdometerVisibility();
+});
+
+// Auto-fill company type when an existing company is selected from the datalist
+document.getElementById('companyName').addEventListener('change', () => {
+    const name = document.getElementById('companyName').value.trim().toLowerCase();
+    const match = companiesData.find(c => c.name.toLowerCase() === name);
+    if (match && match.type) {
+        document.getElementById('companyType').value = match.type;
+        updateAllCategorySelects();
+        updateOdometerVisibility();
+    }
+});
+
 function newRow() {
+    const type = document.getElementById('companyType').value;
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="text"   name="description[]" required></td>
         <td><input type="number" name="quantity[]"    value="1" step="0.001" min="0"></td>
         <td><input type="number" name="unit_price[]"  step="0.01" min="0"></td>
         <td><input type="number" name="total_price[]" step="0.01" min="0"></td>
-        <td><select name="category[]">${categoryOptions('')}</select></td>
+        <td><select name="category[]">${categoryOptions('', type)}</select></td>
         <td><button type="button" class="btn-remove" title="Remove row">&#x2715;</button></td>
     `;
     return tr;
@@ -165,5 +241,9 @@ document.getElementById('itemsBody').addEventListener('click', e => {
         e.target.closest('tr').remove();
     }
 });
+
+// Initialise on load
+updateOdometerVisibility();
+updateAllCategorySelects();
 </script>
 {% endblock %}

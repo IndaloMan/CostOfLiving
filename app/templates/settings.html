@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Settings — Lists{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:1.5rem;">Settings</h1>
+
+<!-- ================================================================
+     COMPANY TYPES
+     ================================================================ -->
+<div class="card" style="margin-bottom:2rem;">
+    <h2 style="margin-bottom:1rem;">Company Types</h2>
+
+    {% for ct in company_types %}
+    <details style="border:1px solid #ddd; border-radius:6px; margin-bottom:0.75rem; background:#fafafa;">
+        <summary style="padding:0.75rem 1rem; cursor:pointer; display:flex; align-items:center; gap:0.75rem; list-style:none;">
+            <span style="font-weight:600; flex:1;">{{ ct.value }}</span>
+            <span style="color:#888; font-size:0.85rem;">({{ ct.meta_list | length }} categories)</span>
+        </summary>
+
+        <div style="padding:1rem; border-top:1px solid #eee; background:#fff;">
+
+            <!-- Rename -->
+            <form method="POST" action="{{ url_for('main.settings_list_rename', item_id=ct.id) }}"
+                  style="display:flex; gap:0.5rem; margin-bottom:1rem; align-items:center;">
+                <input type="text" name="value" value="{{ ct.value }}"
+                       style="flex:1; max-width:260px;">
+                <button type="submit" class="btn btn-secondary btn-sm">Rename</button>
+            </form>
+
+            <!-- Category checkboxes -->
+            <form method="POST" action="{{ url_for('main.settings_type_categories', item_id=ct.id) }}">
+                <p style="font-weight:500; margin-bottom:0.5rem;">Linked categories:</p>
+                <div style="display:flex; flex-wrap:wrap; gap:0.5rem 1.5rem; margin-bottom:1rem;">
+                    {% for cat in categories %}
+                    <label style="display:flex; align-items:center; gap:0.3rem; cursor:pointer;">
+                        <input type="checkbox" name="categories" value="{{ cat.value }}"
+                               {% if cat.value in ct.meta_list %}checked{% endif %}>
+                        {{ cat.value }}
+                    </label>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm">Save categories</button>
+            </form>
+
+            <!-- Delete -->
+            <form method="POST" action="{{ url_for('main.settings_list_delete', item_id=ct.id) }}"
+                  style="margin-top:1rem;"
+                  onsubmit="return confirm('Delete company type \'{{ ct.value }}\'? Companies using this type will have their type cleared.')">
+                <button type="submit" class="btn btn-danger btn-sm">Delete type</button>
+            </form>
+        </div>
+    </details>
+    {% else %}
+    <p style="color:#888;">No company types yet.</p>
+    {% endfor %}
+
+    <!-- Add new type -->
+    <form method="POST" action="{{ url_for('main.settings_list_add', list_name='company_types') }}"
+          style="display:flex; gap:0.5rem; margin-top:1rem; align-items:center;">
+        <input type="text" name="value" placeholder="New company type" style="flex:1; max-width:260px;" required>
+        <button type="submit" class="btn btn-sm">+ Add type</button>
+    </form>
+</div>
+
+
+<!-- ================================================================
+     CATEGORIES
+     ================================================================ -->
+<div class="card">
+    <h2 style="margin-bottom:1rem;">Categories</h2>
+
+    {% if categories %}
+    <div class="table-wrap">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th style="width:40%">Rename</th>
+                    <th style="width:80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td style="font-weight:500;">{{ cat.value }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('main.settings_list_rename', item_id=cat.id) }}"
+                              style="display:flex; gap:0.5rem; align-items:center;">
+                            <input type="text" name="value" value="{{ cat.value }}" style="flex:1;">
+                            <button type="submit" class="btn btn-secondary btn-sm">Rename</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('main.settings_list_delete', item_id=cat.id) }}"
+                              onsubmit="return confirm('Delete category \'{{ cat.value }}\'? All line items with this category will be cleared.')">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:#888;">No categories yet.</p>
+    {% endif %}
+
+    <!-- Add new category -->
+    <form method="POST" action="{{ url_for('main.settings_list_add', list_name='categories') }}"
+          style="display:flex; gap:0.5rem; margin-top:1rem; align-items:center;">
+        <input type="text" name="value" placeholder="New category" style="flex:1; max-width:260px;" required>
+        <button type="submit" class="btn btn-sm">+ Add category</button>
+    </form>
+</div>
+{% endblock %}

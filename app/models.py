@@ -93,3 +93,25 @@ class LineItem(db.Model):
 
     def __repr__(self):
         return f"<LineItem {self.description} {self.total_price}>"
+
+
+class ListItem(db.Model):
+    """Stores user-manageable dropdown list values (categories, company types)."""
+    __tablename__ = "list_items"
+
+    id         = db.Column(db.Integer, primary_key=True)
+    list_name  = db.Column(db.String(50), nullable=False, index=True)
+    value      = db.Column(db.String(100), nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
+    meta       = db.Column(db.Text)   # JSON: categories linked to a company type
+
+    @property
+    def meta_list(self):
+        import json
+        try:
+            return json.loads(self.meta) if self.meta else []
+        except Exception:
+            return []
+
+    def __repr__(self):
+        return f"<ListItem {self.list_name}:{self.value}>"

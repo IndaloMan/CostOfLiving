@@ -12,7 +12,7 @@ from .template_manager import (
     get_template_items, apply_template_hints,
     update_template, set_template_items
 )
-from .models import Company, Receipt, LineItem, ReceiptAnalysis
+from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate
 from .company_analysers import get_analyser_key, canonical_name, get_analysis_endpoint
 from .reports_data import (
     parse_date, default_start,
@@ -24,17 +24,31 @@ from .reports_data import (
 
 main = Blueprint("main", __name__)
 
-CATEGORIES = [
-    "food", "drink", "dairy", "meat", "fish", "bakery", "produce", "frozen",
-    "household", "cleaning", "personal_care", "pet",
-    "electricity", "water", "gas", "internet", "phone",
-    "restaurant", "takeaway", "other",
-]
 
-COMPANY_TYPES = [
-    "Supermarket", "Petrol", "Utility", "Restaurant",
-    "Pharmacy", "Household", "Transport", "Other",
-]
+def _get_categories():
+    """Return sorted list of category values from the DB."""
+    return [
+        item.value for item in
+        ListItem.query.filter_by(list_name="categories").order_by(ListItem.sort_order, ListItem.value).all()
+    ]
+
+
+def _get_company_types():
+    """Return sorted list of company type values from the DB."""
+    return [
+        item.value for item in
+        ListItem.query.filter_by(list_name="company_types").order_by(ListItem.sort_order, ListItem.value).all()
+    ]
+
+
+def _get_type_categories():
+    """Return dict of {company_type: [categories]} for types that have a non-empty meta_list."""
+    result = {}
+    for item in ListItem.query.filter_by(list_name="company_types").order_by(ListItem.sort_order).all():
+        cats = item.meta_list
+        if cats:
+            result[item.value] = cats
+    return result
 
 
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "pdf"}
@@ -204,11 +218,15 @@ def scan_batch():
 def review(receipt_id):
     receipt = Receipt.query.get_or_404(receipt_id)
     companies = Company.query.order_by(Company.name).all()
+    companies_data = [{"name": c.name, "type": c.type or ""} for c in companies]
     return render_template(
         "review.html",
         receipt=receipt,
-        categories=CATEGORIES,
+        categories=_get_categories(),
         companies=companies,
+        companies_data=companies_data,
+        company_types=_get_company_types(),
+        type_categories=_get_type_categories(),
     )
 
 
@@ -222,15 +240,18 @@ def confirm(receipt_id):
 
     # Update or create company
     company_name = request.form.get("company_name", "").strip()
+    company_type = request.form.get("company_type", "").strip() or None
     company = None
     if company_name:
         company = Company.query.filter(
             db.func.lower(Company.name) == company_name.lower()
         ).first()
         if not company:
-            company = Company(name=company_name, type=request.form.get("company_type"))
+            company = Company(name=company_name, type=company_type)
             db.session.add(company)
             db.session.flush()
+        else:
+            company.type = company_type
         receipt.company = company
 
     # Update receipt header fields
@@ -275,6 +296,24 @@ def confirm(receipt_id):
         )
         db.session.add(li)
         saved_items.append(li)
+
+    # Odometer reading (Petrol receipts) — stored as a zero-cost line item
+    odometer_km = request.form.get("odometer_km", "").strip()
+    if odometer_km:
+        try:
+            km = float(odometer_km)
+            li = LineItem(
+                receipt_id=receipt.id,
+                description="Odometer Reading",
+                quantity=km,
+                unit_price=0.0,
+                total_price=0.0,
+                category="odometer",
+            )
+            db.session.add(li)
+            saved_items.append(li)
+        except ValueError:
+            pass
 
     db.session.flush()
 
@@ -329,6 +368,24 @@ def receipts():
         .all()
     )
     return render_template("receipts.html", receipts=confirmed, pending=pending)
+
+
+# ---------------------------------------------------------------------------
+# Delete a pending receipt
+# ---------------------------------------------------------------------------
+
+@main.route("/receipts/<int:receipt_id>/delete", methods=["POST"])
+def delete_receipt(receipt_id):
+    receipt = Receipt.query.get_or_404(receipt_id)
+    LineItem.query.filter_by(receipt_id=receipt.id).delete()
+    # Remove uploaded file
+    filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], receipt.filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    db.session.delete(receipt)
+    db.session.commit()
+    flash(f"Receipt '{receipt.filename}' deleted.", "success")
+    return redirect(url_for("main.receipts"))
 
 
 # ---------------------------------------------------------------------------
@@ -398,11 +455,15 @@ def process_all_pending():
 def edit_receipt(receipt_id):
     receipt = Receipt.query.get_or_404(receipt_id)
     companies = Company.query.order_by(Company.name).all()
+    companies_data = [{"name": c.name, "type": c.type or ""} for c in companies]
     return render_template(
         "review.html",
         receipt=receipt,
-        categories=CATEGORIES,
+        categories=_get_categories(),
         companies=companies,
+        companies_data=companies_data,
+        company_types=_get_company_types(),
+        type_categories=_get_type_categories(),
         editing=True,
     )
 
@@ -456,8 +517,8 @@ def company_detail(company_id):
         company=company,
         template_items=template_items,
         receipt_count=receipt_count,
-        categories=CATEGORIES,
-        company_types=COMPANY_TYPES,
+        categories=_get_categories(),
+        company_types=_get_company_types(),
     )
 
 
@@ -738,6 +799,150 @@ def analysis_energy_nordic_run():
 def uploaded_file(filename):
     from flask import send_from_directory
     return send_from_directory(current_app.config["UPLOAD_FOLDER"], filename)
+
+
+# ---------------------------------------------------------------------------
+# Settings — manage dropdown lists
+# ---------------------------------------------------------------------------
+
+@main.route("/settings")
+def settings():
+    company_types = (
+        ListItem.query
+        .filter_by(list_name="company_types")
+        .order_by(ListItem.sort_order, ListItem.value)
+        .all()
+    )
+    categories = (
+        ListItem.query
+        .filter_by(list_name="categories")
+        .order_by(ListItem.sort_order, ListItem.value)
+        .all()
+    )
+    return render_template("settings.html", company_types=company_types, categories=categories)
+
+
+@main.route("/settings/lists/<list_name>/add", methods=["POST"])
+def settings_list_add(list_name):
+    if list_name not in ("company_types", "categories"):
+        flash("Unknown list.", "error")
+        return redirect(url_for("main.settings"))
+
+    value = request.form.get("value", "").strip()
+    if not value:
+        flash("Value cannot be empty.", "error")
+        return redirect(url_for("main.settings"))
+
+    existing = ListItem.query.filter_by(list_name=list_name, value=value).first()
+    if existing:
+        flash(f"'{value}' already exists in {list_name}.", "error")
+        return redirect(url_for("main.settings"))
+
+    max_order = db.session.query(db.func.max(ListItem.sort_order)).filter_by(list_name=list_name).scalar() or 0
+    db.session.add(ListItem(list_name=list_name, value=value, sort_order=max_order + 1))
+    db.session.commit()
+    flash(f"Added '{value}' to {list_name.replace('_', ' ')}.", "success")
+    return redirect(url_for("main.settings"))
+
+
+@main.route("/settings/lists/<int:item_id>/delete", methods=["POST"])
+def settings_list_delete(item_id):
+    item = ListItem.query.get_or_404(item_id)
+    value = item.value
+    list_name = item.list_name
+
+    if list_name == "categories":
+        # Clear category from line items
+        LineItem.query.filter_by(category=value).update({"category": None})
+        # Patch template JSON blobs
+        for tmpl in CompanyTemplate.query.all():
+            try:
+                items = json.loads(tmpl.known_items) if tmpl.known_items else []
+                patched = [
+                    {**it, "category": None} if it.get("category") == value else it
+                    for it in items
+                ]
+                if patched != items:
+                    tmpl.known_items = json.dumps(patched)
+            except (ValueError, TypeError):
+                pass
+        # Remove from company type meta lists
+        for ct in ListItem.query.filter_by(list_name="company_types").all():
+            cats = ct.meta_list
+            if value in cats:
+                ct.meta = json.dumps([c for c in cats if c != value])
+
+    elif list_name == "company_types":
+        # Clear type from companies
+        Company.query.filter_by(type=value).update({"type": None})
+
+    db.session.delete(item)
+    db.session.commit()
+    flash(f"Deleted '{value}' from {list_name.replace('_', ' ')}.", "success")
+    return redirect(url_for("main.settings"))
+
+
+@main.route("/settings/lists/<int:item_id>/rename", methods=["POST"])
+def settings_list_rename(item_id):
+    item = ListItem.query.get_or_404(item_id)
+    old_value = item.value
+    new_value = request.form.get("value", "").strip()
+
+    if not new_value:
+        flash("New name cannot be empty.", "error")
+        return redirect(url_for("main.settings"))
+
+    if new_value == old_value:
+        return redirect(url_for("main.settings"))
+
+    existing = ListItem.query.filter_by(list_name=item.list_name, value=new_value).first()
+    if existing:
+        flash(f"'{new_value}' already exists.", "error")
+        return redirect(url_for("main.settings"))
+
+    if item.list_name == "categories":
+        # Cascade: line items
+        LineItem.query.filter_by(category=old_value).update({"category": new_value})
+        # Cascade: template JSON blobs
+        for tmpl in CompanyTemplate.query.all():
+            try:
+                items = json.loads(tmpl.known_items) if tmpl.known_items else []
+                patched = [
+                    {**it, "category": new_value} if it.get("category") == old_value else it
+                    for it in items
+                ]
+                if patched != items:
+                    tmpl.known_items = json.dumps(patched)
+            except (ValueError, TypeError):
+                pass
+        # Cascade: company type meta lists
+        for ct in ListItem.query.filter_by(list_name="company_types").all():
+            cats = ct.meta_list
+            if old_value in cats:
+                ct.meta = json.dumps([new_value if c == old_value else c for c in cats])
+
+    elif item.list_name == "company_types":
+        # Cascade: companies
+        Company.query.filter_by(type=old_value).update({"type": new_value})
+
+    item.value = new_value
+    db.session.commit()
+    flash(f"Renamed '{old_value}' to '{new_value}'.", "success")
+    return redirect(url_for("main.settings"))
+
+
+@main.route("/settings/types/<int:item_id>/categories", methods=["POST"])
+def settings_type_categories(item_id):
+    item = ListItem.query.get_or_404(item_id)
+    if item.list_name != "company_types":
+        flash("Not a company type.", "error")
+        return redirect(url_for("main.settings"))
+
+    selected = request.form.getlist("categories")
+    item.meta = json.dumps(selected) if selected else None
+    db.session.commit()
+    flash(f"Categories updated for '{item.value}'.", "success")
+    return redirect(url_for("main.settings"))
 
 
 # ---------------------------------------------------------------------------
