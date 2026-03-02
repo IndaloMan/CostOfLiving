@@ -77,7 +77,7 @@
 {% set group_total = namespace(val=0) %}
 {% for r in group_list %}{% if r.total_amount %}{% set group_total.val = group_total.val + r.total_amount %}{% endif %}{% endfor %}
 
-<details class="card receipt-group" style="margin-bottom:1rem;">
+<details class="card receipt-group" style="margin-bottom:1rem;" data-company="{{ company_name }}">
     <summary class="receipt-group-summary">
         <span class="receipt-group-name">{{ company_name }}</span>
         <span class="receipt-group-meta">
@@ -171,5 +171,31 @@
 <div class="card empty-state">
     <p>No receipts yet. <a href="{{ url_for('main.scan') }}">Scan your first receipt.</a></p>
 </div>
+{% endif %}
+
+{% if grouped %}
+<script>
+const OPEN_KEY = 'receipts_open_groups';
+
+function loadOpenGroups() {
+    try { return new Set(JSON.parse(localStorage.getItem(OPEN_KEY)) || []); }
+    catch { return new Set(); }
+}
+
+function saveOpenGroups() {
+    const open = [];
+    document.querySelectorAll('details[data-company]').forEach(el => {
+        if (el.open) open.push(el.dataset.company);
+    });
+    localStorage.setItem(OPEN_KEY, JSON.stringify(open));
+}
+
+// Restore open state on load
+const openGroups = loadOpenGroups();
+document.querySelectorAll('details[data-company]').forEach(el => {
+    if (openGroups.has(el.dataset.company)) el.open = true;
+    el.addEventListener('toggle', saveOpenGroups);
+});
+</script>
 {% endif %}
 {% endblock %}
