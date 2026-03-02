@@ -321,6 +321,7 @@ def confirm(receipt_id):
     if company and saved_items:
         update_template(company.id, saved_items)
 
+    receipt.updated_at = datetime.utcnow()
     db.session.commit()
 
     # Run company-specific analysis if one exists for this company

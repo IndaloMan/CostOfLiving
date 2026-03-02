@@ -35,9 +35,20 @@ def create_app():
     with app.app_context():
         from . import models  # noqa: F401 — ensures tables are registered
         db.create_all()
+        _migrate_db(db)
         _seed_list_items(db)
 
     return app
+
+
+def _migrate_db(db):
+    """Apply incremental schema changes that db.create_all() won't handle."""
+    with db.engine.connect() as conn:
+        # Add updated_at to receipts if missing
+        cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(receipts)"))]
+        if "updated_at" not in cols:
+            conn.execute(db.text("ALTER TABLE receipts ADD COLUMN updated_at DATETIME"))
+            conn.commit()
 
 
 def _seed_list_items(db):

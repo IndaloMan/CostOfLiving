@@ -52,6 +52,7 @@ class Receipt(db.Model):
     # pending = extracted but not yet confirmed; confirmed = saved by user
     status = db.Column(db.String(20), default="pending")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, nullable=True)
 
     company = db.relationship("Company", back_populates="receipts")
     line_items = db.relationship("LineItem", back_populates="receipt", cascade="all, delete-orphan")
