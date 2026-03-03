@@ -262,6 +262,7 @@ document.getElementById('itemSearch').addEventListener('keydown', e => {
 // ---------------------------------------------------------------------------
 
 async function loadAll() {
+    if (!window.validateDateRange()) return;
     const { start, end } = getFilters();
     localStorage.setItem('filter_mercadona_start', start);
     localStorage.setItem('filter_mercadona_end',   end);
@@ -279,19 +280,19 @@ async function loadAll() {
 
 // Initialise — restore saved dates or default to last 12 months
 window.addEventListener('DOMContentLoaded', () => {
-    const today = new Date();
+    const today    = new Date();
+    const todayStr = today.toISOString().split('T')[0];
     const defStart = new Date(today);
     defStart.setFullYear(defStart.getFullYear() - 1);
-    document.getElementById('endDate').value   = localStorage.getItem('filter_mercadona_end')   || today.toISOString().split('T')[0];
-    document.getElementById('startDate').value = localStorage.getItem('filter_mercadona_start') || defStart.toISOString().split('T')[0];
+
+    const startEl = document.getElementById('startDate');
+    const endEl   = document.getElementById('endDate');
+    endEl.value   = localStorage.getItem('filter_mercadona_end')   || todayStr;
+    startEl.value = localStorage.getItem('filter_mercadona_start') || defStart.toISOString().split('T')[0];
 
     // Save immediately when either date input changes (even without clicking Apply)
-    document.getElementById('startDate').addEventListener('change', function () {
-        localStorage.setItem('filter_mercadona_start', this.value);
-    });
-    document.getElementById('endDate').addEventListener('change', function () {
-        localStorage.setItem('filter_mercadona_end', this.value);
-    });
+    startEl.addEventListener('change', function () { localStorage.setItem('filter_mercadona_start', this.value); });
+    endEl.addEventListener('change',   function () { localStorage.setItem('filter_mercadona_end',   this.value); });
 
     loadAll();
 });

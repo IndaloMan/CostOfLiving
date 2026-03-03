@@ -14,17 +14,18 @@
 
 <!-- Filters -->
 <div class="filters-bar card">
-    <form method="GET" action="{{ url_for('main.analysis_energy_nordic') }}" class="filters-inner">
+    <form method="GET" action="{{ url_for('main.analysis_energy_nordic') }}" class="filters-inner" id="filterForm">
         <div class="filter-group">
             <label>From</label>
-            <input type="date" name="start" value="{{ start }}">
+            <input type="date" name="start" id="startDate" value="{{ start }}">
         </div>
         <div class="filter-group">
             <label>To</label>
-            <input type="date" name="end" value="{{ end }}">
+            <input type="date" name="end" id="endDate" value="{{ end }}">
         </div>
         <button type="submit" class="btn">Apply</button>
     </form>
+    <div id="dateError" class="alert alert-error" style="display:none; margin-top:0.75rem;">'From' date must be before 'To' date.</div>
 </div>
 
 {% if pending and not analysed %}
@@ -179,6 +180,7 @@ const billData = {{ analysed | tojson }};
             window.location.search = p.toString();
         }
     }
+
 })();
 </script>
 {% endblock %}

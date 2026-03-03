@@ -28,6 +28,45 @@
         });
     </script>
 
+    <script>
+    /* Shared date filter logic — applies to any page with #startDate / #endDate */
+    document.addEventListener('DOMContentLoaded', function () {
+        const startEl = document.getElementById('startDate');
+        const endEl   = document.getElementById('endDate');
+        if (!startEl || !endEl) return;
+
+        // Restrict picker to current year and 4 previous years — no future dates
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const minDate  = new Date(today);
+        minDate.setFullYear(minDate.getFullYear() - 4);
+        const minStr = minDate.toISOString().split('T')[0];
+        startEl.max = todayStr; startEl.min = minStr;
+        endEl.max   = todayStr; endEl.min   = minStr;
+
+        // Form-based pages: validate on submit
+        const form = startEl.closest('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (!window.validateDateRange()) e.preventDefault();
+            });
+        }
+    });
+
+    // Shared validation helper — called by JS-driven pages in their loadAll()
+    window.validateDateRange = function () {
+        const startEl = document.getElementById('startDate');
+        const endEl   = document.getElementById('endDate');
+        const errEl   = document.getElementById('dateError');
+        if (startEl && endEl && errEl && startEl.value && endEl.value && startEl.value > endEl.value) {
+            errEl.style.display = 'block';
+            return false;
+        }
+        if (errEl) errEl.style.display = 'none';
+        return true;
+    };
+    </script>
+
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}

@@ -183,6 +183,17 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.5 — 3 March 2026
+- app/static/js/analysis_mercadona.js, app/static/js/reports.js, app/templates/analysis_energy_nordic.html, app/templates/analysis_mercadona.html, app/templates/base.html, app/templates/reports.html, bump_version.py
+
+### v1.4 — 3 March 2026
+- app/static/js/analysis_mercadona.js, app/static/js/reports.js, app/templates/analysis_energy_nordic.html, app/templates/analysis_mercadona.html, app/templates/base.html, app/templates/reports.html, bump_version.py
+
+### v1.3 — 3 March 2026
+- **Date range validation** — all screens with date filters now show an inline error if From is after To instead of failing silently
+- **Date picker restricted to relevant years** — pickers no longer show future years; range limited to today and 4 years back
+- **Shared date filter logic** — validation and date picker constraints live once in `base.html` and apply automatically to all company analysis pages past and future; no per-page duplication
+
 ### v1.2 — 3 March 2026
 - **Utility bill description fix** — Claude now extracts only the stable charge name into the description field (e.g. `Energy P1`, `Contracted Power P1`, `Meter Hire`) rather than embedding quantities and rates; variable data is placed in qty and unit_price where it belongs, so company templates match correctly across bills
 - **Cancel button on review screen** — new Cancel button on the Review Extracted Data page discards the pending receipt and its uploaded file and returns to the Receipts list
