@@ -158,6 +158,9 @@
         <a href="{{ url_for('main.receipts') }}" class="btn btn-secondary">&#8592; Cancel</a>
         {% else %}
         <a href="{{ url_for('main.scan') }}" class="btn btn-secondary">&#8592; Scan Another</a>
+        <form method="POST" action="{{ url_for('main.delete_receipt', receipt_id=receipt.id) }}" style="margin:0;">
+            <button type="submit" class="btn btn-secondary" onclick="return confirm('Discard this receipt?')">&#x2715; Cancel</button>
+        </form>
         {% endif %}
         <span id="savingIndicator" style="display:none; align-items:center; gap:0.5rem; color:#2980b9; font-size:0.9rem;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"

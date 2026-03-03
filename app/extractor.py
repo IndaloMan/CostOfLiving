@@ -33,6 +33,7 @@ Rules:
 - If a value cannot be determined, use null
 - Include ALL line items visible — do not skip any
 - For utility bills, treat each charge line as a line item
+- For utility bill line items, use only the stable charge name as the description (e.g. "Contracted Power P1", "Energy P1", "Meter Hire", "VAT (21%)") — do not append quantities, rates or calculated values to the description; those values belong in the qty and unit_price fields
 - For category, pick the most appropriate from:
   food, drink, dairy, meat, fish, bakery, produce, frozen,
   household, cleaning, personal_care, pet,
