@@ -1,5 +1,6 @@
 import os
 import json
+import config
 from datetime import date, datetime
 from flask import (
     Blueprint, render_template, request, redirect,
@@ -823,7 +824,8 @@ def settings():
         .order_by(ListItem.sort_order, ListItem.value)
         .all()
     )
-    return render_template("settings.html", company_types=company_types, categories=categories)
+    return render_template("settings.html", company_types=company_types, categories=categories,
+                           app_version=config.APP_VERSION)
 
 
 @main.route("/settings/lists/<list_name>/add", methods=["POST"])

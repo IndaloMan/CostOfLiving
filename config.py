@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+APP_VERSION = "1.2"
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")

@@ -183,6 +183,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.2 — 3 March 2026
+- **Utility bill description fix** — Claude now extracts only the stable charge name into the description field (e.g. `Energy P1`, `Contracted Power P1`, `Meter Hire`) rather than embedding quantities and rates; variable data is placed in qty and unit_price where it belongs, so company templates match correctly across bills
+- **Cancel button on review screen** — new Cancel button on the Review Extracted Data page discards the pending receipt and its uploaded file and returns to the Receipts list
+
 ### v1.1 — 2 March 2026
 - **Settings page** — add, rename and delete Company Types and Categories from the UI; renames cascade to all existing receipts, line items and templates
 - **Price Tracker moved to Dashboard** — removed from Reports page; now a self-contained card on the Dashboard with a Track Item button
