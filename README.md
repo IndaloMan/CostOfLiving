@@ -17,12 +17,15 @@ Built with Python, Flask, SQLite, and the Anthropic Claude API.
 - **Grouped receipts** — toggle between flat list and Group by Company view; groups start collapsed showing name/count/total; expanded state and view preference persist across page loads and receipt edits
 - **Receipt modified timestamp** — receipts table shows the date and time of the last edit in a Modified column
 - **Reports & charts** — spending over time (month/quarter/year), by category and by company
-- **Price Tracker** — on the Dashboard; search any item to see its price trend over the last 12 months
+- **Price Tracker** — dedicated full-page view accessible from the nav; search any item to see its price trend with % change vs previous price shown in the hover tooltip
 - **Company filter** — filter all reports to a single company or view all companies together
 - **Persistent date filters** — each analysis page (Reports, Mercadona, Energy Nordic) remembers the last date range you used; saved immediately when dates are changed
 - **Save indicator** — a spinner and message appear while a receipt is being confirmed, since AI analysis can take several seconds
 - **Company-specific analysis** — deep analysis for utility bills; currently implemented for Energy Nordic electricity bills (consumption per tariff period, energy price trends, bill component breakdown, per-period avg €/kWh stats)
-- **Mercadona shopping analysis** — spend per visit, category breakdown, top items, and price tracker with item autocomplete
+- **Mercadona shopping analysis** — spend per visit, category breakdown, and top items by spend
+- **Item Analysis** — on the Reports page; shows all supermarket items with qty (number of receipts), price low/high, % price change, and category; sortable columns; uses the same date/company filters as the charts above
+- **Column sorting** — Bill Breakdown table on the Energy Nordic analysis page is fully sortable by any column
+- **Google Translate** — widget in the nav bar translates the entire UI to English; useful for Spanish supermarket item names
 - **Mobile responsive** — hamburger nav, stacked stats and full-width charts on screens 768px and below; access securely from anywhere via Tailscale HTTPS
 
 ---
@@ -130,8 +133,9 @@ To access the app securely from any device (including mobile):
 - Date range is remembered between visits
 
 ### Price Tracker
-- Available on the **Dashboard** — type any item name and click **Track Item**
-- Shows price trend over the last 12 months with autocomplete suggestions
+- Available from the **Price Tracker** link in the nav bar
+- Type any item name (autocomplete suggestions appear after 2 characters) and click **Track Item**
+- Chart fills the full page; hover tooltip shows price and % change vs the previous data point
 
 ### Energy Nordic analysis
 - Go to **Companies → ⚡ Analysis** for a detailed breakdown of electricity bills
@@ -142,8 +146,7 @@ To access the app securely from any device (including mobile):
 
 ### Mercadona shopping analysis
 - Go to **Companies → 🛒 Analysis** for shopping trends
-- Spend per visit, category breakdown, top items by total spend, and an item price tracker
-- Type the first few characters of any item in the Price Tracker to search by autocomplete
+- Spend per visit, category breakdown, and top items by total spend
 
 ### Managing companies
 - Go to **Companies** to see all companies with receipt counts and template sizes
@@ -183,20 +186,32 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.9 — 6 March 2026
+- see commit
+
 ### v1.8 — 6 March 2026
-- app/reports_data.py, app/routes.py, app/static/css/style.css, app/static/js/reports.js, app/templates/analysis_energy_nordic.html, app/templates/analysis_mercadona.html, app/templates/reports.html
+- **Item Analysis table** — new section on the Reports page showing supermarket items with qty, price low/high, % price diff (red/green), and category; groups by description only; sortable columns
+- **Date range label** — displays the active from/to dates and number of days above the Item Analysis table
+- **Analyse on demand** — Item Analysis loads only when the Analyse button is clicked, using the top-level filter dates and company
+- **Energy Nordic column sorting** — all columns in the Bill Breakdown table are now sortable with ▲/▼ indicators
+- **Price Tracker removed from Mercadona page** — use the dedicated Price Tracker page instead
 
 ### v1.7 — 6 March 2026
-- app/extractor.py
+- **Prompt caching** — extraction system prompt now uses Anthropic ephemeral caching (1h TTL) to reduce API costs on repeated scans; template hints moved to a separate helper and only appended when present
 
 ### v1.6 — 6 March 2026
-- app/routes.py, app/static/css/style.css, app/templates/base.html, app/templates/index.html, app/templates/price_tracker.html
+- **Price Tracker full page** — moved from a Dashboard card to a dedicated /price-tracker route with its own nav link; chart fills the available screen height
+- **Hover % change** — Price Tracker tooltip now shows price and % change vs the previous data point
+- **Google Translate widget** — added to the nav bar on all pages; translates ES→EN with one click; preference persists via cookie
+- **Dashboard card simplified** — Price Tracker card on the Dashboard replaced with an Open Price Tracker button
 
 ### v1.5 — 3 March 2026
-- app/static/js/analysis_mercadona.js, app/static/js/reports.js, app/templates/analysis_energy_nordic.html, app/templates/analysis_mercadona.html, app/templates/base.html, app/templates/reports.html, bump_version.py
+- **Twitter/X upload support** — social upload triggers added to daily, weekly and monthly jobs
+- **Persistent date filters** — Reports, Mercadona and Energy Nordic pages save date filters to localStorage on change (not just on Apply)
 
 ### v1.4 — 3 March 2026
-- app/static/js/analysis_mercadona.js, app/static/js/reports.js, app/templates/analysis_energy_nordic.html, app/templates/analysis_mercadona.html, app/templates/base.html, app/templates/reports.html, bump_version.py
+- **Mobile navigation** — hamburger menu added for screens 768px and below; nav links collapse into a dropdown
+- **Responsive layout improvements** — stats row, filters, charts and tables optimised for mobile
 
 ### v1.3 — 3 March 2026
 - **Date range validation** — all screens with date filters now show an inline error if From is after To instead of failing silently
