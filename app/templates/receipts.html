@@ -106,7 +106,7 @@
                     <td><span class="badge">{{ r.document_type.replace('_',' ').title() }}</span></td>
                     <td>{{ r.line_items | length }}</td>
                     <td style="text-align:right">
-                        {% if r.total_amount %}{{ r.currency }} {{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
+                        {% if r.total_amount %}€{{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
                     </td>
                     <td>
                         <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
@@ -135,25 +135,25 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Company</th>
-                    <th>Type</th>
-                    <th>Items</th>
-                    <th style="text-align:right">Total</th>
-                    <th>File</th>
-                    <th>Modified</th>
+                    <th data-col="0" class="sortable" style="white-space:nowrap">Date <span class="sort-icon"></span></th>
+                    <th data-col="1" class="sortable">Company <span class="sort-icon"></span></th>
+                    <th data-col="2" class="sortable" style="white-space:nowrap">Type <span class="sort-icon"></span></th>
+                    <th data-col="3" class="sortable">Items <span class="sort-icon"></span></th>
+                    <th data-col="4" class="sortable" style="text-align:right">Total <span class="sort-icon"></span></th>
+                    <th data-col="5" class="sortable" style="white-space:nowrap">File <span class="sort-icon"></span></th>
+                    <th data-col="6" class="sortable" style="white-space:nowrap">Modified <span class="sort-icon"></span></th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for r in receipts %}
                 <tr>
-                    <td>{{ r.receipt_date.strftime('%d %b %Y') if r.receipt_date else '—' }}</td>
+                    <td style="white-space:nowrap">{{ r.receipt_date.strftime('%d %b %Y') if r.receipt_date else '—' }}</td>
                     <td>{{ r.company.name if r.company else '—' }}</td>
-                    <td><span class="badge">{{ r.document_type.replace('_',' ').title() }}</span></td>
+                    <td style="white-space:nowrap"><span class="badge">{{ r.document_type.replace('_',' ').title() }}</span></td>
                     <td>{{ r.line_items | length }}</td>
                     <td style="text-align:right">
-                        {% if r.total_amount %}{{ r.currency }} {{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
+                        {% if r.total_amount %}€{{ '%.2f' % r.total_amount }}{% else %}—{% endif %}
                     </td>
                     <td>
                         <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
@@ -206,4 +206,32 @@ document.querySelectorAll('details[data-company]').forEach(el => {
 });
 </script>
 {% endif %}
+<script>
+(function () {
+    const table = document.querySelector('.data-table');
+    if (!table || !table.querySelector('th[data-col]')) return;
+    let sortCol = null, sortAsc = true;
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const col = parseInt(th.dataset.col);
+            sortAsc = (sortCol === col) ? !sortAsc : true;
+            sortCol = col;
+            const tbody = table.querySelector('tbody');
+            const rows  = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const av = a.cells[col] ? a.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const bv = b.cells[col] ? b.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const an = parseFloat(av), bn = parseFloat(bv);
+                const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
+                return sortAsc ? cmp : -cmp;
+            });
+            rows.forEach(r => tbody.appendChild(r));
+            table.querySelectorAll('th.sortable .sort-icon').forEach(ic => ic.textContent = '');
+            th.querySelector('.sort-icon').textContent = sortAsc ? ' ▲' : ' ▼';
+        });
+    });
+})();
+</script>
+
 {% endblock %}

@@ -4,7 +4,7 @@
 {% block content %}
 {% if editing %}
 <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
-    <a href="{{ url_for('main.receipts') }}" style="color:#888; text-decoration:none;">&#8592; Receipts</a>
+    <a href="{{ url_for('main.receipts', view='grouped') if from_grouped else url_for('main.receipts') }}" style="color:#888; text-decoration:none;">&#8592; Receipts</a>
     <h1 style="margin:0">Edit Receipt</h1>
 </div>
 <div class="alert alert-info" style="margin-bottom:1.5rem;">
@@ -155,7 +155,7 @@
     <div style="display:flex; gap:1rem; align-items:center;">
         <button type="submit" class="btn" id="saveBtn">&#10003; Confirm &amp; Save</button>
         {% if editing %}
-        <a href="{{ url_for('main.receipts') }}" class="btn btn-secondary">&#8592; Cancel</a>
+        <a href="{{ url_for('main.receipts', view='grouped') if from_grouped else url_for('main.receipts') }}" class="btn btn-secondary">&#8592; Cancel</a>
         {% else %}
         <a href="{{ url_for('main.scan') }}" class="btn btn-secondary">&#8592; Scan Another</a>
         <form method="POST" action="{{ url_for('main.delete_receipt', receipt_id=receipt.id) }}" style="margin:0;">

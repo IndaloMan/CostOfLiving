@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.10 — 6 March 2026
+- app/static/css/style.css, app/templates/base.html, app/templates/company_detail.html, app/templates/receipts.html, app/templates/review.html, app/templates/settings.html
+
 ### v1.9 — 6 March 2026
 - see commit
 

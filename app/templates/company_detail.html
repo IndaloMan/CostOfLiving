@@ -41,8 +41,8 @@
             <table class="items-table" id="tmplTable">
                 <thead>
                     <tr>
-                        <th style="width:55%">Description</th>
-                        <th style="width:35%">Category</th>
+                        <th style="width:55%; cursor:pointer" data-col="0" class="sortable" onclick="sortTmpl(0)">Description <span class="sort-icon"></span></th>
+                        <th style="width:35%; cursor:pointer" data-col="1" class="sortable" onclick="sortTmpl(1)">Category <span class="sort-icon"></span></th>
                         <th style="width:10%"></th>
                     </tr>
                 </thead>
@@ -73,8 +73,8 @@
             <table class="items-table" id="tmplTable">
                 <thead>
                     <tr>
-                        <th style="width:55%">Description</th>
-                        <th style="width:35%">Category</th>
+                        <th style="width:55%; cursor:pointer" data-col="0" class="sortable" onclick="sortTmpl(0)">Description <span class="sort-icon"></span></th>
+                        <th style="width:35%; cursor:pointer" data-col="1" class="sortable" onclick="sortTmpl(1)">Category <span class="sort-icon"></span></th>
                         <th style="width:10%"></th>
                     </tr>
                 </thead>
@@ -127,5 +127,30 @@ document.addEventListener('click', e => {
         e.target.closest('tr').remove();
     }
 });
+
+let tmplSortCol = null, tmplSortAsc = true;
+
+function sortTmpl(col) {
+    tmplSortAsc = (tmplSortCol === col) ? !tmplSortAsc : true;
+    tmplSortCol = col;
+
+    const tbody = document.getElementById('tmplBody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    rows.sort((a, b) => {
+        const aEl = col === 0 ? a.querySelector('input') : a.querySelector('select');
+        const bEl = col === 0 ? b.querySelector('input') : b.querySelector('select');
+        const av = aEl ? aEl.value.toLowerCase() : '';
+        const bv = bEl ? bEl.value.toLowerCase() : '';
+        return tmplSortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+
+    document.querySelectorAll('#tmplTable .sort-icon').forEach(ic => ic.textContent = '');
+    const th = document.querySelector(`#tmplTable th[data-col="${col}"] .sort-icon`);
+    if (th) th.textContent = tmplSortAsc ? ' ▲' : ' ▼';
+}
 </script>
 {% endblock %}

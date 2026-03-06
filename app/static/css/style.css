@@ -557,25 +557,6 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
     padding: 1rem;
 }
 
-/* Google Translate widget in nav */
-#google_translate_element {
-    margin-left: auto;
-    margin-right: 0.75rem;
-}
-
-#google_translate_element select {
-    background: #3d5166;
-    color: white;
-    border: 1px solid #5a7a96;
-    border-radius: 4px;
-    padding: 0.2rem 0.4rem;
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-/* Hide the Google Translate banner/toolbar */
-.goog-te-banner-frame { display: none !important; }
-body { top: 0 !important; }
 
 /* Sortable table headers */
 th.sortable:hover { color: #2980b9; }

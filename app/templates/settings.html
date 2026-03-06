@@ -46,7 +46,7 @@
             <!-- Delete -->
             <form method="POST" action="{{ url_for('main.settings_list_delete', item_id=ct.id) }}"
                   style="margin-top:1rem;"
-                  onsubmit="return confirm('Delete company type \'{{ ct.value }}\'? Companies using this type will have their type cleared.')">
+                  onsubmit="return confirm('Delete company type '{{ ct.value }}'? Companies using this type will have their type cleared.')">
                 <button type="submit" class="btn btn-danger btn-sm">Delete type</button>
             </form>
         </div>
@@ -75,8 +75,8 @@
         <table class="items-table">
             <thead>
                 <tr>
-                    <th>Category</th>
-                    <th style="width:40%">Rename</th>
+                    <th class="sortable" onclick="sortCats(0)" style="cursor:pointer;">Category <span class="sort-icon" id="si0"></span></th>
+                    <th class="sortable" onclick="sortCats(1)" style="cursor:pointer; width:40%">Rename <span class="sort-icon" id="si1"></span></th>
                     <th style="width:80px;"></th>
                 </tr>
             </thead>
@@ -93,7 +93,7 @@
                     </td>
                     <td>
                         <form method="POST" action="{{ url_for('main.settings_list_delete', item_id=cat.id) }}"
-                              onsubmit="return confirm('Delete category \'{{ cat.value }}\'? All line items with this category will be cleared.')">
+                              onsubmit="return confirm('Delete category '{{ cat.value }}'? All line items with this category will be cleared.')">
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
                     </td>
@@ -113,4 +113,33 @@
         <button type="submit" class="btn btn-sm">+ Add category</button>
     </form>
 </div>
+
+<script>
+var _catSortDir = {};
+function sortCats(col) {
+    var tbody = document.querySelector('.items-table tbody');
+    var rows = Array.from(tbody.querySelectorAll('tr'));
+    var dir = (_catSortDir[col] === 'asc') ? 'desc' : 'asc';
+    _catSortDir = {};
+    _catSortDir[col] = dir;
+    rows.sort(function(a, b) {
+        var aVal, bVal;
+        if (col === 0) {
+            aVal = (a.cells[0].textContent || '').trim().toLowerCase();
+            bVal = (b.cells[0].textContent || '').trim().toLowerCase();
+        } else {
+            var aInp = a.cells[1].querySelector('input[name="value"]');
+            var bInp = b.cells[1].querySelector('input[name="value"]');
+            aVal = aInp ? aInp.value.trim().toLowerCase() : '';
+            bVal = bInp ? bInp.value.trim().toLowerCase() : '';
+        }
+        if (aVal < bVal) return dir === 'asc' ? -1 : 1;
+        if (aVal > bVal) return dir === 'asc' ? 1 : -1;
+        return 0;
+    });
+    rows.forEach(function(r) { tbody.appendChild(r); });
+    document.getElementById('si0').textContent = col === 0 ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+    document.getElementById('si1').textContent = col === 1 ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+}
+</script>
 {% endblock %}
