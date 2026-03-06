@@ -186,11 +186,21 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.11 — 6 March 2026
+- see commit
+
 ### v1.10 — 6 March 2026
 - app/static/css/style.css, app/templates/base.html, app/templates/company_detail.html, app/templates/receipts.html, app/templates/review.html, app/templates/settings.html
 
+### v1.10 — 6 March 2026
+- **Sortable columns everywhere** — Known Items (company detail), Receipts flat list, and Settings categories tables all support click-to-sort on any column
+- **Receipts grouped view fix** — editing then cancelling a receipt now correctly returns to the grouped view
+- **Receipts table polish** — Date, Type and File columns no longer wrap; EUR replaced with € symbol
+- **Remove Google Translate** — widget removed from nav bar
+
 ### v1.9 — 6 March 2026
-- see commit
+- **Settings sortable columns** — Category and Rename columns in Settings are sortable
+- **Receipts sort and polish** — all flat-list columns sortable; nowrap on Date/Type/File; € symbol
 
 ### v1.8 — 6 March 2026
 - **Item Analysis table** — new section on the Reports page showing supermarket items with qty, price low/high, % price diff (red/green), and category; groups by description only; sortable columns
