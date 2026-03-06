@@ -183,6 +183,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.7 — 6 March 2026
+- app/extractor.py
+
 ### v1.6 — 6 March 2026
 - app/routes.py, app/static/css/style.css, app/templates/base.html, app/templates/index.html, app/templates/price_tracker.html
 

@@ -60,10 +60,13 @@ def extract_from_file(filepath: str, template_items: list = None) -> dict:
 
     client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
 
+    system = [{"type": "text", "text": EXTRACTION_PROMPT, "cache_control": {"type": "ephemeral", "ttl": "1h"}}]
+
     try:
         response = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=2048,
+            system=system,
             messages=[{"role": "user", "content": content}],
         )
     except anthropic.APIConnectionError as e:
@@ -90,7 +93,7 @@ def _build_image_content(filepath: str, template_items: list) -> list:
     with open(filepath, "rb") as f:
         image_data = base64.standard_b64encode(f.read()).decode("utf-8")
 
-    return [
+    content = [
         {
             "type": "image",
             "source": {
@@ -99,18 +102,18 @@ def _build_image_content(filepath: str, template_items: list) -> list:
                 "data": image_data,
             },
         },
-        {
-            "type": "text",
-            "text": _build_prompt(template_items),
-        },
     ]
+    hint = _build_hint(template_items)
+    if hint:
+        content.append({"type": "text", "text": hint})
+    return content
 
 
 def _build_pdf_content(filepath: str, template_items: list) -> list:
     with open(filepath, "rb") as f:
         pdf_data = base64.standard_b64encode(f.read()).decode("utf-8")
 
-    return [
+    content = [
         {
             "type": "document",
             "source": {
@@ -119,19 +122,18 @@ def _build_pdf_content(filepath: str, template_items: list) -> list:
                 "data": pdf_data,
             },
         },
-        {
-            "type": "text",
-            "text": _build_prompt(template_items),
-        },
     ]
+    hint = _build_hint(template_items)
+    if hint:
+        content.append({"type": "text", "text": hint})
+    return content
 
 
-def _build_prompt(template_items: list) -> str:
-    prompt = EXTRACTION_PROMPT
+def _build_hint(template_items: list) -> str | None:
     if template_items:
         hint = json.dumps(template_items, indent=2)
-        prompt += f"\n\nKnown items from this company (use for category hints):\n{hint}"
-    return prompt
+        return f"Known items from this company (use for category hints):\n{hint}"
+    return None
 
 
 def _parse_response(raw_text: str) -> dict:
