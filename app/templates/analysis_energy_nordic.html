@@ -82,23 +82,23 @@
 <div class="card" style="margin-bottom:1.5rem;">
     <h2>Bill Breakdown</h2>
     <div class="table-wrap">
-        <table class="data-table" style="font-size:0.82rem; min-width:900px;">
+        <table class="data-table" id="billTable" style="font-size:0.82rem; min-width:900px;">
             <thead>
                 <tr>
                     <th></th>
-                    <th>Date</th>
-                    <th>Days</th>
-                    <th style="text-align:right">P1 kWh</th>
-                    <th style="text-align:right">P2 kWh</th>
-                    <th style="text-align:right">P3 kWh</th>
-                    <th style="text-align:right">Total kWh</th>
-                    <th style="text-align:right">P1 €/kWh</th>
-                    <th style="text-align:right">P2 €/kWh</th>
-                    <th style="text-align:right">P3 €/kWh</th>
-                    <th style="text-align:right">Energy</th>
-                    <th style="text-align:right">Standing</th>
-                    <th style="text-align:right">Tax+VAT</th>
-                    <th style="text-align:right"><strong>Total</strong></th>
+                    <th data-col="1" class="sortable" style="white-space:nowrap">Date <span class="sort-icon"></span></th>
+                    <th data-col="2" class="sortable">Days <span class="sort-icon"></span></th>
+                    <th data-col="3" class="sortable" style="text-align:right">P1 kWh <span class="sort-icon"></span></th>
+                    <th data-col="4" class="sortable" style="text-align:right">P2 kWh <span class="sort-icon"></span></th>
+                    <th data-col="5" class="sortable" style="text-align:right">P3 kWh <span class="sort-icon"></span></th>
+                    <th data-col="6" class="sortable" style="text-align:right">Total kWh <span class="sort-icon"></span></th>
+                    <th data-col="7" class="sortable" style="text-align:right">P1 €/kWh <span class="sort-icon"></span></th>
+                    <th data-col="8" class="sortable" style="text-align:right">P2 €/kWh <span class="sort-icon"></span></th>
+                    <th data-col="9" class="sortable" style="text-align:right">P3 €/kWh <span class="sort-icon"></span></th>
+                    <th data-col="10" class="sortable" style="text-align:right">Energy <span class="sort-icon"></span></th>
+                    <th data-col="11" class="sortable" style="text-align:right">Standing <span class="sort-icon"></span></th>
+                    <th data-col="12" class="sortable" style="text-align:right">Tax+VAT <span class="sort-icon"></span></th>
+                    <th data-col="13" class="sortable" style="text-align:right"><strong>Total</strong> <span class="sort-icon"></span></th>
                 </tr>
             </thead>
             <tbody>
@@ -114,7 +114,7 @@
                         <a href="{{ url_for('main.edit_receipt', receipt_id=row.receipt_id) }}"
                            class="btn btn-secondary btn-sm">Edit</a>
                     </td>
-                    <td>{{ row.date }}</td>
+                    <td style="white-space:nowrap">{{ row.date }}</td>
                     <td style="text-align:center">{{ d.billing_period.days }}</td>
                     <td style="text-align:right">{{ "%.2f"|format(e.P1.kwh or 0) }}</td>
                     <td style="text-align:right">{{ "%.2f"|format(e.P2.kwh or 0) }}</td>
@@ -183,4 +183,38 @@ const billData = {{ analysed | tojson }};
 
 })();
 </script>
+<script>
+(function () {
+    const table = document.getElementById('billTable');
+    if (!table) return;
+    let sortCol = null, sortAsc = true;
+
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const col = parseInt(th.dataset.col);
+            sortAsc = (sortCol === col) ? !sortAsc : true;
+            sortCol = col;
+
+            const tbody = table.querySelector('tbody');
+            const rows  = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                const av = a.cells[col] ? a.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const bv = b.cells[col] ? b.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const an = parseFloat(av), bn = parseFloat(bv);
+                const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
+                return sortAsc ? cmp : -cmp;
+            });
+
+            rows.forEach(r => tbody.appendChild(r));
+
+            // Update sort icons
+            table.querySelectorAll('th.sortable .sort-icon').forEach(ic => ic.textContent = '');
+            th.querySelector('.sort-icon').textContent = sortAsc ? ' ▲' : ' ▼';
+        });
+    });
+})();
+</script>
+
 {% endblock %}

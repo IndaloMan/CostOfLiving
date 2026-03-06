@@ -21,6 +21,7 @@ from .reports_data import (
     get_by_category, get_by_company,
     get_price_trend, get_item_suggestions,
     get_spend_per_visit, get_top_items,
+    get_item_analysis,
 )
 
 main = Blueprint("main", __name__)
@@ -534,7 +535,8 @@ def company_detail(company_id):
 @main.route("/reports")
 def reports():
     companies = Company.query.order_by(Company.name).all()
-    return render_template("reports.html", companies=companies)
+    supermarkets = Company.query.filter_by(type="Supermarket").order_by(Company.name).all()
+    return render_template("reports.html", companies=companies, supermarkets=supermarkets)
 
 
 # ---------------------------------------------------------------------------
@@ -618,6 +620,14 @@ def _get_mercadona():
 def analysis_mercadona():
     company = _get_mercadona()
     return render_template("analysis_mercadona.html", company=company)
+
+
+@main.route("/api/item-analysis")
+def api_item_analysis():
+    start      = parse_date(request.args.get("start"), default_start())
+    end        = parse_date(request.args.get("end"),   date.today())
+    company_id = request.args.get("company_id", type=int)
+    return jsonify(get_item_analysis(start, end, company_id))
 
 
 @main.route("/api/analysis/mercadona/summary")

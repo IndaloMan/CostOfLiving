@@ -85,6 +85,31 @@
 </div>
 
 
+<!-- Item Analysis -->
+<div class="card" style="margin-top:1.5rem;">
+    <h2>Item Analysis</h2>
+    <div id="iaDateLabel" style="font-size:0.85rem; color:#888; margin-bottom:0.75rem;"></div>
+    <button class="btn" onclick="loadItemAnalysis()" style="margin-bottom:1rem;">Analyse</button>
+    <div id="iaEmpty"   class="chart-empty" style="display:none">No items found for this period.</div>
+    <div id="iaLoading" class="chart-empty" style="display:none">Loading…</div>
+    <div class="table-wrap" id="iaTableWrap" style="display:none">
+        <table class="data-table" id="iaTable" style="font-size:0.88rem;">
+            <thead>
+                <tr>
+                    <th data-col="0" class="sortable">Description <span class="sort-icon"></span></th>
+                    <th data-col="1" class="sortable" style="text-align:center">Qty <span class="sort-icon"></span></th>
+                    <th data-col="2" class="sortable" style="text-align:right">Price Low <span class="sort-icon"></span></th>
+                    <th data-col="3" class="sortable" style="text-align:right">Price High <span class="sort-icon"></span></th>
+                    <th data-col="4" class="sortable" style="text-align:right">% Diff <span class="sort-icon"></span></th>
+                    <th data-col="5" class="sortable">Category <span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody id="iaBody"></tbody>
+        </table>
+    </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/reports.js') }}"></script>
 {% endblock %}

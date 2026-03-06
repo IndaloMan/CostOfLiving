@@ -68,25 +68,6 @@
     </div>
 </div>
 
-<!-- Price tracker -->
-<div class="card chart-card">
-    <h2>Price Tracker</h2>
-    <p style="color:#888; font-size:0.88rem; margin-bottom:1rem;">
-        Track how the price of a specific Mercadona item has changed over time.
-    </p>
-    <div class="search-row">
-        <div style="position:relative; flex:1">
-            <input type="text" id="itemSearch" placeholder="Type an item name…"
-                   autocomplete="off" oninput="suggestItems(this.value)">
-            <ul id="suggestions" class="suggestions-list" style="display:none"></ul>
-        </div>
-        <button class="btn" onclick="loadPriceTrend()">Track</button>
-    </div>
-    <div class="chart-container tall" id="priceChartWrap" style="display:none">
-        <canvas id="priceChart"></canvas>
-    </div>
-    <div id="priceEmpty" class="chart-empty" style="display:none">No price data found for that item.</div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="{{ url_for('static', filename='js/analysis_mercadona.js') }}"></script>

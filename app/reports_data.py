@@ -327,3 +327,49 @@ def get_item_suggestions(q: str, limit: int = 12, company_id: int = None) -> lis
         .all()
     )
     return [r.description for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Item analysis (supermarkets)
+# ---------------------------------------------------------------------------
+
+def get_item_analysis(start: date, end: date, company_id: int = None) -> list:
+    """Return per-item stats (qty, price low/high) for supermarket receipts."""
+    query = (
+        db.session.query(
+            LineItem.description,
+            func.min(LineItem.category).label('category'),
+            func.count(LineItem.receipt_id.distinct()).label('qty'),
+            func.min(LineItem.unit_price).label('price_low'),
+            func.max(LineItem.unit_price).label('price_high'),
+        )
+        .join(Receipt, LineItem.receipt_id == Receipt.id)
+        .join(Company, Receipt.company_id == Company.id)
+        .filter(Company.type == 'Supermarket')
+        .filter(Receipt.receipt_date >= start, Receipt.receipt_date <= end)
+    )
+    if company_id:
+        query = query.filter(Company.id == company_id)
+    rows = (
+        query
+        .group_by(func.lower(LineItem.description))
+        .order_by(LineItem.description)
+        .all()
+    )
+    result = []
+    for row in rows:
+        low  = round(float(row.price_low),  4) if row.price_low  is not None else None
+        high = round(float(row.price_high), 4) if row.price_high is not None else None
+        if low and high and low != 0:
+            pct_diff = round((high - low) / low * 100, 1)
+        else:
+            pct_diff = None
+        result.append({
+            'description': row.description,
+            'category':    row.category or '',
+            'qty':         row.qty,
+            'price_low':   low,
+            'price_high':  high,
+            'pct_diff':    pct_diff,
+        })
+    return result

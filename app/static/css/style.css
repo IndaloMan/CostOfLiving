@@ -576,3 +576,7 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
 /* Hide the Google Translate banner/toolbar */
 .goog-te-banner-frame { display: none !important; }
 body { top: 0 !important; }
+
+/* Sortable table headers */
+th.sortable:hover { color: #2980b9; }
+th.sortable .sort-icon { font-size: 0.7rem; color: #2980b9; }

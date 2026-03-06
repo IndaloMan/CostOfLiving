@@ -183,6 +183,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.8 — 6 March 2026
+- app/reports_data.py, app/routes.py, app/static/css/style.css, app/static/js/reports.js, app/templates/analysis_energy_nordic.html, app/templates/analysis_mercadona.html, app/templates/reports.html
+
 ### v1.7 — 6 March 2026
 - app/extractor.py
 

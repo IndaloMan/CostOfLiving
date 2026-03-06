@@ -218,4 +218,96 @@ window.addEventListener('DOMContentLoaded', () => {
     endEl.addEventListener('change',   function () { localStorage.setItem('filter_reports_end',   this.value); });
 
     loadAll();
+
 });
+
+// ---------------------------------------------------------------------------
+// Item Analysis table
+// ---------------------------------------------------------------------------
+
+async function loadItemAnalysis() {
+    const start     = document.getElementById('startDate').value;
+    const end       = document.getElementById('endDate').value;
+    const companyId = document.getElementById('companyFilter').value;
+    const wrap      = document.getElementById('iaTableWrap');
+
+    // Update date label
+    const labelEl = document.getElementById('iaDateLabel');
+    if (labelEl && start && end) {
+        const s    = new Date(start), e = new Date(end);
+        const days = Math.round((e - s) / (1000 * 60 * 60 * 24));
+        const fmt  = d => d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+        labelEl.textContent = `${fmt(s)} — ${fmt(e)}  (${days} days)`;
+    }
+    const empty     = document.getElementById('iaEmpty');
+    const loading   = document.getElementById('iaLoading');
+    const tbody     = document.getElementById('iaBody');
+
+    wrap.style.display    = 'none';
+    empty.style.display   = 'none';
+    loading.style.display = 'block';
+
+    const params = { start, end };
+    if (companyId) params.company_id = companyId;
+
+    try {
+        const data = await fetchJSON(`/api/item-analysis?${qs(params)}`);
+        loading.style.display = 'none';
+
+        if (!data.length) {
+            empty.style.display = 'block';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            let pctHtml = '—';
+            if (row.pct_diff != null) {
+                const sign  = row.pct_diff >= 0 ? '+' : '';
+                const color = row.pct_diff > 0 ? '#c0392b' : '#27ae60';
+                pctHtml = `<span style="color:${color};font-weight:600">${sign}${row.pct_diff.toFixed(1)}%</span>`;
+            }
+            tr.innerHTML = `
+                <td style="padding-right:0.5rem">${row.description}</td>
+                <td style="text-align:center;padding-right:0.5rem">${row.qty}</td>
+                <td style="text-align:right;padding-right:0.5rem">${row.price_low  != null ? '€' + row.price_low.toFixed(2)  : '—'}</td>
+                <td style="text-align:right;padding-right:0.5rem">${row.price_high != null ? '€' + row.price_high.toFixed(2) : '—'}</td>
+                <td style="text-align:right;padding-right:0.5rem">${pctHtml}</td>
+                <td>${row.category}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        wrap.style.display = 'block';
+        initTableSort(document.getElementById('iaTable'));
+    } catch (err) {
+        loading.style.display = 'none';
+        console.error('Item analysis error:', err);
+    }
+}
+
+function initTableSort(table) {
+    let sortCol = null, sortAsc = true;
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.onclick = () => {
+            const col = parseInt(th.dataset.col);
+            sortAsc = (sortCol === col) ? !sortAsc : true;
+            sortCol = col;
+            const tbody = table.querySelector('tbody');
+            const rows  = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const av = a.cells[col] ? a.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const bv = b.cells[col] ? b.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const an = parseFloat(av), bn = parseFloat(bv);
+                const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
+                return sortAsc ? cmp : -cmp;
+            });
+            rows.forEach(r => tbody.appendChild(r));
+            table.querySelectorAll('th.sortable .sort-icon').forEach(ic => ic.textContent = '');
+            th.querySelector('.sort-icon').textContent = sortAsc ? ' ▲' : ' ▼';
+        };
+    });
+}
+
