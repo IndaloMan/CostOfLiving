@@ -542,3 +542,37 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
     /* --- Form grid: single column --- */
     .form-grid { grid-template-columns: 1fr; }
 }
+
+/* Price Tracker full-page layout */
+.pt-page { display: flex; flex-direction: column; height: calc(100vh - 56px - 4rem); }
+.pt-desc  { color: #666; font-size: 0.9rem; margin-bottom: 1rem; }
+.pt-search { margin-bottom: 1rem; }
+.pt-chart-wrap {
+    flex: 1;
+    position: relative;
+    min-height: 300px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 1rem;
+}
+
+/* Google Translate widget in nav */
+#google_translate_element {
+    margin-left: auto;
+    margin-right: 0.75rem;
+}
+
+#google_translate_element select {
+    background: #3d5166;
+    color: white;
+    border: 1px solid #5a7a96;
+    border-radius: 4px;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* Hide the Google Translate banner/toolbar */
+.goog-te-banner-frame { display: none !important; }
+body { top: 0 !important; }

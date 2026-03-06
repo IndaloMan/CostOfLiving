@@ -183,6 +183,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.6 — 6 March 2026
+- app/routes.py, app/static/css/style.css, app/templates/base.html, app/templates/index.html, app/templates/price_tracker.html
+
 ### v1.5 — 3 March 2026
 - app/static/js/analysis_mercadona.js, app/static/js/reports.js, app/templates/analysis_energy_nordic.html, app/templates/analysis_mercadona.html, app/templates/base.html, app/templates/reports.html, bump_version.py
 

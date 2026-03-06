@@ -955,6 +955,11 @@ def settings_type_categories(item_id):
 # Helpers
 # ---------------------------------------------------------------------------
 
+@main.route("/price-tracker")
+def price_tracker():
+    return render_template("price_tracker.html")
+
+
 def _float_or(lst, i, default):
     try:
         val = lst[i].strip() if i < len(lst) else ""
