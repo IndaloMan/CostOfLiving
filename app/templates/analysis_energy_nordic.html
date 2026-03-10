@@ -23,6 +23,12 @@
             <label>To</label>
             <input type="date" name="end" id="endDate" value="{{ end }}">
         </div>
+        <div class="preset-group">
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('month'); document.getElementById('filterForm').submit();">Month</button>
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('qtr'); document.getElementById('filterForm').submit();">Qtr</button>
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('ytd'); document.getElementById('filterForm').submit();">YTD</button>
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('prevyr'); document.getElementById('filterForm').submit();">Prev Yr</button>
+        </div>
         <button type="submit" class="btn">Apply</button>
     </form>
     <div id="dateError" class="alert alert-error" style="display:none; margin-top:0.75rem;">'From' date must be before 'To' date.</div>

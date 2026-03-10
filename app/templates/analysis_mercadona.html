@@ -18,6 +18,12 @@
             <label>To</label>
             <input type="date" id="endDate">
         </div>
+        <div class="preset-group">
+            <button class="btn btn-preset" onclick="setDatePreset('month')">Month</button>
+            <button class="btn btn-preset" onclick="setDatePreset('qtr')">Qtr</button>
+            <button class="btn btn-preset" onclick="setDatePreset('ytd')">YTD</button>
+            <button class="btn btn-preset" onclick="setDatePreset('prevyr')">Prev Yr</button>
+        </div>
         <button class="btn" onclick="loadAll()">Apply</button>
     </div>
     <div id="dateError" class="alert alert-error" style="display:none; margin-top:0.75rem;">'From' date must be before 'To' date.</div>

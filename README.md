@@ -186,6 +186,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.13 — 10 March 2026
+- **Date presets on filter pages** — Month, Qtr, YTD and Prev Yr buttons on Reports, Mercadona Analysis, Energy Nordic Analysis and Income Reports; clicking auto-applies the date range
+- **Clickable stat boxes on Expenditure dashboard** — Receipts Saved links to /receipts, Companies links to /companies
+
 ### v1.12 — 10 March 2026
 - app/__init__.py, app/models.py, app/reports_data.py, app/routes.py, app/statement_parsers/__init__.py, app/statement_parsers/sabadell_pdf.py, app/statement_parsers/wise_csv.py, app/static/js/analysis_mercadona.js, app/templates/accounts.html, app/templates/accounts_edit.html, app/templates/base.html, app/templates/import_preview.html, app/templates/import_statement.html, app/templates/income.html, app/templates/income_dashboard.html, app/templates/income_edit.html, app/templates/income_reports.html, app/templates/index.html, app/templates/review.html, app/templates/settings.html, app/templates/transaction_edit.html, app/templates/transactions.html
 

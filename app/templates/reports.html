@@ -15,6 +15,12 @@
             <label>To</label>
             <input type="date" id="endDate">
         </div>
+        <div class="preset-group">
+            <button class="btn btn-preset" onclick="setDatePreset('month')">Month</button>
+            <button class="btn btn-preset" onclick="setDatePreset('qtr')">Qtr</button>
+            <button class="btn btn-preset" onclick="setDatePreset('ytd')">YTD</button>
+            <button class="btn btn-preset" onclick="setDatePreset('prevyr')">Prev Yr</button>
+        </div>
         <div class="filter-group">
             <label>Company</label>
             <select id="companyFilter">

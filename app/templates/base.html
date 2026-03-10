@@ -50,6 +50,38 @@
         }
     });
 
+    // Date preset helper — called by preset buttons on filter pages
+    window.setDatePreset = function (preset) {
+        const startEl = document.getElementById('startDate');
+        const endEl   = document.getElementById('endDate');
+        if (!startEl || !endEl) return;
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        let startDate;
+        if (preset === 'month') {
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        } else if (preset === 'qtr') {
+            const qtrMonth = Math.floor(today.getMonth() / 3) * 3;
+            startDate = new Date(today.getFullYear(), qtrMonth, 1);
+        } else if (preset === 'ytd') {
+            startDate = new Date(today.getFullYear(), 0, 1);
+        } else { // prevyr
+            const prevYr = today.getFullYear() - 1;
+            startDate = new Date(prevYr, 0, 1);
+            endEl.value = prevYr + '-12-31';
+            startEl.value = startDate.toISOString().split('T')[0];
+            startEl.dispatchEvent(new Event('change'));
+            endEl.dispatchEvent(new Event('change'));
+            if (typeof loadAll === 'function') loadAll();
+            return;
+        }
+        startEl.value = startDate.toISOString().split('T')[0];
+        endEl.value   = todayStr;
+        startEl.dispatchEvent(new Event('change'));
+        endEl.dispatchEvent(new Event('change'));
+        if (typeof loadAll === 'function') loadAll();
+    };
+
     // Shared validation helper — called by JS-driven pages in their loadAll()
     window.validateDateRange = function () {
         const startEl = document.getElementById('startDate');

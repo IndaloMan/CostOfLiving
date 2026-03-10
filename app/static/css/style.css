@@ -114,6 +114,24 @@ h2 {
     background: #a93226;
 }
 
+.btn-preset {
+    background: white;
+    color: #2980b9;
+    border: 1px solid #2980b9;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.8rem;
+}
+
+.btn-preset:hover {
+    background: #eaf4fb;
+}
+
+.preset-group {
+    display: flex;
+    gap: 0.3rem;
+    align-items: flex-end;
+}
+
 /* Stats row */
 .stats-row {
     display: flex;
@@ -127,6 +145,18 @@ h2 {
     padding: 1rem 1.5rem;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     min-width: 120px;
+}
+
+a.stat-box-link {
+    display: block;
+    text-decoration: none;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+}
+
+a.stat-box-link:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
 }
 
 .stat-num   { font-size: 2rem; font-weight: 700; color: #2980b9; }
