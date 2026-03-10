@@ -43,6 +43,8 @@ class Receipt(db.Model):
     # Total amount on receipt
     total_amount = db.Column(db.Float, nullable=True)
     currency = db.Column(db.String(10), default="EUR")
+    # Account this receipt was paid from (optional)
+    account_id = db.Column(db.Integer, db.ForeignKey("accounts.id"), nullable=True)
     # Original file stored in Receipts/
     filename = db.Column(db.String(500))
     # Type: receipt, invoice, utility_bill
@@ -116,3 +118,56 @@ class ListItem(db.Model):
 
     def __repr__(self):
         return f"<ListItem {self.list_name}:{self.value}>"
+
+class Income(db.Model):
+    """A single income entry (pension, interest, etc.)."""
+    __tablename__ = 'income'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    date       = db.Column(db.Date, nullable=False)
+    source     = db.Column(db.String(200), nullable=False)
+    amount     = db.Column(db.Float, nullable=False)
+    category   = db.Column(db.String(100), nullable=True)
+    notes      = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Income {self.date} {self.source} {self.amount}>'
+
+
+class Account(db.Model):
+    """A bank account or credit card with an opening balance."""
+    __tablename__ = 'accounts'
+
+    id              = db.Column(db.Integer, primary_key=True)
+    name            = db.Column(db.String(200), nullable=False)
+    account_type    = db.Column(db.String(100), nullable=True)
+    opening_balance = db.Column(db.Float, nullable=False, default=0.0)
+    opening_date    = db.Column(db.Date, nullable=False)
+    notes           = db.Column(db.String(500), nullable=True)
+    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Account {self.name}>'
+
+class Transaction(db.Model):
+    """A single imported bank statement transaction."""
+    __tablename__ = 'transactions'
+
+    id             = db.Column(db.Integer, primary_key=True)
+    account_id     = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
+    date           = db.Column(db.Date, nullable=False)
+    description    = db.Column(db.String(500), nullable=False)
+    amount         = db.Column(db.Float, nullable=False)
+    direction      = db.Column(db.String(10), nullable=False, default='out')  # 'in' or 'out'
+    category       = db.Column(db.String(100), nullable=True)
+    notes          = db.Column(db.String(500), nullable=True)
+    transaction_id = db.Column(db.String(200), nullable=True, unique=True)
+    source         = db.Column(db.String(50), nullable=True)   # wise_csv, sabadell_pdf, manual
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+
+    account = db.relationship('Account', backref='transactions', foreign_keys=[account_id])
+
+    def __repr__(self):
+        return f'<Transaction {self.date} {self.description} {self.amount}>'
+

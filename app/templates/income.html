@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Income — Cost of Living Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+    <h1 style="margin-bottom:0;">Income</h1>
+</div>
+
+<div class="card" style="margin-bottom:2rem;">
+    <h2 style="margin-bottom:1rem;">Add Entry</h2>
+    <form method="POST" action="{{ url_for('main.income_add') }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label>Source</label>
+                <input type="text" name="source" placeholder="e.g. UK Pension" required>
+            </div>
+            <div class="form-group">
+                <label>Amount (€)</label>
+                <input type="number" name="amount" step="0.01" min="0" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select name="category">
+                    <option value="">— Select —</option>
+                    {% for cat in income_cats %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" name="notes" placeholder="Optional">
+            </div>
+        </div>
+        <div style="margin-top:1rem;">
+            <button type="submit" class="btn">+ Add Income</button>
+        </div>
+    </form>
+</div>
+
+{% if entries %}
+{% set ns = namespace(total=0) %}
+{% for e in entries %}{% set ns.total = ns.total + e.amount %}{% endfor %}
+<div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+        <h2 style="margin-bottom:0;">All Entries</h2>
+        <span style="font-size:0.9rem; color:#888;">Total: <strong style="color:#27ae60;">€{{ "%.2f"|format(ns.total) }}</strong></span>
+    </div>
+    <div class="table-wrap">
+        <table class="data-table" id="incomeTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortIncome(0)" style="cursor:pointer; white-space:nowrap;">Date <span class="sort-icon" id="isi0"></span></th>
+                    <th class="sortable" onclick="sortIncome(1)" style="cursor:pointer;">Source <span class="sort-icon" id="isi1"></span></th>
+                    <th class="sortable" onclick="sortIncome(2)" style="cursor:pointer; text-align:right;">Amount <span class="sort-icon" id="isi2"></span></th>
+                    <th class="sortable" onclick="sortIncome(3)" style="cursor:pointer;">Category <span class="sort-icon" id="isi3"></span></th>
+                    <th>Notes</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in entries %}
+                <tr>
+                    <td style="white-space:nowrap;">{{ e.date.isoformat() }}</td>
+                    <td>{{ e.source }}</td>
+                    <td style="text-align:right; font-weight:500; color:#27ae60;">€{{ "%.2f"|format(e.amount) }}</td>
+                    <td>{{ e.category or "" }}</td>
+                    <td style="color:#888; font-size:0.85rem;">{{ e.notes or "" }}</td>
+                    <td style="white-space:nowrap;">
+                        <a href="{{ url_for("main.income_edit", entry_id=e.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                        <form method="POST" action="{{ url_for("main.income_delete", entry_id=e.id) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete this income entry?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">No income entries yet. Add your first entry above.</div>
+{% endif %}
+
+<script>
+var _incomeSortDir = {};
+function sortIncome(col) {
+    var tbody = document.querySelector("#incomeTable tbody");
+    var rows = Array.from(tbody.querySelectorAll("tr"));
+    var dir = (_incomeSortDir[col] === "asc") ? "desc" : "asc";
+    _incomeSortDir = {};
+    _incomeSortDir[col] = dir;
+    rows.sort(function(a, b) {
+        var aVal = (a.cells[col].textContent || "").trim();
+        var bVal = (b.cells[col].textContent || "").trim();
+        if (col === 2) {
+            aVal = parseFloat(aVal.replace("€", "")) || 0;
+            bVal = parseFloat(bVal.replace("€", "")) || 0;
+            return dir === "asc" ? aVal - bVal : bVal - aVal;
+        }
+        aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase();
+        if (aVal < bVal) return dir === "asc" ? -1 : 1;
+        if (aVal > bVal) return dir === "asc" ? 1 : -1;
+        return 0;
+    });
+    rows.forEach(function(r) { tbody.appendChild(r); });
+    for (var i = 0; i < 4; i++) {
+        var el = document.getElementById("isi" + i);
+        if (el) el.textContent = (i === col) ? (dir === "asc" ? " ▲" : " ▼") : "";
+    }
+}
+</script>
+{% endblock %}

@@ -90,6 +90,16 @@
                    style="text-decoration:none; color:inherit;">{{ receipt.filename }} &#8599;</a>
             </div>
 
+            <div class="form-group">
+                <label>Paid By</label>
+                <select name="account_id">
+                    <option value="">— Unknown —</option>
+                    {% for a in accounts %}
+                    <option value="{{ a.id }}" {% if receipt.account_id == a.id %}selected{% endif %}>{{ a.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <!-- Odometer reading — shown only for Petrol companies -->
             {% set ns = namespace(odom_qty='') %}
             {% for item in receipt.line_items %}

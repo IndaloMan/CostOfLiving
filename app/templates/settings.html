@@ -72,7 +72,7 @@
 
     {% if categories %}
     <div class="table-wrap">
-        <table class="items-table">
+        <table class="items-table" id="catTable">
             <thead>
                 <tr>
                     <th class="sortable" onclick="sortCats(0)" style="cursor:pointer;">Category <span class="sort-icon" id="si0"></span></th>
@@ -114,32 +114,139 @@
     </form>
 </div>
 
+<!-- ================================================================
+     INCOME CATEGORIES
+     ================================================================ -->
+<div class="card" style="margin-top:2rem;">
+    <h2 style="margin-bottom:1rem;">Income Categories</h2>
+
+    {% if income_categories %}
+    <div class="table-wrap">
+        <table class="items-table" id="incomeCatTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortList('incomeCatTable',0,'ici0')" style="cursor:pointer;">Category <span class="sort-icon" id="ici0"></span></th>
+                    <th class="sortable" onclick="sortList('incomeCatTable',1,'ici1')" style="cursor:pointer; width:40%">Rename <span class="sort-icon" id="ici1"></span></th>
+                    <th style="width:80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in income_categories %}
+                <tr>
+                    <td style="font-weight:500;">{{ cat.value }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('main.settings_list_rename', item_id=cat.id) }}"
+                              style="display:flex; gap:0.5rem; align-items:center;">
+                            <input type="text" name="value" value="{{ cat.value }}" style="flex:1;">
+                            <button type="submit" class="btn btn-secondary btn-sm">Rename</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('main.settings_list_delete', item_id=cat.id) }}"
+                              onsubmit="return confirm('Delete income category \'{{ cat.value }}\'?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:#888;">No income categories yet.</p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('main.settings_list_add', list_name='income_categories') }}"
+          style="display:flex; gap:0.5rem; margin-top:1rem; align-items:center;">
+        <input type="text" name="value" placeholder="New income category" style="flex:1; max-width:260px;" required>
+        <button type="submit" class="btn btn-sm">+ Add</button>
+    </form>
+</div>
+
+
+<!-- ================================================================
+     ACCOUNT TYPES
+     ================================================================ -->
+<div class="card" style="margin-top:2rem; margin-bottom:2rem;">
+    <h2 style="margin-bottom:1rem;">Account Types</h2>
+
+    {% if account_types %}
+    <div class="table-wrap">
+        <table class="items-table" id="acctTypeTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortList('acctTypeTable',0,'ati0')" style="cursor:pointer;">Type <span class="sort-icon" id="ati0"></span></th>
+                    <th class="sortable" onclick="sortList('acctTypeTable',1,'ati1')" style="cursor:pointer; width:40%">Rename <span class="sort-icon" id="ati1"></span></th>
+                    <th style="width:80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for at in account_types %}
+                <tr>
+                    <td style="font-weight:500;">{{ at.value }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('main.settings_list_rename', item_id=at.id) }}"
+                              style="display:flex; gap:0.5rem; align-items:center;">
+                            <input type="text" name="value" value="{{ at.value }}" style="flex:1;">
+                            <button type="submit" class="btn btn-secondary btn-sm">Rename</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('main.settings_list_delete', item_id=at.id) }}"
+                              onsubmit="return confirm('Delete account type \'{{ at.value }}\'?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:#888;">No account types yet.</p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('main.settings_list_add', list_name='account_types') }}"
+          style="display:flex; gap:0.5rem; margin-top:1rem; align-items:center;">
+        <input type="text" name="value" placeholder="New account type" style="flex:1; max-width:260px;" required>
+        <button type="submit" class="btn btn-sm">+ Add</button>
+    </form>
+</div>
+
+
 <script>
-var _catSortDir = {};
-function sortCats(col) {
-    var tbody = document.querySelector('.items-table tbody');
-    var rows = Array.from(tbody.querySelectorAll('tr'));
-    var dir = (_catSortDir[col] === 'asc') ? 'desc' : 'asc';
-    _catSortDir = {};
-    _catSortDir[col] = dir;
+var _sortDirs = {};
+function sortList(tableId, col, iconId) {
+    var key = tableId + "_" + col;
+    var dir = (_sortDirs[key] === "asc") ? "desc" : "asc";
+    // reset icons for this table
+    Object.keys(_sortDirs).forEach(function(k) { if (k.startsWith(tableId)) delete _sortDirs[k]; });
+    _sortDirs[key] = dir;
+    var tbody = document.querySelector("#" + tableId + " tbody");
+    var rows = Array.from(tbody.querySelectorAll("tr"));
     rows.sort(function(a, b) {
         var aVal, bVal;
         if (col === 0) {
-            aVal = (a.cells[0].textContent || '').trim().toLowerCase();
-            bVal = (b.cells[0].textContent || '').trim().toLowerCase();
+            aVal = (a.cells[0].textContent || "").trim().toLowerCase();
+            bVal = (b.cells[0].textContent || "").trim().toLowerCase();
         } else {
-            var aInp = a.cells[1].querySelector('input[name="value"]');
-            var bInp = b.cells[1].querySelector('input[name="value"]');
-            aVal = aInp ? aInp.value.trim().toLowerCase() : '';
-            bVal = bInp ? bInp.value.trim().toLowerCase() : '';
+            var aInp = a.cells[1].querySelector("input[name=\"value\"]");
+            var bInp = b.cells[1].querySelector("input[name=\"value\"]");
+            aVal = aInp ? aInp.value.trim().toLowerCase() : "";
+            bVal = bInp ? bInp.value.trim().toLowerCase() : "";
         }
-        if (aVal < bVal) return dir === 'asc' ? -1 : 1;
-        if (aVal > bVal) return dir === 'asc' ? 1 : -1;
+        if (aVal < bVal) return dir === "asc" ? -1 : 1;
+        if (aVal > bVal) return dir === "asc" ? 1 : -1;
         return 0;
     });
     rows.forEach(function(r) { tbody.appendChild(r); });
-    document.getElementById('si0').textContent = col === 0 ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
-    document.getElementById('si1').textContent = col === 1 ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+    // update icon
+    var icon = document.getElementById(iconId);
+    if (icon) icon.textContent = dir === "asc" ? " ▲" : " ▼";
+}
+// Legacy aliases for categories table
+function sortCats(col) {
+    sortList("catTable", col, col === 0 ? "si0" : "si1");
 }
 </script>
 {% endblock %}

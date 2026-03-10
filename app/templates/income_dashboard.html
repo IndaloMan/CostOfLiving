@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Income — Cost of Living Tracker{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <h1>Income</h1>
+    <div class="stats-row">
+        <div class="stat-box">
+            <div class="stat-num">{{ total_entries }}</div>
+            <div class="stat-label">Income Entries</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-num">{{ total_accounts }}</div>
+            <div class="stat-label">Accounts</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-num" style="color:{{ '#27ae60' if net_worth >= 0 else '#c0392b' }};">&#8364;{{ "%.2f"|format(net_worth) }}</div>
+            <div class="stat-label">Net Worth</div>
+        </div>
+    </div>
+    <div class="cards">
+        <div class="card">
+            <h2>Income Entries</h2>
+            <p>Add and manage income entries such as pension payments and interest.</p>
+            <a href="/income" class="btn">View Income</a>
+        </div>
+        <div class="card">
+            <h2>Accounts</h2>
+            <p>Manage bank accounts, savings and credit cards with opening balances.</p>
+            <a href="/accounts" class="btn">View Accounts</a>
+        </div>
+        <div class="card">
+            <h2>Income Report</h2>
+            <p>Compare income vs expenses over time and track your net balance.</p>
+            <a href="/income-reports" class="btn">View Report</a>
+        </div>
+        <div class="card">
+            <h2>Import Statement</h2>
+            <p>Import a Wise CSV or Banco Sabadell PDF to bulk-add transactions.</p>
+            <a href="/import" class="btn">Import</a>
+        </div>
+        <div class="card">
+            <h2>Transactions</h2>
+            <p>View and manage all imported bank statement transactions.</p>
+            <a href="/transactions" class="btn">View Transactions</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

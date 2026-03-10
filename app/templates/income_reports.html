@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Income Report — Cost of Living Tracker{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:1.5rem;">Income Report</h1>
+
+<!-- Filters -->
+<div class="card filters-bar" style="margin-bottom:1.5rem;">
+    <div class="filters-inner">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" id="endDate">
+        </div>
+        <button class="btn" onclick="loadAll()">Apply</button>
+        <span id="dateError" style="color:#c0392b; font-size:0.85rem; display:none;">From date must be before To date.</span>
+    </div>
+</div>
+
+<!-- Summary stats -->
+<div class="stats-row" id="summaryStats" style="margin-bottom:1.5rem; display:none;">
+    <div class="stat-box">
+        <div class="stat-num" style="color:#27ae60;" id="statIncome">€0.00</div>
+        <div class="stat-label">Total Income</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" style="color:#c0392b;" id="statExpenses">€0.00</div>
+        <div class="stat-label">Total Expenses</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statNet">€0.00</div>
+        <div class="stat-label">Net Balance</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statAssets" style="color:#2980b9;">€0.00</div>
+        <div class="stat-label">Opening Assets</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statLiabilities" style="color:#c0392b;">€0.00</div>
+        <div class="stat-label">Opening Liabilities</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statNetWorth" style="color:#2980b9;">€0.00</div>
+        <div class="stat-label">Net Worth</div>
+    </div>
+</div>
+
+<!-- Income vs Expenses chart -->
+<div class="card chart-card" style="margin-bottom:1.5rem;">
+    <h2 style="margin-bottom:1rem;">Income vs Expenses by Month</h2>
+    <div class="chart-container tall" id="chartIncomeVsExpenses">
+        <canvas id="canvasIncomeVsExpenses"></canvas>
+    </div>
+    <div class="chart-empty" id="emptyIncomeVsExpenses" style="display:none;">No data for this period.</div>
+</div>
+
+<!-- Net balance chart -->
+<div class="card chart-card">
+    <h2 style="margin-bottom:1rem;">Net Balance by Month</h2>
+    <div class="chart-container" id="chartNet">
+        <canvas id="canvasNet"></canvas>
+    </div>
+    <div class="chart-empty" id="emptyNet" style="display:none;">No data for this period.</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var _chartIvE = null;
+var _chartNet = null;
+var LS_KEY_START = "income_report_start";
+var LS_KEY_END   = "income_report_end";
+
+function fmt(v) { return "€" + v.toFixed(2); }
+
+document.addEventListener("DOMContentLoaded", function() {
+    var today = new Date();
+    var defEnd = today.toISOString().split("T")[0];
+    var defStart = new Date(today); defStart.setFullYear(defStart.getFullYear() - 1);
+    var defStartStr = defStart.toISOString().split("T")[0];
+
+    document.getElementById("startDate").value = localStorage.getItem(LS_KEY_START) || defStartStr;
+    document.getElementById("endDate").value   = localStorage.getItem(LS_KEY_END)   || defEnd;
+
+    document.getElementById("startDate").addEventListener("change", function() { localStorage.setItem(LS_KEY_START, this.value); });
+    document.getElementById("endDate").addEventListener("change",   function() { localStorage.setItem(LS_KEY_END,   this.value); });
+
+    loadAll();
+});
+
+function loadAll() {
+    if (!window.validateDateRange()) return;
+    var start = document.getElementById("startDate").value;
+    var end   = document.getElementById("endDate").value;
+    fetch("/api/income-report?start=" + start + "&end=" + end)
+        .then(function(r) { return r.json(); })
+        .then(function(data) { renderAll(data); });
+}
+
+function renderAll(data) {
+    var s = data.summary;
+    var a = data.accounts;
+
+    document.getElementById("summaryStats").style.display = "";
+    document.getElementById("statIncome").textContent    = fmt(s.total_income);
+    document.getElementById("statExpenses").textContent  = fmt(s.total_expenses);
+    var netEl = document.getElementById("statNet");
+    netEl.textContent = fmt(s.net);
+    netEl.style.color = s.net >= 0 ? "#27ae60" : "#c0392b";
+    document.getElementById("statAssets").textContent      = fmt(a.total_assets);
+    document.getElementById("statLiabilities").textContent = fmt(a.total_liabilities);
+    var nwEl = document.getElementById("statNetWorth");
+    nwEl.textContent = fmt(a.net_worth);
+    nwEl.style.color = a.net_worth >= 0 ? "#2980b9" : "#c0392b";
+
+    // Income vs Expenses chart
+    var hasData = data.labels && data.labels.length > 0;
+    document.getElementById("emptyIncomeVsExpenses").style.display = hasData ? "none" : "";
+    document.getElementById("canvasIncomeVsExpenses").style.display = hasData ? "" : "none";
+    if (hasData) {
+        if (_chartIvE) _chartIvE.destroy();
+        _chartIvE = new Chart(document.getElementById("canvasIncomeVsExpenses"), {
+            type: "bar",
+            data: {
+                labels: data.labels,
+                datasets: [
+                    { label: "Income", data: data.income,   backgroundColor: "rgba(39,174,96,0.7)",  borderColor: "#27ae60", borderWidth: 1 },
+                    { label: "Expenses", data: data.expenses, backgroundColor: "rgba(192,57,43,0.7)", borderColor: "#c0392b", borderWidth: 1 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { tooltip: { callbacks: { label: function(ctx) { return " " + ctx.dataset.label + ": " + fmt(ctx.parsed.y); } } } },
+                scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return fmt(v); } } } }
+            }
+        });
+    }
+
+    // Net balance chart
+    document.getElementById("emptyNet").style.display = hasData ? "none" : "";
+    document.getElementById("canvasNet").style.display = hasData ? "" : "none";
+    if (hasData) {
+        if (_chartNet) _chartNet.destroy();
+        var netColors = data.net.map(function(v) { return v >= 0 ? "rgba(39,174,96,0.7)" : "rgba(192,57,43,0.7)"; });
+        var netBorders = data.net.map(function(v) { return v >= 0 ? "#27ae60" : "#c0392b"; });
+        _chartNet = new Chart(document.getElementById("canvasNet"), {
+            type: "bar",
+            data: {
+                labels: data.labels,
+                datasets: [{ label: "Net", data: data.net, backgroundColor: netColors, borderColor: netBorders, borderWidth: 1 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { tooltip: { callbacks: { label: function(ctx) { return " Net: " + fmt(ctx.parsed.y); } } } },
+                scales: { y: { ticks: { callback: function(v) { return fmt(v); } } } }
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

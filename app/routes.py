@@ -13,7 +13,7 @@ from .template_manager import (
     get_template_items, apply_template_hints,
     update_template, set_template_items
 )
-from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate
+from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate, Income, Account, Transaction
 from .company_analysers import get_analyser_key, canonical_name, get_analysis_endpoint
 from .reports_data import (
     parse_date, default_start,
@@ -22,6 +22,7 @@ from .reports_data import (
     get_price_trend, get_item_suggestions,
     get_spend_per_visit, get_top_items,
     get_item_analysis,
+    get_income_report,
 )
 
 main = Blueprint("main", __name__)
@@ -229,6 +230,7 @@ def review(receipt_id):
         companies_data=companies_data,
         company_types=_get_company_types(),
         type_categories=_get_type_categories(),
+        accounts=Account.query.order_by(Account.name).all(),
     )
 
 
@@ -259,6 +261,7 @@ def confirm(receipt_id):
     # Update receipt header fields
     receipt.document_type = request.form.get("document_type", "receipt")
     receipt.currency = request.form.get("currency", "EUR")
+    receipt.account_id = request.form.get("account_id", type=int) or None
     receipt.status = "confirmed"
 
     raw_date = request.form.get("receipt_date", "").strip()
@@ -471,6 +474,7 @@ def edit_receipt(receipt_id):
         type_categories=_get_type_categories(),
         editing=True,
         from_grouped=bool(request.args.get("grouped")),
+        accounts=Account.query.order_by(Account.name).all(),
     )
 
 
@@ -834,13 +838,31 @@ def settings():
         .order_by(ListItem.sort_order, ListItem.value)
         .all()
     )
-    return render_template("settings.html", company_types=company_types, categories=categories,
-                           app_version=config.APP_VERSION)
+    income_categories = (
+        ListItem.query
+        .filter_by(list_name="income_categories")
+        .order_by(ListItem.sort_order, ListItem.value)
+        .all()
+    )
+    account_types = (
+        ListItem.query
+        .filter_by(list_name="account_types")
+        .order_by(ListItem.sort_order, ListItem.value)
+        .all()
+    )
+    return render_template(
+        "settings.html",
+        company_types=company_types,
+        categories=categories,
+        income_categories=income_categories,
+        account_types=account_types,
+        app_version=config.APP_VERSION,
+    )
 
 
 @main.route("/settings/lists/<list_name>/add", methods=["POST"])
 def settings_list_add(list_name):
-    if list_name not in ("company_types", "categories"):
+    if list_name not in ("company_types", "categories", "income_categories", "account_types"):
         flash("Unknown list.", "error")
         return redirect(url_for("main.settings"))
 
@@ -892,6 +914,12 @@ def settings_list_delete(item_id):
         # Clear type from companies
         Company.query.filter_by(type=value).update({"type": None})
 
+    elif list_name == "income_categories":
+        Income.query.filter_by(category=value).update({"category": None})
+
+    elif list_name == "account_types":
+        Account.query.filter_by(account_type=value).update({"account_type": None})
+
     db.session.delete(item)
     db.session.commit()
     flash(f"Deleted '{value}' from {list_name.replace('_', ' ')}.", "success")
@@ -941,6 +969,12 @@ def settings_list_rename(item_id):
         # Cascade: companies
         Company.query.filter_by(type=old_value).update({"type": new_value})
 
+    elif item.list_name == "income_categories":
+        Income.query.filter_by(category=old_value).update({"category": new_value})
+
+    elif item.list_name == "account_types":
+        Account.query.filter_by(account_type=old_value).update({"account_type": new_value})
+
     item.value = new_value
     db.session.commit()
     flash(f"Renamed '{old_value}' to '{new_value}'.", "success")
@@ -976,3 +1010,385 @@ def _float_or(lst, i, default):
         return float(val) if val else default
     except (ValueError, AttributeError):
         return default
+
+# ---------------------------------------------------------------------------
+# Income helpers
+# ---------------------------------------------------------------------------
+
+def _get_income_categories():
+    return [
+        item.value for item in
+        ListItem.query.filter_by(list_name="income_categories").order_by(ListItem.sort_order, ListItem.value).all()
+    ]
+
+
+def _get_account_types():
+    return [
+        item.value for item in
+        ListItem.query.filter_by(list_name="account_types").order_by(ListItem.sort_order, ListItem.value).all()
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Income — manage entries
+# ---------------------------------------------------------------------------
+
+@main.route("/income")
+def income():
+    entries = Income.query.order_by(Income.date.desc()).all()
+    income_cats = _get_income_categories()
+    return render_template("income.html", entries=entries, income_cats=income_cats)
+
+
+@main.route("/income/add", methods=["POST"])
+def income_add():
+    try:
+        entry = Income(
+            date=date.fromisoformat(request.form["date"]),
+            source=request.form["source"].strip(),
+            amount=float(request.form["amount"]),
+            category=request.form.get("category", "").strip() or None,
+            notes=request.form.get("notes", "").strip() or None,
+        )
+        db.session.add(entry)
+        db.session.commit()
+        flash("Income entry added.", "success")
+    except (ValueError, KeyError) as e:
+        flash(f"Error adding entry: {e}", "error")
+    return redirect(url_for("main.income"))
+
+
+@main.route("/income/<int:entry_id>/edit", methods=["GET", "POST"])
+def income_edit(entry_id):
+    entry = Income.query.get_or_404(entry_id)
+    income_cats = _get_income_categories()
+    if request.method == "POST":
+        try:
+            entry.date     = date.fromisoformat(request.form["date"])
+            entry.source   = request.form["source"].strip()
+            entry.amount   = float(request.form["amount"])
+            entry.category = request.form.get("category", "").strip() or None
+            entry.notes    = request.form.get("notes", "").strip() or None
+            db.session.commit()
+            flash("Income entry updated.", "success")
+        except (ValueError, KeyError) as e:
+            flash(f"Error updating entry: {e}", "error")
+        return redirect(url_for("main.income"))
+    return render_template("income_edit.html", entry=entry, income_cats=income_cats)
+
+
+@main.route("/income/<int:entry_id>/delete", methods=["POST"])
+def income_delete(entry_id):
+    entry = Income.query.get_or_404(entry_id)
+    db.session.delete(entry)
+    db.session.commit()
+    flash("Income entry deleted.", "success")
+    return redirect(url_for("main.income"))
+
+
+# ---------------------------------------------------------------------------
+# Accounts — manage opening balances
+# ---------------------------------------------------------------------------
+
+@main.route("/accounts")
+def accounts():
+    accts = Account.query.order_by(Account.name).all()
+    account_types = _get_account_types()
+    total_assets      = round(sum(a.opening_balance for a in accts if a.opening_balance > 0), 2)
+    total_liabilities = round(sum(a.opening_balance for a in accts if a.opening_balance < 0), 2)
+    net_worth         = round(sum(a.opening_balance for a in accts), 2)
+    return render_template(
+        "accounts.html",
+        accounts=accts,
+        account_types=account_types,
+        total_assets=total_assets,
+        total_liabilities=total_liabilities,
+        net_worth=net_worth,
+    )
+
+
+@main.route("/accounts/add", methods=["POST"])
+def accounts_add():
+    try:
+        acct = Account(
+            name=request.form["name"].strip(),
+            account_type=request.form.get("account_type", "").strip() or None,
+            opening_balance=float(request.form["opening_balance"]),
+            opening_date=date.fromisoformat(request.form["opening_date"]),
+            notes=request.form.get("notes", "").strip() or None,
+        )
+        db.session.add(acct)
+        db.session.commit()
+        flash("Account added.", "success")
+    except (ValueError, KeyError) as e:
+        flash(f"Error adding account: {e}", "error")
+    return redirect(url_for("main.accounts"))
+
+
+@main.route("/accounts/<int:account_id>/edit", methods=["GET", "POST"])
+def accounts_edit(account_id):
+    acct = Account.query.get_or_404(account_id)
+    account_types = _get_account_types()
+    if request.method == "POST":
+        try:
+            acct.name            = request.form["name"].strip()
+            acct.account_type    = request.form.get("account_type", "").strip() or None
+            acct.opening_balance = float(request.form["opening_balance"])
+            acct.opening_date    = date.fromisoformat(request.form["opening_date"])
+            acct.notes           = request.form.get("notes", "").strip() or None
+            db.session.commit()
+            flash("Account updated.", "success")
+        except (ValueError, KeyError) as e:
+            flash(f"Error updating account: {e}", "error")
+        return redirect(url_for("main.accounts"))
+    return render_template("accounts_edit.html", account=acct, account_types=account_types)
+
+
+@main.route("/accounts/<int:account_id>/delete", methods=["POST"])
+def accounts_delete(account_id):
+    acct = Account.query.get_or_404(account_id)
+    db.session.delete(acct)
+    db.session.commit()
+    flash("Account deleted.", "success")
+    return redirect(url_for("main.accounts"))
+
+
+# ---------------------------------------------------------------------------
+# Income Report
+# ---------------------------------------------------------------------------
+
+@main.route("/income-reports")
+def income_reports():
+    return render_template("income_reports.html")
+
+
+@main.route("/api/income-report")
+def api_income_report():
+    start = parse_date(request.args.get("start"), default_start())
+    end   = parse_date(request.args.get("end"),   date.today())
+    return jsonify(get_income_report(start, end))
+
+# ---------------------------------------------------------------------------
+# Income Dashboard
+# ---------------------------------------------------------------------------
+
+@main.route("/income-dashboard")
+def income_dashboard():
+    from .models import Income, Account
+    total_entries = Income.query.count()
+    total_accounts = Account.query.count()
+    accounts = Account.query.order_by(Account.name).all()
+    net_worth = round(sum(a.opening_balance for a in accounts), 2)
+    return render_template(
+        "income_dashboard.html",
+        total_entries=total_entries,
+        total_accounts=total_accounts,
+        net_worth=net_worth,
+    )
+
+# ---------------------------------------------------------------------------
+# Statement import helper
+# ---------------------------------------------------------------------------
+
+def _find_matching_receipt(description, txn_date, amount):
+    """Return a confirmed receipt that likely matches this transaction, or None."""
+    from datetime import timedelta
+    words = [w for w in description.split() if len(w) >= 4]
+    if not words:
+        return None
+    for word in words[:2]:
+        matches = Company.query.filter(
+            db.func.lower(Company.name).contains(word.lower())
+        ).all()
+        for company in matches:
+            for r in Receipt.query.filter(
+                Receipt.company_id == company.id,
+                Receipt.status == "confirmed",
+                Receipt.receipt_date >= txn_date - timedelta(days=2),
+                Receipt.receipt_date <= txn_date + timedelta(days=2),
+            ).all():
+                if r.total_amount and abs(r.total_amount - amount) / max(amount, 0.01) <= 0.05:
+                    return r
+    return None
+
+
+# ---------------------------------------------------------------------------
+# Statement import — upload → preview → confirm
+# ---------------------------------------------------------------------------
+
+@main.route("/import")
+def import_statement():
+    accounts = Account.query.order_by(Account.name).all()
+    categories = _get_categories()
+    return render_template("import_statement.html", accounts=accounts, categories=categories)
+
+
+@main.route("/import/preview", methods=["POST"])
+def import_preview():
+    f = request.files.get("file")
+    if not f or not f.filename:
+        flash("No file selected.", "error")
+        return redirect(url_for("main.import_statement"))
+
+    account_id = request.form.get("account_id", type=int)
+    accounts   = Account.query.order_by(Account.name).all()
+    categories = _get_categories()
+
+    filename   = f.filename.lower()
+    file_bytes = f.read()
+
+    try:
+        if filename.endswith(".csv"):
+            from .statement_parsers import wise_csv
+            rows = wise_csv.parse(file_bytes)
+            source_label = "Wise CSV"
+        elif filename.endswith(".pdf"):
+            from .statement_parsers import sabadell_pdf
+            rows = sabadell_pdf.parse(file_bytes)
+            source_label = "Banco Sabadell PDF"
+        else:
+            flash("Unsupported file type. Upload a .csv or .pdf statement.", "error")
+            return redirect(url_for("main.import_statement"))
+    except Exception as e:
+        flash(f"Error parsing file: {e}", "error")
+        return redirect(url_for("main.import_statement"))
+
+    if not rows:
+        flash("No transactions found in file.", "error")
+        return redirect(url_for("main.import_statement"))
+
+    for row in rows:
+        row["suggested_skip"] = False
+        row["skip_reason"]    = ""
+        # Already imported?
+        if row.get("transaction_id"):
+            if Transaction.query.filter_by(transaction_id=row["transaction_id"]).first():
+                row["suggested_skip"] = True
+                row["skip_reason"]    = "Already imported"
+                continue
+        # Auto-detect matching scanned receipt (OUT only)
+        if row["direction"] == "out":
+            match = _find_matching_receipt(
+                row["description"], date.fromisoformat(row["date"]), row["amount"]
+            )
+            if match:
+                company_name = match.company.name if match.company else "?"
+                row["suggested_skip"] = True
+                row["skip_reason"] = (
+                    f"Matches receipt #{match.id} "
+                    f"({company_name}, {match.receipt_date}, €{match.total_amount:.2f})"
+                )
+
+    return render_template(
+        "import_preview.html",
+        rows=rows,
+        row_count=len(rows),
+        account_id=account_id,
+        accounts=accounts,
+        categories=categories,
+        source_label=source_label,
+    )
+
+
+@main.route("/import/confirm", methods=["POST"])
+def import_confirm():
+    account_id = request.form.get("account_id", type=int)
+    row_count  = request.form.get("row_count", type=int, default=0)
+
+    imported       = 0
+    income_added   = 0
+    skipped_dupe   = 0
+
+    for i in range(row_count):
+        if not request.form.get(f"include_{i}"):
+            continue
+
+        direction      = request.form.get(f"direction_{i}", "out")
+        date_str       = request.form.get(f"date_{i}", "")
+        description    = request.form.get(f"description_{i}", "").strip()
+        amount_str     = request.form.get(f"amount_{i}", "0")
+        category       = request.form.get(f"category_{i}", "").strip() or None
+        notes          = request.form.get(f"notes_{i}", "").strip() or None
+        transaction_id = request.form.get(f"transaction_id_{i}", "").strip() or None
+        source         = request.form.get(f"source_{i}", "")
+
+        if not date_str:
+            continue
+        try:
+            txn_date = date.fromisoformat(date_str)
+            amount   = float(amount_str)
+        except (ValueError, TypeError):
+            continue
+        if amount == 0:
+            continue
+
+        # Duplicate check
+        if transaction_id and Transaction.query.filter_by(transaction_id=transaction_id).first():
+            skipped_dupe += 1
+            continue
+
+        if direction == "in":
+            db.session.add(Income(
+                date=txn_date, source=description, amount=amount,
+                category="Other", notes=notes,
+            ))
+            income_added += 1
+        else:
+            db.session.add(Transaction(
+                account_id=account_id, date=txn_date, description=description,
+                amount=amount, direction=direction, category=category,
+                notes=notes, transaction_id=transaction_id, source=source,
+            ))
+            imported += 1
+
+    db.session.commit()
+
+    parts = []
+    if imported:     parts.append(f"{imported} transaction(s)")
+    if income_added: parts.append(f"{income_added} income entry(ies)")
+    if skipped_dupe: parts.append(f"{skipped_dupe} duplicate(s) skipped")
+    flash("Imported: " + (", ".join(parts) or "nothing") + ".", "success")
+    return redirect(url_for("main.transactions"))
+
+
+# ---------------------------------------------------------------------------
+# Transactions — list, edit, delete
+# ---------------------------------------------------------------------------
+
+@main.route("/transactions")
+def transactions():
+    txns     = Transaction.query.order_by(Transaction.date.desc()).all()
+    accounts = Account.query.order_by(Account.name).all()
+    account_map = {a.id: a.name for a in accounts}
+    return render_template("transactions.html", transactions=txns, account_map=account_map)
+
+
+@main.route("/transactions/<int:txn_id>/edit", methods=["GET", "POST"])
+def transaction_edit(txn_id):
+    txn        = Transaction.query.get_or_404(txn_id)
+    categories = _get_categories()
+    accounts   = Account.query.order_by(Account.name).all()
+    if request.method == "POST":
+        try:
+            txn.date        = date.fromisoformat(request.form["date"])
+            txn.description = request.form["description"].strip()
+            txn.amount      = float(request.form["amount"])
+            txn.category    = request.form.get("category", "").strip() or None
+            txn.notes       = request.form.get("notes", "").strip() or None
+            txn.account_id  = request.form.get("account_id", type=int) or None
+            db.session.commit()
+            flash("Transaction updated.", "success")
+        except (ValueError, KeyError) as e:
+            flash(f"Error: {e}", "error")
+        return redirect(url_for("main.transactions"))
+    return render_template("transaction_edit.html", txn=txn, categories=categories, accounts=accounts)
+
+
+@main.route("/transactions/<int:txn_id>/delete", methods=["POST"])
+def transaction_delete(txn_id):
+    txn = Transaction.query.get_or_404(txn_id)
+    db.session.delete(txn)
+    db.session.commit()
+    flash("Transaction deleted.", "success")
+    return redirect(url_for("main.transactions"))
+

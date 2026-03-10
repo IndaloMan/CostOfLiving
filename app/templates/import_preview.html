@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Import Preview — Cost of Living Tracker{% endblock %}
+{% block content %}
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+    <a href="{{ url_for('main.import_statement') }}" style="color:#888; text-decoration:none;">&larr; Back</a>
+    <h1 style="margin:0;">Import Preview — {{ source_label }}</h1>
+</div>
+
+{% set out_rows = rows | selectattr('direction','eq','out') | list %}
+{% set in_rows  = rows | selectattr('direction','eq','in')  | list %}
+{% set skip_rows = rows | selectattr('suggested_skip') | list %}
+
+<div class="stats-row" style="margin-bottom:1.5rem;">
+    <div class="stat-box">
+        <div class="stat-num">{{ rows | length }}</div>
+        <div class="stat-label">Transactions Found</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" style="color:#c0392b;">{{ out_rows | length }}</div>
+        <div class="stat-label">Expenses (OUT)</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" style="color:#27ae60;">{{ in_rows | length }}</div>
+        <div class="stat-label">Income / Refunds (IN)</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" style="color:#e67e22;">{{ skip_rows | length }}</div>
+        <div class="stat-label">Pre-unchecked</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:1rem; padding:0.75rem 1.5rem; background:#d6eaf8; border-left:4px solid #2980b9;">
+    <p style="margin:0; font-size:0.9rem; color:#1a5276;">
+        <strong>Review before importing.</strong>
+        Rows pre-unchecked (orange) already exist or match a scanned receipt — check the reason and include only if needed.
+        IN rows (green) will be saved as <strong>Income entries</strong>.
+    </p>
+</div>
+
+<form method="POST" action="{{ url_for('main.import_confirm') }}">
+    <input type="hidden" name="account_id" value="{{ account_id or '' }}">
+    <input type="hidden" name="row_count" value="{{ row_count }}">
+
+    <div class="card" style="padding:0;">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">Inc.</th>
+                        <th style="white-space:nowrap;">Date</th>
+                        <th>Description</th>
+                        <th style="text-align:right; white-space:nowrap;">Amount</th>
+                        <th style="width:60px;">Dir.</th>
+                        <th style="width:140px;">Category</th>
+                        <th>Notes</th>
+                        <th>Match / Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}{% set i = loop.index0 %}
+                <tr style="opacity:{{ '0.55' if row.suggested_skip else '1' }}; background:{{ '#fff8f0' if row.suggested_skip else '' }};">
+                    <td style="text-align:center;">
+                        <input type="checkbox" name="include_{{ i }}" value="1"
+                               {% if not row.suggested_skip %}checked{% endif %}>
+                    </td>
+                    <td style="white-space:nowrap; font-size:0.85rem;">{{ row.date }}</td>
+                    <td style="font-weight:500;">{{ row.description }}</td>
+                    <td style="text-align:right; white-space:nowrap;
+                               color:{{ '#27ae60' if row.direction == 'in' else '#333' }};">
+                        {% if row.direction == 'in' %}+{% endif %}€{{ "%.2f"|format(row.amount) }}
+                    </td>
+                    <td>
+                        <span style="font-size:0.75rem; padding:2px 6px; border-radius:10px;
+                                     background:{{ '#d5f5e3' if row.direction == 'in' else '#f2f2f2' }};
+                                     color:{{ '#1e8449' if row.direction == 'in' else '#666' }};">
+                            {{ row.direction.upper() }}
+                        </span>
+                    </td>
+                    <td>
+                        <select name="category_{{ i }}" style="width:100%; font-size:0.8rem; padding:2px 4px;">
+                            <option value="">— none —</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if cat == row.category %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="notes_{{ i }}" value="{{ row.notes or '' }}"
+                               style="width:100%; font-size:0.8rem; padding:2px 4px; border:1px solid #ddd; border-radius:3px;">
+                    </td>
+                    <td style="font-size:0.78rem; color:#e67e22;">{{ row.skip_reason }}</td>
+
+                    {# Hidden fields #}
+                    <input type="hidden" name="date_{{ i }}"           value="{{ row.date }}">
+                    <input type="hidden" name="description_{{ i }}"    value="{{ row.description }}">
+                    <input type="hidden" name="amount_{{ i }}"         value="{{ row.amount }}">
+                    <input type="hidden" name="direction_{{ i }}"      value="{{ row.direction }}">
+                    <input type="hidden" name="transaction_id_{{ i }}" value="{{ row.transaction_id or '' }}">
+                    <input type="hidden" name="source_{{ i }}"         value="{{ row.source }}">
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="margin-top:1.5rem; display:flex; gap:1rem; align-items:center;">
+        <button type="submit" class="btn">&#10003; Confirm Import</button>
+        <a href="{{ url_for('main.import_statement') }}" class="btn btn-secondary">&larr; Cancel</a>
+        <label style="font-size:0.85rem; color:#666; cursor:pointer;">
+            <input type="checkbox" id="toggleAll"> Select / deselect all
+        </label>
+    </div>
+</form>
+
+<script>
+document.getElementById("toggleAll").addEventListener("change", function() {
+    document.querySelectorAll("input[type=checkbox][name^=include_]").forEach(function(cb) {
+        cb.checked = document.getElementById("toggleAll").checked;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Accounts — Cost of Living Tracker{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:1.5rem;">Accounts &amp; Opening Balances</h1>
+
+<div class="stats-row" style="margin-bottom:2rem;">
+    <div class="stat-box">
+        <div class="stat-num" style="color:#27ae60;">€{{ "%.2f"|format(total_assets) }}</div>
+        <div class="stat-label">Total Assets</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" style="color:#c0392b;">€{{ "%.2f"|format(total_liabilities) }}</div>
+        <div class="stat-label">Total Liabilities</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" style="color:{{ "#27ae60" if net_worth >= 0 else "#c0392b" }};">€{{ "%.2f"|format(net_worth) }}</div>
+        <div class="stat-label">Net Worth</div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:2rem;">
+    <h2 style="margin-bottom:1rem;">Add Account</h2>
+    <form method="POST" action="{{ url_for("main.accounts_add") }}">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Account Name</label>
+                <input type="text" name="name" placeholder="e.g. Santander Current" required>
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select name="account_type">
+                    <option value="">— Select —</option>
+                    {% for t in account_types %}
+                    <option value="{{ t }}">{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Opening Balance (€)</label>
+                <input type="number" name="opening_balance" step="0.01" required placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Opening Date</label>
+                <input type="date" name="opening_date" required>
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" name="notes" placeholder="Optional">
+            </div>
+        </div>
+        <div style="margin-top:1rem;">
+            <button type="submit" class="btn">+ Add Account</button>
+        </div>
+    </form>
+</div>
+
+{% if accounts %}
+<div class="card">
+    <h2 style="margin-bottom:1rem;">All Accounts</h2>
+    <div class="table-wrap">
+        <table class="data-table" id="accountsTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortAccts(0)" style="cursor:pointer;">Name <span class="sort-icon" id="asi0"></span></th>
+                    <th class="sortable" onclick="sortAccts(1)" style="cursor:pointer;">Type <span class="sort-icon" id="asi1"></span></th>
+                    <th class="sortable" onclick="sortAccts(2)" style="cursor:pointer; text-align:right; white-space:nowrap;">Opening Balance <span class="sort-icon" id="asi2"></span></th>
+                    <th class="sortable" onclick="sortAccts(3)" style="cursor:pointer; white-space:nowrap;">Opening Date <span class="sort-icon" id="asi3"></span></th>
+                    <th>Notes</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in accounts %}
+                <tr>
+                    <td style="font-weight:500;">{{ a.name }}</td>
+                    <td>{{ a.account_type or "" }}</td>
+                    <td style="text-align:right; font-weight:500; color:{{ "#27ae60" if a.opening_balance >= 0 else "#c0392b" }};">€{{ "%.2f"|format(a.opening_balance) }}</td>
+                    <td style="white-space:nowrap;">{{ a.opening_date.isoformat() }}</td>
+                    <td style="color:#888; font-size:0.85rem;">{{ a.notes or "" }}</td>
+                    <td style="white-space:nowrap;">
+                        <a href="{{ url_for("main.accounts_edit", account_id=a.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                        <form method="POST" action="{{ url_for("main.accounts_delete", account_id=a.id) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete account {{ a.name }}?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">No accounts yet. Add your first account above.</div>
+{% endif %}
+
+<script>
+var _acctSortDir = {};
+function sortAccts(col) {
+    var tbody = document.querySelector("#accountsTable tbody");
+    var rows = Array.from(tbody.querySelectorAll("tr"));
+    var dir = (_acctSortDir[col] === "asc") ? "desc" : "asc";
+    _acctSortDir = {};
+    _acctSortDir[col] = dir;
+    rows.sort(function(a, b) {
+        var aVal = (a.cells[col].textContent || "").trim();
+        var bVal = (b.cells[col].textContent || "").trim();
+        if (col === 2) {
+            aVal = parseFloat(aVal.replace("€", "")) || 0;
+            bVal = parseFloat(bVal.replace("€", "")) || 0;
+            return dir === "asc" ? aVal - bVal : bVal - aVal;
+        }
+        aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase();
+        if (aVal < bVal) return dir === "asc" ? -1 : 1;
+        if (aVal > bVal) return dir === "asc" ? 1 : -1;
+        return 0;
+    });
+    rows.forEach(function(r) { tbody.appendChild(r); });
+    for (var i = 0; i < 4; i++) {
+        var el = document.getElementById("asi" + i);
+        if (el) el.textContent = (i === col) ? (dir === "asc" ? " ▲" : " ▼") : "";
+    }
+}
+</script>
+{% endblock %}

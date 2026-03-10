@@ -373,3 +373,73 @@ def get_item_analysis(start: date, end: date, company_id: int = None) -> list:
             'pct_diff':    pct_diff,
         })
     return result
+
+# ---------------------------------------------------------------------------
+# Income vs Expenses report
+# ---------------------------------------------------------------------------
+
+def get_income_report(start: date, end: date) -> dict:
+    """Monthly income vs expenses, net balance, and account opening balance summary."""
+    from .models import Income, Account
+
+    income_rows = (
+        Income.query
+        .filter(Income.date >= start, Income.date <= end)
+        .order_by(Income.date)
+        .all()
+    )
+
+    expense_rows = (
+        db.session.query(Receipt.receipt_date, Receipt.total_amount)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            Receipt.total_amount.isnot(None),
+            Receipt.receipt_date.isnot(None),
+        )
+        .order_by(Receipt.receipt_date)
+        .all()
+    )
+
+    income_by_month: dict[str, float] = {}
+    for r in income_rows:
+        key = f"{r.date.year}-{r.date.month:02d}"
+        income_by_month[key] = income_by_month.get(key, 0.0) + float(r.amount)
+
+    expense_by_month: dict[str, float] = {}
+    for r in expense_rows:
+        key = f"{r.receipt_date.year}-{r.receipt_date.month:02d}"
+        expense_by_month[key] = expense_by_month.get(key, 0.0) + float(r.total_amount)
+
+    all_keys = sorted(set(list(income_by_month.keys()) + list(expense_by_month.keys())))
+    income_vals   = [round(income_by_month.get(k, 0.0),  2) for k in all_keys]
+    expense_vals  = [round(expense_by_month.get(k, 0.0), 2) for k in all_keys]
+    net_vals      = [round(i - e, 2) for i, e in zip(income_vals, expense_vals)]
+
+    total_income   = round(sum(income_vals),  2)
+    total_expenses = round(sum(expense_vals), 2)
+    net            = round(total_income - total_expenses, 2)
+
+    accounts = Account.query.order_by(Account.name).all()
+    total_assets      = round(sum(a.opening_balance for a in accounts if a.opening_balance > 0), 2)
+    total_liabilities = round(sum(a.opening_balance for a in accounts if a.opening_balance < 0), 2)
+    net_worth         = round(sum(a.opening_balance for a in accounts), 2)
+
+    return {
+        "labels":   all_keys,
+        "income":   income_vals,
+        "expenses": expense_vals,
+        "net":      net_vals,
+        "summary": {
+            "total_income":   total_income,
+            "total_expenses": total_expenses,
+            "net":            net,
+        },
+        "accounts": {
+            "total_assets":      total_assets,
+            "total_liabilities": total_liabilities,
+            "net_worth":         net_worth,
+        },
+    }
+

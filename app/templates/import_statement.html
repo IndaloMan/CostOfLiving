@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Import Statement — Cost of Living Tracker{% endblock %}
+{% block content %}
+<h1 style="margin-bottom:1.5rem;">Import Bank Statement</h1>
+
+<div class="card" style="max-width:560px;">
+    <p style="color:#666; font-size:0.9rem; margin-bottom:1.5rem;">
+        Upload a <strong>Wise CSV</strong> or <strong>Banco Sabadell PDF</strong> statement.
+        A preview will show before anything is saved.
+    </p>
+    <form method="POST" action="{{ url_for('main.import_preview') }}" enctype="multipart/form-data">
+        <div class="form-grid" style="margin-bottom:1rem;">
+            <div class="form-group">
+                <label>Account (Paid from)</label>
+                <select name="account_id">
+                    <option value="">— Unknown —</option>
+                    {% for a in accounts %}
+                    <option value="{{ a.id }}">{{ a.name }}{% if a.account_type %} ({{ a.account_type }}){% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Statement File (.csv or .pdf)</label>
+                <input type="file" name="file" accept=".csv,.pdf" required>
+            </div>
+        </div>
+        <button type="submit" class="btn">Preview Transactions &rarr;</button>
+    </form>
+</div>
+{% endblock %}

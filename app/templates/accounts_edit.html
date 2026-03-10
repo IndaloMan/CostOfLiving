@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Edit Account — Cost of Living Tracker{% endblock %}
+
+{% block content %}
+<p style="margin-bottom:1.5rem;"><a href="{{ url_for("main.accounts") }}" style="color:#888; text-decoration:none;">&larr; Accounts</a></p>
+<div class="card" style="max-width:600px;">
+    <h1 style="margin-bottom:1.5rem;">Edit Account</h1>
+    <form method="POST">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Account Name</label>
+                <input type="text" name="name" required value="{{ account.name }}">
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select name="account_type">
+                    <option value="">— Select —</option>
+                    {% for t in account_types %}
+                    <option value="{{ t }}" {% if t == account.account_type %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Opening Balance (€)</label>
+                <input type="number" name="opening_balance" step="0.01" required value="{{ account.opening_balance }}">
+            </div>
+            <div class="form-group">
+                <label>Opening Date</label>
+                <input type="date" name="opening_date" required value="{{ account.opening_date.isoformat() }}">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" name="notes" value="{{ account.notes or "" }}">
+            </div>
+        </div>
+        <div style="margin-top:1.5rem; display:flex; gap:0.75rem;">
+            <button type="submit" class="btn">Save Changes</button>
+            <a href="{{ url_for("main.accounts") }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

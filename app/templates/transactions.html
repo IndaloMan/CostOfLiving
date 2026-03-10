@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Transactions — Cost of Living Tracker{% endblock %}
+{% block content %}
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+    <h1 style="margin:0;">Transactions</h1>
+    <a href="{{ url_for('main.import_statement') }}" class="btn">+ Import Statement</a>
+</div>
+
+{% if transactions %}
+{% set ns = namespace(total=0) %}
+{% for t in transactions %}{% if t.direction == 'out' %}{% set ns.total = ns.total + t.amount %}{% endif %}{% endfor %}
+
+<div class="stats-row" style="margin-bottom:1.5rem;">
+    <div class="stat-box">
+        <div class="stat-num">{{ transactions | length }}</div>
+        <div class="stat-label">Total Transactions</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" style="color:#c0392b;">€{{ "%.2f"|format(ns.total) }}</div>
+        <div class="stat-label">Total Spent</div>
+    </div>
+</div>
+
+<div class="card" style="padding:0;">
+    <div class="table-wrap">
+        <table class="data-table" id="txnTable">
+            <thead>
+                <tr>
+                    <th class="sortable" onclick="sortTxn(0)" style="cursor:pointer; white-space:nowrap;">Date <span class="sort-icon" id="tsi0"></span></th>
+                    <th class="sortable" onclick="sortTxn(1)" style="cursor:pointer;">Description <span class="sort-icon" id="tsi1"></span></th>
+                    <th class="sortable" onclick="sortTxn(2)" style="cursor:pointer; text-align:right; white-space:nowrap;">Amount <span class="sort-icon" id="tsi2"></span></th>
+                    <th class="sortable" onclick="sortTxn(3)" style="cursor:pointer;">Category <span class="sort-icon" id="tsi3"></span></th>
+                    <th class="sortable" onclick="sortTxn(4)" style="cursor:pointer;">Account <span class="sort-icon" id="tsi4"></span></th>
+                    <th class="sortable" onclick="sortTxn(5)" style="cursor:pointer;">Source <span class="sort-icon" id="tsi5"></span></th>
+                    <th>Notes</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td style="white-space:nowrap; font-size:0.85rem;">{{ t.date.isoformat() }}</td>
+                    <td style="font-weight:500;">{{ t.description }}</td>
+                    <td style="text-align:right; white-space:nowrap;
+                               color:{{ '#27ae60' if t.direction == 'in' else '#333' }};">
+                        {% if t.direction == 'in' %}+{% endif %}€{{ "%.2f"|format(t.amount) }}
+                    </td>
+                    <td>{{ t.category or '' }}</td>
+                    <td>{{ account_map.get(t.account_id, '') }}</td>
+                    <td style="font-size:0.8rem; color:#888;">{{ (t.source or '').replace('_', ' ') }}</td>
+                    <td style="color:#888; font-size:0.85rem;">{{ t.notes or '' }}</td>
+                    <td style="white-space:nowrap;">
+                        <a href="{{ url_for('main.transaction_edit', txn_id=t.id) }}" class="btn btn-secondary btn-sm">Edit</a>
+                        <form method="POST" action="{{ url_for('main.transaction_delete', txn_id=t.id) }}"
+                              style="display:inline;"
+                              onsubmit="return confirm('Delete this transaction?')">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">
+    No transactions yet. <a href="{{ url_for('main.import_statement') }}">Import a statement</a> to get started.
+</div>
+{% endif %}
+
+<script>
+var _txnSortDir = {};
+function sortTxn(col) {
+    var tbody = document.querySelector("#txnTable tbody");
+    var rows = Array.from(tbody.querySelectorAll("tr"));
+    var dir = (_txnSortDir[col] === "asc") ? "desc" : "asc";
+    _txnSortDir = {}; _txnSortDir[col] = dir;
+    rows.sort(function(a, b) {
+        var aVal = (a.cells[col].textContent || "").trim();
+        var bVal = (b.cells[col].textContent || "").trim();
+        if (col === 2) {
+            aVal = parseFloat(aVal.replace(/[€+]/g, "")) || 0;
+            bVal = parseFloat(bVal.replace(/[€+]/g, "")) || 0;
+            return dir === "asc" ? aVal - bVal : bVal - aVal;
+        }
+        aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase();
+        if (aVal < bVal) return dir === "asc" ? -1 : 1;
+        if (aVal > bVal) return dir === "asc" ? 1 : -1;
+        return 0;
+    });
+    rows.forEach(function(r) { tbody.appendChild(r); });
+    for (var i = 0; i < 6; i++) {
+        var el = document.getElementById("tsi" + i);
+        if (el) el.textContent = (i === col) ? (dir === "asc" ? " ▲" : " ▼") : "";
+    }
+}
+</script>
+{% endblock %}

@@ -141,7 +141,9 @@ async function loadTopItemsChart(start, end) {
     const values = [...data.total_spent].reverse();
     const counts = [...data.purchase_count].reverse();
 
-    const ctx = document.getElementById('topItemsChart').getContext('2d');
+    const topItemsCanvas = document.getElementById('topItemsChart');
+    topItemsCanvas.parentElement.style.height = Math.max(280, labels.length * 32) + 'px';
+    const ctx = topItemsCanvas.getContext('2d');
     topItemsChart = new Chart(ctx, {
         type: 'bar',
         data: {
