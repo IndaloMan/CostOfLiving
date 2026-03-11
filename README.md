@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.14 — 11 March 2026
+- app/templates/base.html
+
 ### v1.13 — 10 March 2026
 - **Date presets on filter pages** — Month, Qtr, YTD and Prev Yr buttons on Reports, Mercadona Analysis, Energy Nordic Analysis and Income Reports; clicking auto-applies the date range
 - **Clickable stat boxes on Expenditure dashboard** — Receipts Saved links to /receipts, Companies links to /companies
