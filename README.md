@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.18 — 11 March 2026
+- see commit
+
 ### v1.17 — 11 March 2026
 - see commit
 
