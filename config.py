@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-APP_VERSION = "1.14"
+APP_VERSION = "1.15"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,3 +13,12 @@ DATABASE_PATH = os.path.join(BASE_DIR, "database.db")
 SQLALCHEMY_DATABASE_URI = f"sqlite:///{DATABASE_PATH}"
 MAX_UPLOAD_SIZE_MB = 20
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "pdf"}
+
+# Session secret key — set a stable value in .env for production
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-key-change-me-in-production")
+
+# Admin shopper — seeded on first run; override via .env
+ADMIN_EMAIL     = os.getenv("ADMIN_EMAIL",     "admin@example.com")
+ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "Administrator")
+ADMIN_NICKNAME  = os.getenv("ADMIN_NICKNAME",  "Admin")
+ADMIN_PASSWORD  = os.getenv("ADMIN_PASSWORD",  "changeme")

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Shopper' if shopper else 'Add Shopper' }} — Cost of Living Tracker{% endblock %}
+
+{% block content %}
+<h1>{{ 'Edit Shopper' if shopper else 'Add Shopper' }}</h1>
+
+<form method="POST" class="edit-form">
+    <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name"
+               value="{{ shopper.full_name if shopper else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="nickname">Nickname <small>(shown in nav and reports)</small></label>
+        <input type="text" id="nickname" name="nickname"
+               value="{{ shopper.nickname if shopper else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="email">Email <small>(used to log in)</small></label>
+        <input type="email" id="email" name="email"
+               value="{{ shopper.email if shopper else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="password">
+            {% if shopper %}New Password <small>(leave blank to keep current)</small>{% else %}Password{% endif %}
+        </label>
+        <input type="password" id="password" name="password"
+               {% if not shopper %}required{% endif %} autocomplete="new-password">
+    </div>
+    <div class="form-group">
+        <label class="checkbox-label">
+            <input type="checkbox" name="is_admin" value="1"
+                   {% if shopper and shopper.is_admin %}checked{% endif %}>
+            Admin — can view all shoppers' data and manage settings
+        </label>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {{ 'Save Changes' if shopper else 'Add Shopper' }}
+        </button>
+        <a href="/shoppers" class="btn">Cancel</a>
+    </div>
+</form>
+{% endblock %}
