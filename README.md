@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.28 — 11 March 2026
+- app/templates/review.html
+
 ### v1.27 — 11 March 2026
 - app/templates/review.html
 

@@ -174,9 +174,7 @@
         <button type="submit" class="btn" id="saveBtn">&#10003; Confirm &amp; Save</button>
         {% if editing %}
         <a href="{{ url_for('main.receipts', view='grouped') if from_grouped else url_for('main.receipts') }}" class="btn btn-secondary">&#8592; Cancel</a>
-        <form method="POST" action="{{ url_for('main.delete_receipt', receipt_id=receipt.id) }}" style="margin:0;">
-            <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this receipt and all its line items?')">&#x2715; Delete</button>
-        </form>
+        <button type="button" class="btn btn-danger" onclick="deleteReceipt()">&#x2715; Delete</button>
         {% else %}
         <a href="{{ url_for('main.scan') }}" class="btn btn-secondary">&#8592; Scan Another</a>
         <form method="POST" action="{{ url_for('main.delete_receipt', receipt_id=receipt.id) }}" style="margin:0;">
@@ -195,11 +193,18 @@
 
 </form>
 
+<form id="deleteForm" method="POST" action="{{ url_for('main.delete_receipt', receipt_id=receipt.id) }}" style="display:none;"></form>
+
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
 <script>
+function deleteReceipt() {
+    if (confirm('Delete this receipt and all its line items?')) {
+        document.getElementById('deleteForm').submit();
+    }
+}
 document.querySelector('form').addEventListener('submit', function () {
     const btn = document.getElementById('saveBtn');
     const indicator = document.getElementById('savingIndicator');
