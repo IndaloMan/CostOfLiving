@@ -21,7 +21,7 @@
         <div class="card">
             <h2>Scan a Receipt</h2>
             <p>Upload a photo or PDF of a receipt or invoice to extract and store its data.</p>
-            <a href="/scan" class="btn">Scan Now</a>
+            <a href="{{ '/scan' if current_user.is_admin else '/quick-scan' }}" class="btn">Scan Now</a>
         </div>
         <div class="card">
             <h2>View Receipts</h2>

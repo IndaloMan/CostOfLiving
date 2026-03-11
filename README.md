@@ -186,6 +186,11 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.16 — 11 March 2026
+- **Quick Scan page** — new minimal mobile-friendly `/quick-scan` page with a large camera button; non-admin Scan nav link and Scan Now card point here automatically
+- **Mobile camera capture** — file input on scan pages uses `capture="environment"` so mobile browsers open the camera directly
+- **Quick Confirm button** — full-width confirm button added at the top of the Review page for one-tap confirmation without scrolling
+
 ### v1.15 — 11 March 2026
 - **Multi-shopper support** — Shoppers table (email, full name, nickname, password, admin flag, active flag); each receipt is owned by the shopper who uploaded it
 - **Authentication** — flask-login session-based login/logout; all routes protected; stable SECRET_KEY via .env

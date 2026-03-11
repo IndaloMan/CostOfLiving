@@ -272,6 +272,26 @@ def scan():
     return redirect(url_for("main.review", receipt_id=receipt.id))
 
 
+@main.route("/quick-scan", methods=["GET", "POST"])
+@login_required
+def quick_scan():
+    if request.method == "GET":
+        return render_template("quick_scan.html")
+
+    if "file" not in request.files or request.files["file"].filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("main.quick_scan"))
+
+    receipt, error = _process_one_file(request.files["file"])
+    if error:
+        flash(error, "error")
+        return redirect(url_for("main.quick_scan"))
+
+    db.session.commit()
+    log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname} (quick-scan)")
+    return redirect(url_for("main.review", receipt_id=receipt.id))
+
+
 @main.route("/scan/batch", methods=["GET", "POST"])
 @login_required
 def scan_batch():

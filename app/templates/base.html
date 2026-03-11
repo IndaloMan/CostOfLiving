@@ -17,7 +17,11 @@
         <ul class="nav-links" id="navLinks">
             {% if current_user.is_authenticated %}
             <li><a href="/">Expenditure</a></li>
+            {% if current_user.is_admin %}
             <li><a href="/scan">Scan</a></li>
+            {% else %}
+            <li><a href="/quick-scan">Scan</a></li>
+            {% endif %}
             <li><a href="/reports">Reports</a></li>
             {% if current_user.is_admin %}
             <li><a href="/income-dashboard">Income</a></li>

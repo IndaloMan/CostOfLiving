@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Quick Scan{% endblock %}
+
+{% block extra_head %}
+<style>
+.qs-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    gap: 1.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+.qs-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+.qs-sub {
+    color: #666;
+    margin: 0;
+    font-size: 0.95rem;
+}
+.qs-btn-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: #2980b9;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(41,128,185,0.35);
+    transition: background 0.15s, transform 0.1s;
+    border: none;
+}
+.qs-btn-label:active {
+    background: #1f6a9a;
+    transform: scale(0.97);
+}
+.qs-btn-label svg {
+    width: 52px;
+    height: 52px;
+}
+#qsFileInput { display: none; }
+#qsPreview {
+    font-size: 0.9rem;
+    color: #555;
+    max-width: 280px;
+    word-break: break-all;
+}
+#qsSubmitBtn {
+    width: 200px;
+    padding: 0.85rem;
+    font-size: 1rem;
+}
+#qsLoading {
+    color: #2980b9;
+    font-size: 0.95rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qs-wrap">
+    <p class="qs-title">Quick Scan</p>
+    <p class="qs-sub">Take a photo of your receipt and it will be extracted automatically.</p>
+
+    <form method="POST" enctype="multipart/form-data" id="qsForm">
+        <label class="qs-btn-label" for="qsFileInput">
+            <!-- Camera icon -->
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+            </svg>
+            Take Photo
+        </label>
+        <input type="file" id="qsFileInput" name="file"
+               accept="image/*,application/pdf" capture="environment">
+
+        <div id="qsPreview" style="display:none; margin-top:1rem;"></div>
+
+        <button type="submit" class="btn" id="qsSubmitBtn" style="display:none; margin-top:1rem;">
+            &#128269; Extract Data
+        </button>
+
+        <div id="qsLoading" style="display:none; margin-top:1rem;">
+            &#9203; Extracting&hellip; please wait
+        </div>
+    </form>
+
+    <a href="{{ url_for('main.receipts') }}" style="color:#888; font-size:0.9rem;">View my receipts</a>
+</div>
+
+<script>
+const qsInput  = document.getElementById('qsFileInput');
+const qsPreview= document.getElementById('qsPreview');
+const qsSubmit = document.getElementById('qsSubmitBtn');
+const qsForm   = document.getElementById('qsForm');
+const qsLoad   = document.getElementById('qsLoading');
+
+qsInput.addEventListener('change', function () {
+    if (!qsInput.files.length) return;
+    const file = qsInput.files[0];
+    qsPreview.textContent = file.name;
+    qsPreview.style.display = 'block';
+    qsSubmit.style.display = 'block';
+});
+
+qsForm.addEventListener('submit', function () {
+    qsSubmit.disabled = true;
+    qsSubmit.style.opacity = '0.6';
+    qsLoad.style.display = 'block';
+});
+</script>
+{% endblock %}
