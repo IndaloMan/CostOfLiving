@@ -110,9 +110,15 @@ const qsLoad   = document.getElementById('qsLoading');
 qsInput.addEventListener('change', function () {
     if (!qsInput.files.length) return;
     const file = qsInput.files[0];
-    qsPreview.textContent = file.name;
+    const name = file.name.length > 25 ? file.name.substring(0, 25) + '…' : file.name;
+    qsPreview.textContent = name;
     qsPreview.style.display = 'block';
     qsSubmit.style.display = 'block';
+    // Grey out the Take Photo button to guide user to Extract Data
+    const label = document.querySelector('.qs-btn-label');
+    label.style.background = '#aaa';
+    label.style.boxShadow = 'none';
+    label.style.cursor = 'default';
 });
 
 qsForm.addEventListener('submit', function () {
