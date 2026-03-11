@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.26 — 11 March 2026
+- app/extractor.py
+
 ### v1.25 — 11 March 2026
 - app/templates/review.html
 

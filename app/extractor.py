@@ -34,6 +34,9 @@ Rules:
 - Include ALL line items visible — do not skip any
 - For utility bills, treat each charge line as a line item
 - For utility bill line items, use only the stable charge name as the description (e.g. "Contracted Power P1", "Energy P1", "Meter Hire", "VAT (21%)") — do not append quantities, rates or calculated values to the description; those values belong in the qty and unit_price fields
+- For Spanish supermarket receipts (e.g. Aldi, Mercadona, Consum), items are listed as "ITEM NAME   PRICE € VAT_CODE" where the trailing single digit (2, 3, 4 etc.) is a VAT rate code — ignore it, do NOT treat it as a quantity or price
+- When a line shows "N x PRICE €" immediately before or above an item, N is the quantity and PRICE is the unit price for that item; otherwise quantity defaults to 1
+- Discounts appear as negative prices — include them as line items with negative unit_price and total_price
 - For category, pick the most appropriate from:
   food, drink, dairy, meat, fish, bakery, produce, frozen,
   household, cleaning, personal_care, pet,
