@@ -186,6 +186,14 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.31 — 11 March 2026
+- **Generic company analysis** — every company now has an Analysis page showing spend per visit, by category, top items, and price tracker with % change tooltip; works for all current and future companies
+- **Price tracker on analysis page** — item search with autocomplete filtered to that company, uses the same date range as the other charts
+- **Mercadona duplicate button removed** — generic Analysis replaces it; Energy Nordic keeps its specialist button
+- **YTD/date preset timezone fix** — date presets (Month, Qtr, YTD, Prev Yr) now use local date instead of UTC, fixing off-by-one day for Spain (UTC+1)
+- **Timestamps use local time** — all created_at/updated_at now store local time instead of UTC, fixing Modified column showing 1 hour behind
+- **Unit price fix for qty=1** — extraction prompt now sets unit_price = total_price when qty is 1 and no unit price is printed on the receipt
+
 ### v1.30 — 11 March 2026
 - **Company alias** — admin can set a display name for each company (e.g. "Iceland" for "Overseas - Vera"), shown on receipts, reports, and all views while preserving the original extracted name for matching
 

@@ -71,7 +71,7 @@
 
         // Restrict picker to current year and 4 previous years — no future dates
         const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+        const todayStr = localISO(today);
         const minDate  = new Date(today);
         minDate.setFullYear(minDate.getFullYear() - 4);
         const minStr = minDate.toISOString().split('T')[0];
@@ -88,12 +88,15 @@
     });
 
     // Date preset helper — called by preset buttons on filter pages
+    function localISO(d) {
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
     window.setDatePreset = function (preset) {
         const startEl = document.getElementById('startDate');
         const endEl   = document.getElementById('endDate');
         if (!startEl || !endEl) return;
         const today = new Date();
-        const todayStr = today.toISOString().split('T')[0];
+        const todayStr = localISO(today);
         let startDate;
         if (preset === 'month') {
             startDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -106,13 +109,13 @@
             const prevYr = today.getFullYear() - 1;
             startDate = new Date(prevYr, 0, 1);
             endEl.value = prevYr + '-12-31';
-            startEl.value = startDate.toISOString().split('T')[0];
+            startEl.value = localISO(startDate);
             startEl.dispatchEvent(new Event('change'));
             endEl.dispatchEvent(new Event('change'));
             if (typeof loadAll === 'function') loadAll();
             return;
         }
-        startEl.value = startDate.toISOString().split('T')[0];
+        startEl.value = localISO(startDate);
         endEl.value   = todayStr;
         startEl.dispatchEvent(new Event('change'));
         endEl.dispatchEvent(new Event('change'));

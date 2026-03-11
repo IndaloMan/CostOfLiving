@@ -438,7 +438,7 @@ def confirm(receipt_id):
     if company and saved_items:
         update_template(company.id, saved_items)
 
-    receipt.updated_at = datetime.utcnow()
+    receipt.updated_at = datetime.now()
     db.session.commit()
 
     # Run company-specific analysis if one exists for this company
@@ -862,6 +862,38 @@ def api_mercadona_item_suggestions():
     if len(q) < 2:
         return jsonify([])
     return jsonify(get_item_suggestions(q, company_id=company.id))
+
+
+
+# ---------------------------------------------------------------------------
+# Generic company analysis — works for any company
+# ---------------------------------------------------------------------------
+
+@main.route('/analysis/company/<int:company_id>')
+@login_required
+@admin_required
+def analysis_company(company_id):
+    company = Company.query.get_or_404(company_id)
+    return render_template('analysis_company.html', company=company)
+
+
+@main.route('/api/company/<int:company_id>/per-visit')
+@login_required
+def api_company_per_visit(company_id):
+    Company.query.get_or_404(company_id)
+    start = parse_date(request.args.get('start'), default_start())
+    end   = parse_date(request.args.get('end'),   date.today())
+    return jsonify(get_spend_per_visit(start, end, company_id))
+
+
+@main.route('/api/company/<int:company_id>/top-items')
+@login_required
+def api_company_top_items(company_id):
+    Company.query.get_or_404(company_id)
+    start = parse_date(request.args.get('start'), default_start())
+    end   = parse_date(request.args.get('end'),   date.today())
+    limit = int(request.args.get('limit', 15))
+    return jsonify(get_top_items(start, end, company_id, limit))
 
 
 # ---------------------------------------------------------------------------

@@ -15,7 +15,7 @@ class Shopper(db.Model, UserMixin):
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin      = db.Column(db.Boolean,     default=False, nullable=False)
     is_active     = db.Column(db.Boolean,     default=True,  nullable=False)
-    created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
+    created_at    = db.Column(db.DateTime,    default=datetime.now)
 
     receipts = db.relationship("Receipt", back_populates="shopper")
 
@@ -38,7 +38,7 @@ class Company(db.Model):
     alias = db.Column(db.String(200), nullable=True)
     # Type: supermarket, utility, restaurant, pharmacy, household, other
     type = db.Column(db.String(50))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     receipts = db.relationship("Receipt", back_populates="company")
     template = db.relationship("CompanyTemplate", back_populates="company", uselist=False, cascade="all, delete-orphan")
@@ -59,7 +59,7 @@ class CompanyTemplate(db.Model):
     company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=False)
     # JSON string: list of known products with default categories
     known_items = db.Column(db.Text, default="[]")
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
     company = db.relationship("Company", back_populates="template")
 
@@ -86,7 +86,7 @@ class Receipt(db.Model):
     raw_extraction = db.Column(db.Text)
     # pending = extracted but not yet confirmed; confirmed = saved by user
     status = db.Column(db.String(20), default="pending")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, nullable=True)
 
     shopper = db.relationship("Shopper", back_populates="receipts")
@@ -106,7 +106,7 @@ class ReceiptAnalysis(db.Model):
     receipt_id = db.Column(db.Integer, db.ForeignKey("receipts.id"), nullable=False, unique=True)
     analyser = db.Column(db.String(50), nullable=False)   # e.g. "energy_nordic"
     data = db.Column(db.Text, nullable=False)              # JSON blob
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     receipt = db.relationship("Receipt", back_populates="analysis")
 
@@ -163,7 +163,7 @@ class Income(db.Model):
     amount     = db.Column(db.Float, nullable=False)
     category   = db.Column(db.String(100), nullable=True)
     notes      = db.Column(db.String(500), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
         return f'<Income {self.date} {self.source} {self.amount}>'
@@ -179,7 +179,7 @@ class Account(db.Model):
     opening_balance = db.Column(db.Float, nullable=False, default=0.0)
     opening_date    = db.Column(db.Date, nullable=False)
     notes           = db.Column(db.String(500), nullable=True)
-    created_at      = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at      = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
         return f'<Account {self.name}>'
@@ -198,7 +198,7 @@ class Transaction(db.Model):
     notes          = db.Column(db.String(500), nullable=True)
     transaction_id = db.Column(db.String(200), nullable=True, unique=True)
     source         = db.Column(db.String(50), nullable=True)   # wise_csv, sabadell_pdf, manual
-    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at     = db.Column(db.DateTime, default=datetime.now)
 
     account = db.relationship('Account', backref='transactions', foreign_keys=[account_id])
 

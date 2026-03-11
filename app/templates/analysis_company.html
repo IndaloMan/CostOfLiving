@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ company.display_name }} — Analysis{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <a href="{{ url_for('main.companies') }}" style="color:#888; text-decoration:none;">&#8592; Companies</a>
+    <h1 style="margin:0">{{ company.display_name }} &#8212; Analysis</h1>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar card">
+    <div class="filters-inner">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" id="startDate">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" id="endDate">
+        </div>
+        <div class="preset-group">
+            <button class="btn btn-preset" onclick="setDatePreset('month')">Month</button>
+            <button class="btn btn-preset" onclick="setDatePreset('qtr')">Qtr</button>
+            <button class="btn btn-preset" onclick="setDatePreset('ytd')">YTD</button>
+            <button class="btn btn-preset" onclick="setDatePreset('prevyr')">Prev Yr</button>
+        </div>
+        <button class="btn" onclick="loadAll()">Apply</button>
+    </div>
+    <div id="dateError" class="alert alert-error" style="display:none; margin-top:0.75rem;">'From' date must be before 'To' date.</div>
+</div>
+
+<!-- Summary stats -->
+<div class="stats-row">
+    <div class="stat-box">
+        <div class="stat-num" id="statVisits">&#8212;</div>
+        <div class="stat-label">Visits</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statTotal">&#8212;</div>
+        <div class="stat-label">Total Spent</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statAvg">&#8212;</div>
+        <div class="stat-label">Avg per Visit</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num" id="statTopCat">&#8212;</div>
+        <div class="stat-label">Top Category</div>
+    </div>
+</div>
+
+<!-- Spend per visit -->
+<div class="card chart-card">
+    <h2>Spend per Visit</h2>
+    <div class="chart-container"><canvas id="visitChart"></canvas></div>
+    <div id="visitEmpty" class="chart-empty" style="display:none">No data for this period.</div>
+</div>
+
+<!-- Category + Top items side by side -->
+<div class="charts-row">
+    <div class="card chart-card">
+        <h2>By Category</h2>
+        <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+        <div id="categoryEmpty" class="chart-empty" style="display:none">No categorised items for this period.</div>
+    </div>
+    <div class="card chart-card">
+        <h2>Top Items by Spend</h2>
+        <div class="chart-container"><canvas id="topItemsChart"></canvas></div>
+        <div id="topItemsEmpty" class="chart-empty" style="display:none">No items for this period.</div>
+    </div>
+</div>
+
+<!-- Price Tracker -->
+<div class="card" style="margin-top:1.5rem;">
+    <h2>Price Tracker</h2>
+    <p style="color:#666; margin-bottom:1rem;">Track how the price of a specific item has changed over time. Uses the date range above.</p>
+    <div class="search-row">
+        <div style="position:relative; flex:1">
+            <input type="text" id="itemSearch" placeholder="Type an item name&#8230;"
+                   autocomplete="off" oninput="suggestItems(this.value)">
+            <ul id="suggestions" class="suggestions-list" style="display:none"></ul>
+        </div>
+        <button class="btn" onclick="loadPriceTrend()">Track Item</button>
+    </div>
+    <div class="chart-container" id="priceChartWrap" style="display:none; margin-top:1rem; height:300px;">
+        <canvas id="priceChart"></canvas>
+    </div>
+    <div id="priceEmpty" class="chart-empty" style="display:none">No price data found for that item in this period.</div>
+</div>
+
+<script>const COMPANY_ID = {{ company.id }};</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/analysis_company.js') }}"></script>
+{% endblock %}
