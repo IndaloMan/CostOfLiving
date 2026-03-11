@@ -171,7 +171,8 @@ def _process_one_file(f):
     if not _allowed_file(f.filename):
         return None, f"Unsupported file type: {f.filename}"
 
-    filename = secure_filename(f.filename)
+    ext = f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else "jpg"
+    filename = datetime.now().strftime(f"%Y%m%d%H%M%S.{ext}")
 
     # Duplicate check — skip API call entirely if already in DB
     existing = Receipt.query.filter_by(filename=filename).first()
@@ -1695,6 +1696,56 @@ def shopper_toggle_active(shopper_id):
     status = "activated" if s.is_active else "deactivated"
     log.info(f"SHOPPER {status.upper()}  {s.email} ({s.nickname}) by {current_user.nickname}")
     flash(f"Shopper '{s.nickname}' {status}.", "success")
+    return redirect(url_for("main.shoppers"))
+
+
+# ---------------------------------------------------------------------------
+# Change password — self-service for all logged-in users
+# ---------------------------------------------------------------------------
+
+@main.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    if request.method == "GET":
+        return render_template("change_password.html")
+    current_pw  = request.form.get("current_password", "")
+    new_pw      = request.form.get("new_password", "")
+    confirm_pw  = request.form.get("confirm_password", "")
+    if not current_user.check_password(current_pw):
+        flash("Current password is incorrect.", "error")
+        return render_template("change_password.html")
+    if new_pw != confirm_pw:
+        flash("New passwords do not match.", "error")
+        return render_template("change_password.html")
+    if len(new_pw) < 6:
+        flash("Password must be at least 6 characters.", "error")
+        return render_template("change_password.html")
+    current_user.set_password(new_pw)
+    db.session.commit()
+    log.info(f"PASSWORD CHANGED {current_user.email} ({current_user.nickname})")
+    flash("Password changed successfully.", "success")
+    return redirect(url_for("main.index"))
+
+
+# ---------------------------------------------------------------------------
+# Reset password — admin resets any shopper's password
+# ---------------------------------------------------------------------------
+
+@main.route("/shoppers/<int:shopper_id>/reset-password", methods=["POST"])
+@login_required
+def shopper_reset_password(shopper_id):
+    redir = _admin_required()
+    if redir:
+        return redir
+    s = Shopper.query.get_or_404(shopper_id)
+    new_pw = request.form.get("new_password", "")
+    if len(new_pw) < 6:
+        flash("Password must be at least 6 characters.", "error")
+        return redirect(url_for("main.shopper_edit", shopper_id=shopper_id))
+    s.set_password(new_pw)
+    db.session.commit()
+    log.info(f"PASSWORD RESET  {s.email} ({s.nickname}) by {current_user.nickname}")
+    flash(f"Password reset for '{s.nickname}'.", "success")
     return redirect(url_for("main.shoppers"))
 
 

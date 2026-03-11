@@ -110,8 +110,15 @@ const qsLoad   = document.getElementById('qsLoading');
 qsInput.addEventListener('change', function () {
     if (!qsInput.files.length) return;
     const file = qsInput.files[0];
-    const name = file.name.length > 25 ? file.name.substring(0, 25) + '…' : file.name;
-    qsPreview.textContent = name;
+    const now = new Date();
+    const ts = now.getFullYear().toString() +
+        String(now.getMonth()+1).padStart(2,'0') +
+        String(now.getDate()).padStart(2,'0') +
+        String(now.getHours()).padStart(2,'0') +
+        String(now.getMinutes()).padStart(2,'0') +
+        String(now.getSeconds()).padStart(2,'0');
+    const ext = file.name.includes('.') ? file.name.split('.').pop().toLowerCase() : 'jpg';
+    qsPreview.textContent = ts + '.' + ext;
     qsPreview.style.display = 'block';
     qsSubmit.style.display = 'block';
     // Grey out the Take Photo button to guide user to Extract Data

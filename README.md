@@ -186,6 +186,13 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.21 — 11 March 2026
+- **Change password** — all logged-in users can change their own password via nav Password link
+- **Admin password reset** — admin can reset any shopper's password from the shopper edit page
+- **Show/hide password toggle** — eye icon on all password fields across login, change password and shopper pages
+- **YYYYMMDDHHMMSS filenames** — uploaded receipt files saved with timestamp filename instead of original camera filename
+- **Custom 502 error page** — friendly "Server temporarily unavailable" page shown when Flask is down instead of raw nginx error
+
 ### v1.20 — 11 March 2026
 - app/templates/quick_scan.html
 

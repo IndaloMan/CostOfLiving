@@ -691,3 +691,26 @@ body.login-page {
     cursor: pointer;
 }
 .checkbox-label input { width: auto; margin: 0; }
+
+/* ── Password show/hide toggle ─────────────────────────────────── */
+.password-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.password-wrap input {
+    padding-right: 2.8rem;
+    flex: 1;
+}
+.pw-toggle {
+    position: absolute;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+}
+.pw-toggle:hover { color: #333; }
