@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Item Search{% endblock %}
+
+{% block content %}
+<h1>Item Search</h1>
+
+<div class="card">
+    <div class="filters-inner" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end;">
+        <div class="filter-group" style="flex:1; min-width:200px;">
+            <label for="itemQuery">Description</label>
+            <input type="text" id="itemQuery" placeholder="Leave blank to find empty descriptions"
+                   style="width:100%; padding:0.4rem 0.6rem; font-size:0.95rem;">
+        </div>
+        <div class="filter-group">
+            <label for="companyFilter">Company</label>
+            <select id="companyFilter">
+                <option value="">All Companies</option>
+                {% for c in companies %}
+                <option value="{{ c.id }}">{{ c.display_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <button class="btn" onclick="doSearch()">Search</button>
+        </div>
+    </div>
+</div>
+
+<div id="resultCount" style="margin:0.75rem 0; color:#aaa; font-size:0.9rem;"></div>
+
+<div class="card" id="resultsCard" style="display:none;">
+    <div class="table-wrap">
+        <table class="data-table" id="resultsTable">
+            <thead>
+                <tr>
+                    <th class="sortable" data-col="0">Description <span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="1">Company <span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="2">Date <span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="3" style="text-align:right">Qty <span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="4" style="text-align:right">Unit Price <span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="5" style="text-align:right">Total <span class="sort-icon"></span></th>
+                    <th class="sortable" data-col="6">Category <span class="sort-icon"></span></th>
+                    <th style="text-align:center">Receipt</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="emptyState" class="card empty-state" style="display:none;">
+    <p>No items found.</p>
+</div>
+
+<script>
+function fmt(n) {
+    if (n == null) return '\u2014';
+    return '\u20ac' + Number(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtQty(n) {
+    if (n == null) return '\u2014';
+    return parseFloat(n) % 1 === 0 ? parseInt(n) : Number(n).toFixed(3).replace(/\.?0+$/, '');
+}
+
+function initTableSort(table) {
+    let sortCol = null, sortAsc = true;
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.onclick = function() {
+            const col = parseInt(th.dataset.col);
+            sortAsc = (sortCol === col) ? !sortAsc : true;
+            sortCol = col;
+            const tbody = table.querySelector('tbody');
+            const rows  = Array.from(tbody.querySelectorAll('tr'));
+            rows.sort((a, b) => {
+                const av = a.cells[col] ? a.cells[col].textContent.replace(/[€,\u2014]/g, '').trim() : '';
+                const bv = b.cells[col] ? b.cells[col].textContent.replace(/[€,\u2014]/g, '').trim() : '';
+                const an = parseFloat(av), bn = parseFloat(bv);
+                const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
+                return sortAsc ? cmp : -cmp;
+            });
+            rows.forEach(r => tbody.appendChild(r));
+            table.querySelectorAll('th.sortable .sort-icon').forEach(ic => ic.textContent = '');
+            th.querySelector('.sort-icon').textContent = sortAsc ? ' \u25b2' : ' \u25bc';
+        };
+    });
+}
+
+async function doSearch() {
+    const q         = document.getElementById('itemQuery').value;
+    const companyId = document.getElementById('companyFilter').value;
+
+    let url = '/api/item-search?q=' + encodeURIComponent(q);
+    if (companyId) url += '&company_id=' + companyId;
+
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    const tbody   = document.getElementById('resultsBody');
+    const card    = document.getElementById('resultsCard');
+    const empty   = document.getElementById('emptyState');
+    const countEl = document.getElementById('resultCount');
+
+    tbody.innerHTML = '';
+
+    if (!data.length) {
+        card.style.display  = 'none';
+        empty.style.display = 'block';
+        countEl.textContent = '';
+        return;
+    }
+
+    empty.style.display = 'none';
+    card.style.display  = 'block';
+    countEl.textContent = data.length + ' result' + (data.length === 1 ? '' : 's') +
+                          (data.length === 200 ? ' (limit reached)' : '');
+
+    data.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + (item.description ? item.description : '<em style="color:#e74c3c">blank</em>') + '</td>' +
+            '<td>' + (item.company_name || '\u2014') + '</td>' +
+            '<td>' + (item.receipt_date || '\u2014') + '</td>' +
+            '<td style="text-align:right">' + fmtQty(item.quantity) + '</td>' +
+            '<td style="text-align:right">' + fmt(item.unit_price) + '</td>' +
+            '<td style="text-align:right">' + fmt(item.total_price) + '</td>' +
+            '<td>' + (item.category || '\u2014') + '</td>' +
+            '<td style="text-align:center"><a href="/receipts/' + item.receipt_id + '/edit" class="btn btn-secondary btn-sm">View</a></td>';
+        tbody.appendChild(tr);
+    });
+
+    initTableSort(document.getElementById('resultsTable'));
+}
+
+document.getElementById('itemQuery').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doSearch();
+});
+</script>
+{% endblock %}

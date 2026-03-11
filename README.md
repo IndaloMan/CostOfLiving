@@ -186,6 +186,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.32 — 11 March 2026
+- **Item Search** — admin-only page to search line items across all receipts; blank search finds items with no description; results show company, date, qty, unit price, total, category, and a link to the receipt; sortable columns
+- **Weighed items extraction** — extraction prompt now correctly handles supermarket weighed items (e.g. "0,362 kg  2,50 €/kg  0,91"), extracting weight as qty and price-per-kg as unit_price
+
 ### v1.31 — 11 March 2026
 - **Generic company analysis** — every company now has an Analysis page showing spend per visit, by category, top items, and price tracker with % change tooltip; works for all current and future companies
 - **Price tracker on analysis page** — item search with autocomplete filtered to that company, uses the same date range as the other charts

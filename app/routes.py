@@ -897,6 +897,61 @@ def api_company_top_items(company_id):
 
 
 # ---------------------------------------------------------------------------
+# Item Search (admin only)
+# ---------------------------------------------------------------------------
+
+@main.route('/items/search')
+@login_required
+@admin_required
+def item_search():
+    companies = Company.query.order_by(Company.name).all()
+    return render_template('item_search.html', companies=companies)
+
+
+@main.route('/api/item-search')
+@login_required
+@admin_required
+def api_item_search():
+    q          = request.args.get('q', '')
+    company_id = request.args.get('company_id', type=int)
+
+    query = (
+        db.session.query(LineItem, Receipt, Company)
+        .join(Receipt, LineItem.receipt_id == Receipt.id)
+        .join(Company, Receipt.company_id == Company.id)
+        .filter(Receipt.status == 'confirmed')
+    )
+
+    if q.strip():
+        query = query.filter(LineItem.description.ilike('%' + q.strip() + '%'))
+    else:
+        query = query.filter(
+            db.or_(LineItem.description == '', LineItem.description == None)
+        )
+
+    if company_id:
+        query = query.filter(Receipt.company_id == company_id)
+
+    query = query.order_by(Receipt.receipt_date.desc()).limit(200)
+
+    results = []
+    for li, r, c in query.all():
+        results.append({
+            'id':           li.id,
+            'description':  li.description,
+            'quantity':     li.quantity,
+            'unit_price':   li.unit_price,
+            'total_price':  li.total_price,
+            'category':     li.category,
+            'receipt_id':   r.id,
+            'receipt_date': r.receipt_date.isoformat() if r.receipt_date else None,
+            'company_name': c.alias or c.name,
+        })
+
+    return jsonify(results)
+
+
+# ---------------------------------------------------------------------------
 # Company-specific analysis — Energy Nordic
 # ---------------------------------------------------------------------------
 

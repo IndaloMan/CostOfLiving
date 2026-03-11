@@ -38,6 +38,7 @@ Rules:
 - When a line shows "N x PRICE €" immediately before or above an item, N is the quantity and PRICE is the unit price for that item; otherwise quantity defaults to 1
 - Discounts appear as negative prices — include them as line items with negative unit_price and total_price
 - When quantity is 1 and no unit price is shown on the receipt, set unit_price equal to total_price
+- For weighed items on supermarket receipts, the line below the item name shows "X,XXX kg  Y,YY €/kg  TOTAL" — extract quantity=X.XXX (in kg), unit_price=Y.YY (price per kg), total_price=TOTAL
 - For category, pick the most appropriate from:
   food, drink, dairy, meat, fish, bakery, produce, frozen,
   household, cleaning, personal_care, pet,
