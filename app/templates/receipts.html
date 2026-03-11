@@ -41,7 +41,7 @@
                 {% for r in pending %}
                 <tr>
                     <td>{{ r.created_at.strftime('%d %b %Y %H:%M') }}</td>
-                    <td>{{ r.company.name if r.company else '—' }}</td>
+                    <td>{{ r.company.display_name if r.company else '—' }}</td>
                     <td>
                         <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
                            target="_blank" class="file-tag" style="text-decoration:none; color:inherit;">{{ r.filename }} &#8599;</a>
@@ -72,7 +72,7 @@
 {% if grouped %}
 
 {# ── Grouped by company ──────────────────────────────────────────── #}
-{% for company_name, group in receipts | groupby('company.name', default='Unknown') %}
+{% for company_name, group in receipts | groupby('company.display_name', default='Unknown') %}
 {% set group_list = group | list %}
 {% set group_total = namespace(val=0) %}
 {% for r in group_list %}{% if r.total_amount %}{% set group_total.val = group_total.val + r.total_amount %}{% endif %}{% endfor %}
@@ -149,7 +149,7 @@
                 {% for r in receipts %}
                 <tr>
                     <td style="white-space:nowrap">{{ r.receipt_date.strftime('%d %b %Y') if r.receipt_date else '—' }}</td>
-                    <td>{{ r.company.name if r.company else '—' }}</td>
+                    <td>{{ r.company.display_name if r.company else '—' }}</td>
                     <td style="white-space:nowrap"><span class="badge">{{ r.document_type.replace('_',' ').title() }}</span></td>
                     <td>{{ r.line_items | length }}</td>
                     <td style="text-align:right">

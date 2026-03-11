@@ -88,6 +88,13 @@ def create_app():
 def _migrate_db(db):
     """Apply incremental schema changes that db.create_all() won't handle."""
     with db.engine.connect() as conn:
+        # companies table
+        cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(companies)"))]
+        if "alias" not in cols:
+            conn.execute(db.text("ALTER TABLE companies ADD COLUMN alias TEXT"))
+            conn.execute(db.text("UPDATE companies SET alias = name WHERE alias IS NULL"))
+            conn.commit()
+
         # receipts table
         cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(receipts)"))]
         if "updated_at" not in cols:

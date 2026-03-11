@@ -35,12 +35,17 @@ class Company(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False, unique=True)
+    alias = db.Column(db.String(200), nullable=True)
     # Type: supermarket, utility, restaurant, pharmacy, household, other
     type = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     receipts = db.relationship("Receipt", back_populates="company")
     template = db.relationship("CompanyTemplate", back_populates="company", uselist=False, cascade="all, delete-orphan")
+
+    @property
+    def display_name(self):
+        return self.alias or self.name
 
     def __repr__(self):
         return f"<Company {self.name}>"

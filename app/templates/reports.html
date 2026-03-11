@@ -26,7 +26,7 @@
             <select id="companyFilter">
                 <option value="">All Companies</option>
                 {% for c in companies %}
-                <option value="{{ c.id }}">{{ c.name }}</option>
+                <option value="{{ c.id }}">{{ c.display_name }}</option>
                 {% endfor %}
             </select>
         </div>

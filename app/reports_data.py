@@ -178,6 +178,7 @@ def get_by_company(start: date, end: date, limit: int = 10, company_id: int = No
     q = (
         db.session.query(
             Company.name,
+            Company.alias,
             func.sum(Receipt.total_amount).label("total"),
         )
         .join(Company, Receipt.company_id == Company.id)
@@ -198,7 +199,7 @@ def get_by_company(start: date, end: date, limit: int = 10, company_id: int = No
     )
 
     return {
-        "labels": [r.name for r in rows],
+        "labels": [r.alias or r.name for r in rows],
         "values": [round(float(r.total), 2) for r in rows],
     }
 

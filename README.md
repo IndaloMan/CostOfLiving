@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.30 — 11 March 2026
+- **Company alias** — admin can set a display name for each company (e.g. "Iceland" for "Overseas - Vera"), shown on receipts, reports, and all views while preserving the original extracted name for matching
+
 ### v1.29 — 11 March 2026
 - app/templates/quick_scan.html
 

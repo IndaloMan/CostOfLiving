@@ -263,7 +263,7 @@ def scan():
             matched = sum(1 for li in receipt.line_items if li.category)
             if matched:
                 flash(
-                    f"Template applied: {matched} item(s) auto-categorised from previous {company.name} receipts.",
+                    f"Template applied: {matched} item(s) auto-categorised from previous {company.display_name} receipts.",
                     "info"
                 )
 
@@ -630,8 +630,9 @@ def company_detail(company_id):
     company = Company.query.get_or_404(company_id)
 
     if request.method == "POST":
-        # Save company type
+        # Save company type and alias
         company.type = request.form.get("company_type", "").strip() or None
+        company.alias = request.form.get("company_alias", "").strip() or None
 
         # Save manually edited template
         descs = request.form.getlist("tmpl_description[]")
@@ -644,7 +645,7 @@ def company_detail(company_id):
                 items.append({"description": desc, "category": cat})
         set_template_items(company.id, items)
         db.session.commit()
-        flash(f"Template for {company.name} updated ({len(items)} items).", "success")
+        flash(f"Template for {company.display_name} updated ({len(items)} items).", "success")
         return redirect(url_for("main.company_detail", company_id=company.id))
 
     template_items = get_template_items(company.id)

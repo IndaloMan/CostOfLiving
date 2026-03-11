@@ -20,7 +20,7 @@
             <tbody>
                 {% for c in companies %}
                 <tr>
-                    <td><strong>{{ c.name }}</strong></td>
+                    <td><strong>{{ c.display_name }}</strong>{% if c.alias and c.alias != c.name %}<br><small style="color:#aaa">{{ c.name }}</small>{% endif %}</td>
                     <td>{{ c.type or '—' }}</td>
                     <td style="text-align:center">
                         {{ c.receipts | selectattr('status','equalto','confirmed') | list | length }}
