@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.24 — 11 March 2026
+- app/templates/quick_scan.html
+
 ### v1.23 — 11 March 2026
 - **Quick Scan redesign** — two separate buttons (Take Photo / Upload Image) replace the single ambiguous button; buttons stack vertically in portrait mode; Extract Data hidden until file selected
 
