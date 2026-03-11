@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.17 — 11 March 2026
+- see commit
+
 ### v1.16 — 11 March 2026
 - **Quick Scan page** — new minimal mobile-friendly `/quick-scan` page with a large camera button; non-admin Scan nav link and Scan Now card point here automatically
 - **Mobile camera capture** — file input on scan pages uses `capture="environment"` so mobile browsers open the camera directly
