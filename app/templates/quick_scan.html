@@ -13,86 +13,76 @@
     padding: 1rem;
     text-align: center;
 }
-.qs-title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #333;
-    margin: 0;
-}
-.qs-sub {
-    color: #666;
-    margin: 0;
-    font-size: 0.95rem;
-}
+.qs-title { font-size: 1.4rem; font-weight: 600; color: #333; margin: 0; }
+.qs-sub   { color: #666; margin: 0; font-size: 0.95rem; }
+.qs-buttons { display: flex; flex-direction: column; gap: 1.2rem; align-items: center; }
 .qs-btn-label {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    width: 180px;
-    height: 180px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
-    background: #2980b9;
     color: #fff;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(41,128,185,0.35);
-    transition: background 0.15s, transform 0.1s;
-    border: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transition: filter 0.15s, transform 0.1s;
 }
-.qs-btn-label:active {
-    background: #1f6a9a;
-    transform: scale(0.97);
-}
-.qs-btn-label svg {
-    width: 52px;
-    height: 52px;
-}
-#qsFileInput { display: none; }
-#qsPreview {
-    font-size: 0.9rem;
-    color: #555;
-    max-width: 280px;
-    word-break: break-all;
-}
-#qsSubmitBtn {
-    width: 200px;
-    padding: 0.85rem;
-    font-size: 1rem;
-}
-#qsLoading {
-    color: #2980b9;
-    font-size: 0.95rem;
-}
+.qs-btn-label:active { filter: brightness(0.85); transform: scale(0.97); }
+.qs-btn-camera  { background: #2980b9; }
+.qs-btn-upload  { background: #27ae60; }
+.qs-btn-label.used { filter: brightness(0.6); cursor: default; }
+.qs-btn-label svg { width: 44px; height: 44px; }
+#qsPreview { font-size: 0.9rem; color: #555; }
+#qsSubmitBtn { width: 200px; padding: 0.85rem; font-size: 1rem; }
+#qsLoading   { color: #2980b9; font-size: 0.95rem; }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="qs-wrap">
     <p class="qs-title">Quick Scan</p>
-    <p class="qs-sub">Take a photo of your receipt and it will be extracted automatically.</p>
+    <p class="qs-sub">Take a photo or upload an image of your receipt.</p>
 
     <form method="POST" enctype="multipart/form-data" id="qsForm">
-        <label class="qs-btn-label" for="qsFileInput">
-            <!-- Camera icon -->
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-            </svg>
-            Take Photo
-        </label>
-        <input type="file" id="qsFileInput" name="file"
-               accept="image/*,application/pdf" capture="environment">
+        <!-- Hidden inputs — one per source -->
+        <input type="file" id="qsCameraInput" name="file"
+               accept="image/*" capture="environment" style="display:none">
+        <input type="file" id="qsUploadInput" name="file"
+               accept="image/*,application/pdf" style="display:none">
 
-        <div id="qsPreview" style="display:none; margin-top:1rem;"></div>
+        <div class="qs-buttons">
+            <!-- Take Photo -->
+            <label class="qs-btn-label qs-btn-camera" id="cameraLabel" for="qsCameraInput">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                Take Photo
+            </label>
 
-        <button type="submit" class="btn" id="qsSubmitBtn" style="display:none; margin-top:1rem;">
+            <!-- Upload Image -->
+            <label class="qs-btn-label qs-btn-upload" id="uploadLabel" for="qsUploadInput">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Upload Image
+            </label>
+        </div>
+
+        <div id="qsPreview" style="display:none; margin-top:0.5rem;"></div>
+
+        <button type="submit" class="btn" id="qsSubmitBtn" style="display:none;">
             &#128269; Extract Data
         </button>
 
-        <div id="qsLoading" style="display:none; margin-top:1rem;">
+        <div id="qsLoading" style="display:none;">
             &#9203; Extracting&hellip; please wait
         </div>
     </form>
@@ -101,15 +91,18 @@
 </div>
 
 <script>
-const qsInput  = document.getElementById('qsFileInput');
-const qsPreview= document.getElementById('qsPreview');
-const qsSubmit = document.getElementById('qsSubmitBtn');
-const qsForm   = document.getElementById('qsForm');
-const qsLoad   = document.getElementById('qsLoading');
+const cameraInput = document.getElementById('qsCameraInput');
+const uploadInput = document.getElementById('qsUploadInput');
+const cameraLabel = document.getElementById('cameraLabel');
+const uploadLabel = document.getElementById('uploadLabel');
+const qsPreview   = document.getElementById('qsPreview');
+const qsSubmit    = document.getElementById('qsSubmitBtn');
+const qsForm      = document.getElementById('qsForm');
+const qsLoad      = document.getElementById('qsLoading');
 
-qsInput.addEventListener('change', function () {
-    if (!qsInput.files.length) return;
-    const file = qsInput.files[0];
+function onFileSelected(input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
     const now = new Date();
     const ts = now.getFullYear().toString() +
         String(now.getMonth()+1).padStart(2,'0') +
@@ -121,14 +114,16 @@ qsInput.addEventListener('change', function () {
     qsPreview.textContent = ts + '.' + ext;
     qsPreview.style.display = 'block';
     qsSubmit.style.display = 'block';
-    // Grey out the Take Photo button to guide user to Extract Data
-    const label = document.querySelector('.qs-btn-label');
-    label.style.background = '#aaa';
-    label.style.boxShadow = 'none';
-    label.style.cursor = 'default';
-});
+    cameraLabel.classList.add('used');
+    uploadLabel.classList.add('used');
+}
+
+cameraInput.addEventListener('change', function() { onFileSelected(this); });
+uploadInput.addEventListener('change', function() { onFileSelected(this); });
 
 qsForm.addEventListener('submit', function () {
+    // Copy the selected file to the form — only one input can have name="file"
+    // Whichever input has files wins; the other is empty so no conflict
     qsSubmit.disabled = true;
     qsSubmit.style.opacity = '0.6';
     qsLoad.style.display = 'block';
