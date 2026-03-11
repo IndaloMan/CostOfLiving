@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.22 — 11 March 2026
+- app/static/502.html, app/templates/login.html
+
 ### v1.21 — 11 March 2026
 - **Change password** — all logged-in users can change their own password via nav Password link
 - **Admin password reset** — admin can reset any shopper's password from the shopper edit page
