@@ -1,5 +1,32 @@
 from . import db
 from datetime import datetime
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
+
+class Shopper(db.Model, UserMixin):
+    """A registered user of the app."""
+    __tablename__ = "shoppers"
+
+    id            = db.Column(db.Integer,     primary_key=True)
+    email         = db.Column(db.String(200), nullable=False, unique=True)
+    full_name     = db.Column(db.String(200), nullable=False)
+    nickname      = db.Column(db.String(50),  nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    is_admin      = db.Column(db.Boolean,     default=False, nullable=False)
+    is_active     = db.Column(db.Boolean,     default=True,  nullable=False)
+    created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
+
+    receipts = db.relationship("Receipt", back_populates="shopper")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f"<Shopper {self.email}>"
 
 
 class Company(db.Model):
@@ -37,6 +64,7 @@ class Receipt(db.Model):
     __tablename__ = "receipts"
 
     id = db.Column(db.Integer, primary_key=True)
+    shopper_id = db.Column(db.Integer, db.ForeignKey("shoppers.id"), nullable=True)
     company_id = db.Column(db.Integer, db.ForeignKey("companies.id"), nullable=True)
     # Date on the receipt itself
     receipt_date = db.Column(db.Date, nullable=True)
@@ -56,6 +84,7 @@ class Receipt(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=True)
 
+    shopper = db.relationship("Shopper", back_populates="receipts")
     company = db.relationship("Company", back_populates="receipts")
     line_items = db.relationship("LineItem", back_populates="receipt", cascade="all, delete-orphan")
     analysis   = db.relationship("ReceiptAnalysis", back_populates="receipt", uselist=False, cascade="all, delete-orphan")
@@ -170,4 +199,3 @@ class Transaction(db.Model):
 
     def __repr__(self):
         return f'<Transaction {self.date} {self.description} {self.amount}>'
-

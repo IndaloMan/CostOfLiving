@@ -15,11 +15,46 @@
             <span></span><span></span><span></span>
         </button>
         <ul class="nav-links" id="navLinks">
+            {% if current_user.is_authenticated %}
             <li><a href="/">Expenditure</a></li>
+            {% if current_user.is_admin %}
+            <li><a href="/scan">Scan</a></li>
+            {% else %}
+            <li><a href="/quick-scan">Scan</a></li>
+            {% endif %}
+            <li><a href="/reports">Reports</a></li>
+            {% if current_user.is_admin %}
             <li><a href="/income-dashboard">Income</a></li>
             <li><a href="/settings">Settings</a></li>
+            <li><a href="/shoppers">Shoppers</a></li>
+            {% endif %}
+            <li class="nav-user">
+                <span class="nav-nickname">{{ current_user.nickname }}</span>
+                <a href="/logout" class="nav-logout">Logout</a>
+            </li>
+            {% endif %}
         </ul>
     </nav>
+
+    {% if current_user.is_authenticated and current_user.is_admin %}
+    <div class="view-as-bar">
+        <span class="view-as-label">Viewing:</span>
+        <form method="POST" action="/view-as" id="viewAsForm">
+            <select name="view_as" onchange="document.getElementById('viewAsForm').submit()">
+                <option value="all" {% if not session.get('view_as') or session.get('view_as') == 'all' %}selected{% endif %}>
+                    All Shoppers
+                </option>
+                {% for s in all_shoppers %}
+                <option value="{{ s.id }}"
+                    {% if session.get('view_as') == s.id|string %}selected{% endif %}>
+                    {{ s.nickname }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    {% endif %}
+
     <script>
         document.getElementById('navToggle').addEventListener('click', function() {
             document.getElementById('navLinks').classList.toggle('open');

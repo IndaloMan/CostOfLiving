@@ -36,10 +36,6 @@ def _period_key(d: date, group_by: str) -> str:
     return f"{d.year}-{d.month:02d}"  # month (default)
 
 
-# ---------------------------------------------------------------------------
-# Summary
-# ---------------------------------------------------------------------------
-
 def _company_filter(query, company_id):
     """Append a company_id filter to a query if one is specified."""
     if company_id:
@@ -47,44 +43,56 @@ def _company_filter(query, company_id):
     return query
 
 
-def get_summary(start: date, end: date, company_id: int = None) -> dict:
+def _shopper_filter(query, shopper_id):
+    """Append a shopper_id filter to a query if one is specified."""
+    if shopper_id:
+        query = query.filter(Receipt.shopper_id == shopper_id)
+    return query
+
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+
+def get_summary(start: date, end: date, company_id: int = None, shopper_id: int = None) -> dict:
     """Total spend, receipt count, average, and top category for the period."""
-    row = (
-        _company_filter(
-            db.session.query(
-                func.sum(Receipt.total_amount).label("total"),
-                func.count(Receipt.id).label("count"),
-            )
-            .filter(
-                Receipt.status == "confirmed",
-                Receipt.receipt_date >= start,
-                Receipt.receipt_date <= end,
-            ),
-            company_id,
+    base = (
+        db.session.query(
+            func.sum(Receipt.total_amount).label("total"),
+            func.count(Receipt.id).label("count"),
         )
-        .first()
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+        )
     )
+    base = _company_filter(base, company_id)
+    base = _shopper_filter(base, shopper_id)
+    row = base.first()
 
     total = float(row.total or 0)
     count = int(row.count or 0)
 
-    top_cat = (
-        _company_filter(
-            db.session.query(
-                LineItem.category,
-                func.sum(LineItem.total_price).label("cat_total"),
-            )
-            .join(Receipt, LineItem.receipt_id == Receipt.id)
-            .filter(
-                Receipt.status == "confirmed",
-                Receipt.receipt_date >= start,
-                Receipt.receipt_date <= end,
-                LineItem.category.isnot(None),
-                LineItem.category != "",
-                LineItem.total_price.isnot(None),
-            ),
-            company_id,
+    top_cat_q = (
+        db.session.query(
+            LineItem.category,
+            func.sum(LineItem.total_price).label("cat_total"),
         )
+        .join(Receipt, LineItem.receipt_id == Receipt.id)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            LineItem.category.isnot(None),
+            LineItem.category != "",
+            LineItem.total_price.isnot(None),
+        )
+    )
+    top_cat_q = _company_filter(top_cat_q, company_id)
+    top_cat_q = _shopper_filter(top_cat_q, shopper_id)
+    top_cat = (
+        top_cat_q
         .group_by(LineItem.category)
         .order_by(func.sum(LineItem.total_price).desc())
         .first()
@@ -102,23 +110,21 @@ def get_summary(start: date, end: date, company_id: int = None) -> dict:
 # Spending over time
 # ---------------------------------------------------------------------------
 
-def get_spending_over_time(start: date, end: date, group_by: str = "month", company_id: int = None) -> dict:
+def get_spending_over_time(start: date, end: date, group_by: str = "month", company_id: int = None, shopper_id: int = None) -> dict:
     """Total spending grouped by month / quarter / year."""
-    rows = (
-        _company_filter(
-            db.session.query(Receipt.receipt_date, Receipt.total_amount)
-            .filter(
-                Receipt.status == "confirmed",
-                Receipt.receipt_date >= start,
-                Receipt.receipt_date <= end,
-                Receipt.total_amount.isnot(None),
-                Receipt.receipt_date.isnot(None),
-            ),
-            company_id,
+    q = (
+        db.session.query(Receipt.receipt_date, Receipt.total_amount)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            Receipt.total_amount.isnot(None),
+            Receipt.receipt_date.isnot(None),
         )
-        .order_by(Receipt.receipt_date)
-        .all()
     )
+    q = _company_filter(q, company_id)
+    q = _shopper_filter(q, shopper_id)
+    rows = q.order_by(Receipt.receipt_date).all()
 
     groups: dict[str, float] = {}
     for r in rows:
@@ -136,29 +142,26 @@ def get_spending_over_time(start: date, end: date, group_by: str = "month", comp
 # By category
 # ---------------------------------------------------------------------------
 
-def get_by_category(start: date, end: date, company_id: int = None) -> dict:
+def get_by_category(start: date, end: date, company_id: int = None, shopper_id: int = None) -> dict:
     """Total spending per category, highest first."""
-    rows = (
-        _company_filter(
-            db.session.query(
-                LineItem.category,
-                func.sum(LineItem.total_price).label("total"),
-            )
-            .join(Receipt, LineItem.receipt_id == Receipt.id)
-            .filter(
-                Receipt.status == "confirmed",
-                Receipt.receipt_date >= start,
-                Receipt.receipt_date <= end,
-                LineItem.category.isnot(None),
-                LineItem.category != "",
-                LineItem.total_price.isnot(None),
-            ),
-            company_id,
+    q = (
+        db.session.query(
+            LineItem.category,
+            func.sum(LineItem.total_price).label("total"),
         )
-        .group_by(LineItem.category)
-        .order_by(func.sum(LineItem.total_price).desc())
-        .all()
+        .join(Receipt, LineItem.receipt_id == Receipt.id)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            LineItem.category.isnot(None),
+            LineItem.category != "",
+            LineItem.total_price.isnot(None),
+        )
     )
+    q = _company_filter(q, company_id)
+    q = _shopper_filter(q, shopper_id)
+    rows = q.group_by(LineItem.category).order_by(func.sum(LineItem.total_price).desc()).all()
 
     return {
         "labels": [r.category for r in rows],
@@ -170,24 +173,25 @@ def get_by_category(start: date, end: date, company_id: int = None) -> dict:
 # By company
 # ---------------------------------------------------------------------------
 
-def get_by_company(start: date, end: date, limit: int = 10, company_id: int = None) -> dict:
+def get_by_company(start: date, end: date, limit: int = 10, company_id: int = None, shopper_id: int = None) -> dict:
     """Total spending per company, highest first."""
-    rows = (
-        _company_filter(
-            db.session.query(
-                Company.name,
-                func.sum(Receipt.total_amount).label("total"),
-            )
-            .join(Company, Receipt.company_id == Company.id)
-            .filter(
-                Receipt.status == "confirmed",
-                Receipt.receipt_date >= start,
-                Receipt.receipt_date <= end,
-                Receipt.total_amount.isnot(None),
-            ),
-            company_id,
+    q = (
+        db.session.query(
+            Company.name,
+            func.sum(Receipt.total_amount).label("total"),
         )
-        .group_by(Company.name)
+        .join(Company, Receipt.company_id == Company.id)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            Receipt.total_amount.isnot(None),
+        )
+    )
+    q = _company_filter(q, company_id)
+    q = _shopper_filter(q, shopper_id)
+    rows = (
+        q.group_by(Company.name)
         .order_by(func.sum(Receipt.total_amount).desc())
         .limit(limit)
         .all()
@@ -203,32 +207,30 @@ def get_by_company(start: date, end: date, limit: int = 10, company_id: int = No
 # Price trend
 # ---------------------------------------------------------------------------
 
-def get_price_trend(description: str, start: date, end: date, company_id: int = None) -> dict:
+def get_price_trend(description: str, start: date, end: date, company_id: int = None, shopper_id: int = None) -> dict:
     """
     Unit price of a line item (matched by partial description) over time.
     Uses unit_price if set; otherwise total_price / quantity.
     """
-    rows = (
-        _company_filter(
-            db.session.query(
-                Receipt.receipt_date,
-                LineItem.description,
-                LineItem.unit_price,
-                LineItem.total_price,
-                LineItem.quantity,
-            )
-            .join(Receipt, LineItem.receipt_id == Receipt.id)
-            .filter(
-                Receipt.status == "confirmed",
-                Receipt.receipt_date >= start,
-                Receipt.receipt_date <= end,
-                LineItem.description.ilike(f"%{description}%"),
-            ),
-            company_id,
+    q = (
+        db.session.query(
+            Receipt.receipt_date,
+            LineItem.description,
+            LineItem.unit_price,
+            LineItem.total_price,
+            LineItem.quantity,
         )
-        .order_by(Receipt.receipt_date)
-        .all()
+        .join(Receipt, LineItem.receipt_id == Receipt.id)
+        .filter(
+            Receipt.status == "confirmed",
+            Receipt.receipt_date >= start,
+            Receipt.receipt_date <= end,
+            LineItem.description.ilike(f"%{description}%"),
+        )
     )
+    q = _company_filter(q, company_id)
+    q = _shopper_filter(q, shopper_id)
+    rows = q.order_by(Receipt.receipt_date).all()
 
     points = []
     for r in rows:
@@ -310,7 +312,7 @@ def get_top_items(start: date, end: date, company_id: int, limit: int = 15) -> d
 # Item autocomplete suggestions
 # ---------------------------------------------------------------------------
 
-def get_item_suggestions(q: str, limit: int = 12, company_id: int = None) -> list:
+def get_item_suggestions(q: str, limit: int = 12, company_id: int = None, shopper_id: int = None) -> list:
     """Return distinct item descriptions matching a search string, most frequent first."""
     query = (
         db.session.query(LineItem.description)
@@ -319,6 +321,8 @@ def get_item_suggestions(q: str, limit: int = 12, company_id: int = None) -> lis
     )
     if company_id:
         query = query.filter(Receipt.company_id == company_id)
+    if shopper_id:
+        query = query.filter(Receipt.shopper_id == shopper_id)
     rows = (
         query
         .group_by(func.lower(LineItem.description))
@@ -333,7 +337,7 @@ def get_item_suggestions(q: str, limit: int = 12, company_id: int = None) -> lis
 # Item analysis (supermarkets)
 # ---------------------------------------------------------------------------
 
-def get_item_analysis(start: date, end: date, company_id: int = None) -> list:
+def get_item_analysis(start: date, end: date, company_id: int = None, shopper_id: int = None) -> list:
     """Return per-item stats (qty, price low/high) for supermarket receipts."""
     query = (
         db.session.query(
@@ -350,6 +354,8 @@ def get_item_analysis(start: date, end: date, company_id: int = None) -> list:
     )
     if company_id:
         query = query.filter(Company.id == company_id)
+    if shopper_id:
+        query = query.filter(Receipt.shopper_id == shopper_id)
     rows = (
         query
         .group_by(func.lower(LineItem.description))
@@ -442,4 +448,3 @@ def get_income_report(start: date, end: date) -> dict:
             "net_worth":         net_worth,
         },
     }
-

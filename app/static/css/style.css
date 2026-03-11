@@ -591,3 +591,103 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
 /* Sortable table headers */
 th.sortable:hover { color: #2980b9; }
 th.sortable .sort-icon { font-size: 0.7rem; color: #2980b9; }
+
+/* =========================================================
+   Multi-shopper additions
+   ========================================================= */
+
+/* Login page */
+body.login-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #f4f6f9;
+    padding: 1rem;
+}
+.login-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    padding: 2rem 2.5rem;
+    width: 100%;
+    max-width: 380px;
+}
+.login-brand {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #2c6fad;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+.login-form .form-group {
+    margin-bottom: 1rem;
+}
+.login-form label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+.login-form input {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+.btn-full { width: 100%; margin-top: 0.5rem; }
+
+/* View-as bar */
+.view-as-bar {
+    background: #2c6fad;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 1.2rem;
+    font-size: 0.85rem;
+}
+.view-as-label { font-weight: 600; }
+.view-as-bar select {
+    border: none;
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+/* Nav user info */
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.nav-nickname {
+    font-weight: 600;
+    color: #fff;
+    opacity: 0.9;
+}
+.nav-logout {
+    font-size: 0.82rem;
+    color: #fff !important;
+    opacity: 0.75;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+}
+.nav-logout:hover { opacity: 1; }
+
+/* Inactive shopper row */
+.row-inactive td { opacity: 0.5; }
+
+/* Checkbox label */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+.checkbox-label input { width: auto; margin: 0; }

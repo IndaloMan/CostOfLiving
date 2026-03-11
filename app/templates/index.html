@@ -10,16 +10,18 @@
             <div class="stat-num">{{ total_receipts }}</div>
             <div class="stat-label">Receipts Saved</div>
         </a>
+        {% if current_user.is_admin %}
         <a href="/companies" class="stat-box stat-box-link">
             <div class="stat-num">{{ total_companies }}</div>
             <div class="stat-label">Companies</div>
         </a>
+        {% endif %}
     </div>
     <div class="cards">
         <div class="card">
             <h2>Scan a Receipt</h2>
             <p>Upload a photo or PDF of a receipt or invoice to extract and store its data.</p>
-            <a href="/scan" class="btn">Scan Now</a>
+            <a href="{{ '/scan' if current_user.is_admin else '/quick-scan' }}" class="btn">Scan Now</a>
         </div>
         <div class="card">
             <h2>View Receipts</h2>
@@ -28,12 +30,12 @@
         </div>
         <div class="card">
             <h2>Companies</h2>
-            <p>View all companies, edit templates and run company-specific analysis.</p>
+            <p>View the companies you've shopped at and their spending history.</p>
             <a href="/companies" class="btn">View Companies</a>
         </div>
         <div class="card">
             <h2>Reports &amp; Charts</h2>
-            <p>Analyse spending trends by category, company, or time period.</p>
+            <p>Analyse your spending trends by category, company, or time period.</p>
             <a href="/reports" class="btn">View Reports</a>
         </div>
         <div class="card">

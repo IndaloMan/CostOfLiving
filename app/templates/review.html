@@ -20,6 +20,14 @@
 <form method="POST" action="{{ url_for('main.confirm', receipt_id=receipt.id) }}">
 {% if from_grouped %}<input type="hidden" name="from_grouped" value="1">{% endif %}
 
+    {% if not editing %}
+    <div style="margin-bottom:1.5rem;">
+        <button type="submit" class="btn btn-lg" id="quickConfirmBtn" style="width:100%; padding:1rem; font-size:1.1rem;">
+            &#10003; Quick Confirm &amp; Save
+        </button>
+    </div>
+    {% endif %}
+
     <!-- Receipt details -->
     <div class="card" style="margin-bottom:1.5rem;">
         <h2>Receipt Details</h2>

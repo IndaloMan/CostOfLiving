@@ -186,8 +186,21 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.16 — 11 March 2026
+- **Quick Scan page** — new minimal mobile-friendly `/quick-scan` page with a large camera button; non-admin Scan nav link and Scan Now card point here automatically
+- **Mobile camera capture** — file input on scan pages uses `capture="environment"` so mobile browsers open the camera directly
+- **Quick Confirm button** — full-width confirm button added at the top of the Review page for one-tap confirmation without scrolling
+
+### v1.15 — 11 March 2026
+- **Multi-shopper support** — Shoppers table (email, full name, nickname, password, admin flag, active flag); each receipt is owned by the shopper who uploaded it
+- **Authentication** — flask-login session-based login/logout; all routes protected; stable SECRET_KEY via .env
+- **Admin controls** — admin sees all shoppers data; View As dropdown lets admin switch to any shopper's view; Shoppers management page (add, edit, activate/deactivate)
+- **Per-shopper data filtering** — receipts list, dashboard counts, companies page, reports & charts, price tracker all filtered to current shopper's own data
+- **Non-admin nav** — simplified to Expenditure, Scan, Reports; Settings, Income, Accounts, Transactions, Shoppers restricted to admin only
+- **App logging** — login/logout (with IP), upload, confirm, delete and shopper changes logged to console and rotating app.log
+
 ### v1.14 — 11 March 2026
-- app/templates/base.html
+- Add extra_head block to base template
 
 ### v1.13 — 10 March 2026
 - **Date presets on filter pages** — Month, Qtr, YTD and Prev Yr buttons on Reports, Mercadona Analysis, Energy Nordic Analysis and Income Reports; clicking auto-applies the date range

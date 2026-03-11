@@ -4,8 +4,11 @@ import config
 from datetime import date, datetime
 from flask import (
     Blueprint, render_template, request, redirect,
-    url_for, flash, current_app, jsonify
+    url_for, flash, current_app, jsonify, session
 )
+import logging
+from flask_login import login_required, current_user, login_user, logout_user
+log = logging.getLogger(__name__)
 from werkzeug.utils import secure_filename
 from . import db
 from .extractor import extract_from_file, ExtractionError
@@ -13,7 +16,7 @@ from .template_manager import (
     get_template_items, apply_template_hints,
     update_template, set_template_items
 )
-from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate, Income, Account, Transaction
+from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate, Income, Account, Transaction, Shopper
 from .company_analysers import get_analyser_key, canonical_name, get_analysis_endpoint
 from .reports_data import (
     parse_date, default_start,
@@ -27,6 +30,55 @@ from .reports_data import (
 
 main = Blueprint("main", __name__)
 
+
+# ---------------------------------------------------------------------------
+# Shopper helpers
+# ---------------------------------------------------------------------------
+
+def _view_as_shopper_id():
+    """Returns shopper_id to filter receipts by, or None for all receipts (admin only)."""
+    if current_user.is_admin:
+        v = session.get('view_as', 'all')
+        if v == 'all':
+            return None
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            return None
+    return current_user.id
+
+
+def _apply_shopper_filter(query):
+    """Apply shopper filter to a Receipt query based on current user / view_as."""
+    sid = _view_as_shopper_id()
+    if sid is not None:
+        query = query.filter(Receipt.shopper_id == sid)
+    return query
+
+
+def _admin_required():
+    """Flash and redirect if current user is not admin. Returns redirect or None."""
+    if not current_user.is_admin:
+        flash("Admin access required.", "error")
+        return redirect(url_for("main.index"))
+    return None
+
+
+def admin_required(f):
+    """Decorator: restricts route to admin users only."""
+    from functools import wraps
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_admin:
+            flash("Admin access required.", "error")
+            return redirect(url_for("main.index"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+# ---------------------------------------------------------------------------
+# List helpers
+# ---------------------------------------------------------------------------
 
 def _get_categories():
     """Return sorted list of category values from the DB."""
@@ -62,13 +114,47 @@ def _allowed_file(filename):
 
 
 # ---------------------------------------------------------------------------
+# Auth — login / logout
+# ---------------------------------------------------------------------------
+
+@main.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+    if request.method == "POST":
+        email    = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        shopper  = Shopper.query.filter(db.func.lower(Shopper.email) == email).first()
+        if shopper and shopper.is_active and shopper.check_password(password):
+            login_user(shopper, remember=True)
+            log.info(f"LOGIN  {shopper.email} ({shopper.nickname}) from {request.remote_addr}")
+            next_page = request.args.get("next")
+            return redirect(next_page or url_for("main.index"))
+        log.warning(f"LOGIN FAILED  {email} from {request.remote_addr}")
+        flash("Invalid email or password.", "error")
+    return render_template("login.html")
+
+
+@main.route("/logout")
+def logout():
+    log.info(f"LOGOUT {current_user.email if current_user.is_authenticated else "?"} from {request.remote_addr}")
+    logout_user()
+    return redirect(url_for("main.login"))
+
+
+# ---------------------------------------------------------------------------
 # Dashboard
 # ---------------------------------------------------------------------------
 
 @main.route("/")
+@login_required
 def index():
-    total_receipts = Receipt.query.filter_by(status="confirmed").count()
-    total_companies = Company.query.count()
+    sid = _view_as_shopper_id()
+    q = Receipt.query.filter_by(status="confirmed")
+    if sid is not None:
+        q = q.filter(Receipt.shopper_id == sid)
+    total_receipts = q.count()
+    total_companies = Company.query.count() if current_user.is_admin else 0
     return render_template("index.html", total_receipts=total_receipts, total_companies=total_companies)
 
 
@@ -91,7 +177,6 @@ def _process_one_file(f):
     existing = Receipt.query.filter_by(filename=filename).first()
     if existing:
         if existing.status == "pending":
-            # Return the receipt so the caller can offer a Review link
             return existing, f"'{filename}' already uploaded (pending — not yet reviewed)"
         return None, f"'{filename}' already uploaded (confirmed)"
 
@@ -121,6 +206,7 @@ def _process_one_file(f):
             pass
 
     receipt = Receipt(
+        shopper_id=current_user.id,
         company=company,
         receipt_date=receipt_date,
         total_amount=extracted.get("total_amount"),
@@ -155,6 +241,7 @@ def _process_one_file(f):
 
 
 @main.route("/scan", methods=["GET", "POST"])
+@login_required
 def scan():
     if request.method == "GET":
         return render_template("scan.html")
@@ -180,11 +267,33 @@ def scan():
                 )
 
     db.session.commit()
+    log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
     flash("Receipt scanned. Review and confirm the details below.", "info")
     return redirect(url_for("main.review", receipt_id=receipt.id))
 
 
+@main.route("/quick-scan", methods=["GET", "POST"])
+@login_required
+def quick_scan():
+    if request.method == "GET":
+        return render_template("quick_scan.html")
+
+    if "file" not in request.files or request.files["file"].filename == "":
+        flash("No file selected.", "error")
+        return redirect(url_for("main.quick_scan"))
+
+    receipt, error = _process_one_file(request.files["file"])
+    if error:
+        flash(error, "error")
+        return redirect(url_for("main.quick_scan"))
+
+    db.session.commit()
+    log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname} (quick-scan)")
+    return redirect(url_for("main.review", receipt_id=receipt.id))
+
+
 @main.route("/scan/batch", methods=["GET", "POST"])
+@login_required
 def scan_batch():
     if request.method == "GET":
         return render_template("scan_batch.html")
@@ -218,6 +327,7 @@ def scan_batch():
 # ---------------------------------------------------------------------------
 
 @main.route("/scan/review/<int:receipt_id>")
+@login_required
 def review(receipt_id):
     receipt = Receipt.query.get_or_404(receipt_id)
     companies = Company.query.order_by(Company.name).all()
@@ -239,6 +349,7 @@ def review(receipt_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/scan/confirm/<int:receipt_id>", methods=["POST"])
+@login_required
 def confirm(receipt_id):
     receipt = Receipt.query.get_or_404(receipt_id)
 
@@ -351,6 +462,7 @@ def confirm(receipt_id):
                 except AnalysisError as e:
                     flash(f"Analysis could not run: {e}", "error")
 
+    log.info(f"CONFIRM receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
     flash("Receipt confirmed and saved.", "success")
     if request.form.get("from_grouped"):
         return redirect(url_for("main.receipts", view="grouped"))
@@ -362,19 +474,16 @@ def confirm(receipt_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/receipts")
+@login_required
 def receipts():
-    confirmed = (
-        Receipt.query
-        .filter_by(status="confirmed")
-        .order_by(Receipt.receipt_date.desc())
-        .all()
-    )
-    pending = (
-        Receipt.query
-        .filter_by(status="pending")
-        .order_by(Receipt.created_at.desc())
-        .all()
-    )
+    sid = _view_as_shopper_id()
+    confirmed_q = Receipt.query.filter_by(status="confirmed")
+    pending_q   = Receipt.query.filter_by(status="pending")
+    if sid is not None:
+        confirmed_q = confirmed_q.filter(Receipt.shopper_id == sid)
+        pending_q   = pending_q.filter(Receipt.shopper_id == sid)
+    confirmed = confirmed_q.order_by(Receipt.receipt_date.desc()).all()
+    pending   = pending_q.order_by(Receipt.created_at.desc()).all()
     return render_template("receipts.html", receipts=confirmed, pending=pending)
 
 
@@ -383,6 +492,7 @@ def receipts():
 # ---------------------------------------------------------------------------
 
 @main.route("/receipts/<int:receipt_id>/delete", methods=["POST"])
+@login_required
 def delete_receipt(receipt_id):
     receipt = Receipt.query.get_or_404(receipt_id)
     LineItem.query.filter_by(receipt_id=receipt.id).delete()
@@ -390,6 +500,7 @@ def delete_receipt(receipt_id):
     filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], receipt.filename)
     if os.path.exists(filepath):
         os.remove(filepath)
+    log.info(f"DELETE  receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
     db.session.delete(receipt)
     db.session.commit()
     flash(f"Receipt '{receipt.filename}' deleted.", "success")
@@ -401,8 +512,14 @@ def delete_receipt(receipt_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/receipts/process-all-pending", methods=["POST"])
+@login_required
 def process_all_pending():
-    pending = Receipt.query.filter_by(status="pending").all()
+    sid = _view_as_shopper_id()
+    q = Receipt.query.filter_by(status="pending")
+    if sid is not None:
+        q = q.filter(Receipt.shopper_id == sid)
+    pending = q.all()
+
     if not pending:
         flash("No pending receipts to process.", "info")
         return redirect(url_for("main.receipts"))
@@ -460,6 +577,7 @@ def process_all_pending():
 # ---------------------------------------------------------------------------
 
 @main.route("/receipts/<int:receipt_id>/edit")
+@login_required
 def edit_receipt(receipt_id):
     receipt = Receipt.query.get_or_404(receipt_id)
     companies = Company.query.order_by(Company.name).all()
@@ -483,8 +601,17 @@ def edit_receipt(receipt_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/companies")
+@login_required
 def companies():
-    all_companies = Company.query.order_by(Company.name).all()
+    if current_user.is_admin:
+        all_companies = Company.query.order_by(Company.name).all()
+    else:
+        sid = current_user.id
+        company_ids = db.session.query(Receipt.company_id).filter(
+            Receipt.shopper_id == sid, Receipt.status == "confirmed",
+            Receipt.company_id.isnot(None)
+        ).distinct()
+        all_companies = Company.query.filter(Company.id.in_(company_ids)).order_by(Company.name).all()
     return render_template(
         "companies.html",
         companies=all_companies,
@@ -497,6 +624,7 @@ def companies():
 # ---------------------------------------------------------------------------
 
 @main.route("/companies/<int:company_id>", methods=["GET", "POST"])
+@login_required
 def company_detail(company_id):
     company = Company.query.get_or_404(company_id)
 
@@ -537,9 +665,19 @@ def company_detail(company_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/reports")
+@login_required
 def reports():
-    companies = Company.query.order_by(Company.name).all()
-    supermarkets = Company.query.filter_by(type="Supermarket").order_by(Company.name).all()
+    sid = _view_as_shopper_id()
+    if sid is not None:
+        company_ids = db.session.query(Receipt.company_id).filter(
+            Receipt.shopper_id == sid, Receipt.status == "confirmed",
+            Receipt.company_id.isnot(None)
+        ).distinct()
+        companies    = Company.query.filter(Company.id.in_(company_ids)).order_by(Company.name).all()
+        supermarkets = [c for c in companies if c.type == "Supermarket"]
+    else:
+        companies    = Company.query.order_by(Company.name).all()
+        supermarkets = Company.query.filter_by(type="Supermarket").order_by(Company.name).all()
     return render_template("reports.html", companies=companies, supermarkets=supermarkets)
 
 
@@ -557,39 +695,44 @@ def _company_id_arg():
 
 
 @main.route("/api/summary")
+@login_required
 def api_summary():
     start      = parse_date(request.args.get("start"), default_start())
     end        = parse_date(request.args.get("end"),   date.today())
     company_id = _company_id_arg()
-    return jsonify(get_summary(start, end, company_id))
+    return jsonify(get_summary(start, end, company_id, shopper_id=_view_as_shopper_id()))
 
 
 @main.route("/api/spending-over-time")
+@login_required
 def api_spending_over_time():
     start      = parse_date(request.args.get("start"), default_start())
     end        = parse_date(request.args.get("end"),   date.today())
     group_by   = request.args.get("group_by", "month")
     company_id = _company_id_arg()
-    return jsonify(get_spending_over_time(start, end, group_by, company_id))
+    return jsonify(get_spending_over_time(start, end, group_by, company_id, shopper_id=_view_as_shopper_id()))
 
 
 @main.route("/api/by-category")
+@login_required
 def api_by_category():
     start      = parse_date(request.args.get("start"), default_start())
     end        = parse_date(request.args.get("end"),   date.today())
     company_id = _company_id_arg()
-    return jsonify(get_by_category(start, end, company_id))
+    return jsonify(get_by_category(start, end, company_id, shopper_id=_view_as_shopper_id()))
 
 
 @main.route("/api/by-company")
+@login_required
 def api_by_company():
     start      = parse_date(request.args.get("start"), default_start())
     end        = parse_date(request.args.get("end"),   date.today())
     company_id = _company_id_arg()
-    return jsonify(get_by_company(start, end, company_id=company_id))
+    return jsonify(get_by_company(start, end, company_id=company_id, shopper_id=_view_as_shopper_id()))
 
 
 @main.route("/api/price-trend")
+@login_required
 def api_price_trend():
     description = request.args.get("description", "").strip()
     start       = parse_date(request.args.get("start"), default_start())
@@ -597,15 +740,16 @@ def api_price_trend():
     company_id  = _company_id_arg()
     if not description:
         return jsonify({"labels": [], "values": [], "description": ""})
-    return jsonify(get_price_trend(description, start, end, company_id))
+    return jsonify(get_price_trend(description, start, end, company_id, shopper_id=_view_as_shopper_id()))
 
 
 @main.route("/api/item-suggestions")
+@login_required
 def api_item_suggestions():
     q = request.args.get("q", "").strip()
     if len(q) < 2:
         return jsonify([])
-    return jsonify(get_item_suggestions(q))
+    return jsonify(get_item_suggestions(q, shopper_id=_view_as_shopper_id()))
 
 
 # ---------------------------------------------------------------------------
@@ -621,20 +765,25 @@ def _get_mercadona():
 
 
 @main.route("/analysis/mercadona")
+@login_required
+@admin_required
 def analysis_mercadona():
     company = _get_mercadona()
     return render_template("analysis_mercadona.html", company=company)
 
 
 @main.route("/api/item-analysis")
+@login_required
 def api_item_analysis():
     start      = parse_date(request.args.get("start"), default_start())
     end        = parse_date(request.args.get("end"),   date.today())
     company_id = request.args.get("company_id", type=int)
-    return jsonify(get_item_analysis(start, end, company_id))
+    return jsonify(get_item_analysis(start, end, company_id, shopper_id=_view_as_shopper_id()))
 
 
 @main.route("/api/analysis/mercadona/summary")
+@login_required
+@admin_required
 def api_mercadona_summary():
     company = _get_mercadona()
     start = parse_date(request.args.get("start"), default_start())
@@ -659,6 +808,8 @@ def api_mercadona_summary():
 
 
 @main.route("/api/analysis/mercadona/per-visit")
+@login_required
+@admin_required
 def api_mercadona_per_visit():
     company = _get_mercadona()
     start = parse_date(request.args.get("start"), default_start())
@@ -667,6 +818,8 @@ def api_mercadona_per_visit():
 
 
 @main.route("/api/analysis/mercadona/by-category")
+@login_required
+@admin_required
 def api_mercadona_by_category():
     company = _get_mercadona()
     start = parse_date(request.args.get("start"), default_start())
@@ -675,6 +828,8 @@ def api_mercadona_by_category():
 
 
 @main.route("/api/analysis/mercadona/top-items")
+@login_required
+@admin_required
 def api_mercadona_top_items():
     company = _get_mercadona()
     start = parse_date(request.args.get("start"), default_start())
@@ -684,6 +839,8 @@ def api_mercadona_top_items():
 
 
 @main.route("/api/analysis/mercadona/price-trend")
+@login_required
+@admin_required
 def api_mercadona_price_trend():
     company     = _get_mercadona()
     description = request.args.get("description", "").strip()
@@ -695,6 +852,8 @@ def api_mercadona_price_trend():
 
 
 @main.route("/api/analysis/mercadona/item-suggestions")
+@login_required
+@admin_required
 def api_mercadona_item_suggestions():
     company = _get_mercadona()
     q = request.args.get("q", "").strip()
@@ -708,6 +867,8 @@ def api_mercadona_item_suggestions():
 # ---------------------------------------------------------------------------
 
 @main.route("/analysis/energy-nordic")
+@login_required
+@admin_required
 def analysis_energy_nordic():
     company = Company.query.filter(
         db.func.lower(Company.name) == "energy nordic"
@@ -761,6 +922,8 @@ def analysis_energy_nordic():
 
 
 @main.route("/analysis/energy-nordic/run", methods=["POST"])
+@login_required
+@admin_required
 def analysis_energy_nordic_run():
     """Run (or re-run) analysis on all Energy Nordic receipts that lack it."""
     from .company_analysers.energy_nordic import analyse, AnalysisError
@@ -815,6 +978,7 @@ def analysis_energy_nordic_run():
 # ---------------------------------------------------------------------------
 
 @main.route("/uploads/<path:filename>")
+@login_required
 def uploaded_file(filename):
     from flask import send_from_directory
     return send_from_directory(current_app.config["UPLOAD_FOLDER"], filename)
@@ -825,6 +989,8 @@ def uploaded_file(filename):
 # ---------------------------------------------------------------------------
 
 @main.route("/settings")
+@login_required
+@admin_required
 def settings():
     company_types = (
         ListItem.query
@@ -861,6 +1027,8 @@ def settings():
 
 
 @main.route("/settings/lists/<list_name>/add", methods=["POST"])
+@login_required
+@admin_required
 def settings_list_add(list_name):
     if list_name not in ("company_types", "categories", "income_categories", "account_types"):
         flash("Unknown list.", "error")
@@ -884,6 +1052,8 @@ def settings_list_add(list_name):
 
 
 @main.route("/settings/lists/<int:item_id>/delete", methods=["POST"])
+@login_required
+@admin_required
 def settings_list_delete(item_id):
     item = ListItem.query.get_or_404(item_id)
     value = item.value
@@ -927,6 +1097,8 @@ def settings_list_delete(item_id):
 
 
 @main.route("/settings/lists/<int:item_id>/rename", methods=["POST"])
+@login_required
+@admin_required
 def settings_list_rename(item_id):
     item = ListItem.query.get_or_404(item_id)
     old_value = item.value
@@ -982,6 +1154,8 @@ def settings_list_rename(item_id):
 
 
 @main.route("/settings/types/<int:item_id>/categories", methods=["POST"])
+@login_required
+@admin_required
 def settings_type_categories(item_id):
     item = ListItem.query.get_or_404(item_id)
     if item.list_name != "company_types":
@@ -1000,6 +1174,7 @@ def settings_type_categories(item_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/price-tracker")
+@login_required
 def price_tracker():
     return render_template("price_tracker.html")
 
@@ -1034,6 +1209,8 @@ def _get_account_types():
 # ---------------------------------------------------------------------------
 
 @main.route("/income")
+@login_required
+@admin_required
 def income():
     entries = Income.query.order_by(Income.date.desc()).all()
     income_cats = _get_income_categories()
@@ -1041,6 +1218,8 @@ def income():
 
 
 @main.route("/income/add", methods=["POST"])
+@login_required
+@admin_required
 def income_add():
     try:
         entry = Income(
@@ -1059,6 +1238,8 @@ def income_add():
 
 
 @main.route("/income/<int:entry_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
 def income_edit(entry_id):
     entry = Income.query.get_or_404(entry_id)
     income_cats = _get_income_categories()
@@ -1078,6 +1259,8 @@ def income_edit(entry_id):
 
 
 @main.route("/income/<int:entry_id>/delete", methods=["POST"])
+@login_required
+@admin_required
 def income_delete(entry_id):
     entry = Income.query.get_or_404(entry_id)
     db.session.delete(entry)
@@ -1091,6 +1274,8 @@ def income_delete(entry_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/accounts")
+@login_required
+@admin_required
 def accounts():
     accts = Account.query.order_by(Account.name).all()
     account_types = _get_account_types()
@@ -1108,6 +1293,8 @@ def accounts():
 
 
 @main.route("/accounts/add", methods=["POST"])
+@login_required
+@admin_required
 def accounts_add():
     try:
         acct = Account(
@@ -1126,6 +1313,8 @@ def accounts_add():
 
 
 @main.route("/accounts/<int:account_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
 def accounts_edit(account_id):
     acct = Account.query.get_or_404(account_id)
     account_types = _get_account_types()
@@ -1145,6 +1334,8 @@ def accounts_edit(account_id):
 
 
 @main.route("/accounts/<int:account_id>/delete", methods=["POST"])
+@login_required
+@admin_required
 def accounts_delete(account_id):
     acct = Account.query.get_or_404(account_id)
     db.session.delete(acct)
@@ -1158,11 +1349,15 @@ def accounts_delete(account_id):
 # ---------------------------------------------------------------------------
 
 @main.route("/income-reports")
+@login_required
+@admin_required
 def income_reports():
     return render_template("income_reports.html")
 
 
 @main.route("/api/income-report")
+@login_required
+@admin_required
 def api_income_report():
     start = parse_date(request.args.get("start"), default_start())
     end   = parse_date(request.args.get("end"),   date.today())
@@ -1173,6 +1368,8 @@ def api_income_report():
 # ---------------------------------------------------------------------------
 
 @main.route("/income-dashboard")
+@login_required
+@admin_required
 def income_dashboard():
     from .models import Income, Account
     total_entries = Income.query.count()
@@ -1217,6 +1414,8 @@ def _find_matching_receipt(description, txn_date, amount):
 # ---------------------------------------------------------------------------
 
 @main.route("/import")
+@login_required
+@admin_required
 def import_statement():
     accounts = Account.query.order_by(Account.name).all()
     categories = _get_categories()
@@ -1224,6 +1423,8 @@ def import_statement():
 
 
 @main.route("/import/preview", methods=["POST"])
+@login_required
+@admin_required
 def import_preview():
     f = request.files.get("file")
     if not f or not f.filename:
@@ -1291,6 +1492,8 @@ def import_preview():
 
 
 @main.route("/import/confirm", methods=["POST"])
+@login_required
+@admin_required
 def import_confirm():
     account_id = request.form.get("account_id", type=int)
     row_count  = request.form.get("row_count", type=int, default=0)
@@ -1356,6 +1559,8 @@ def import_confirm():
 # ---------------------------------------------------------------------------
 
 @main.route("/transactions")
+@login_required
+@admin_required
 def transactions():
     txns     = Transaction.query.order_by(Transaction.date.desc()).all()
     accounts = Account.query.order_by(Account.name).all()
@@ -1364,6 +1569,8 @@ def transactions():
 
 
 @main.route("/transactions/<int:txn_id>/edit", methods=["GET", "POST"])
+@login_required
+@admin_required
 def transaction_edit(txn_id):
     txn        = Transaction.query.get_or_404(txn_id)
     categories = _get_categories()
@@ -1385,6 +1592,8 @@ def transaction_edit(txn_id):
 
 
 @main.route("/transactions/<int:txn_id>/delete", methods=["POST"])
+@login_required
+@admin_required
 def transaction_delete(txn_id):
     txn = Transaction.query.get_or_404(txn_id)
     db.session.delete(txn)
@@ -1392,3 +1601,111 @@ def transaction_delete(txn_id):
     flash("Transaction deleted.", "success")
     return redirect(url_for("main.transactions"))
 
+
+# ---------------------------------------------------------------------------
+# Shopper management (admin only)
+# ---------------------------------------------------------------------------
+
+@main.route("/shoppers")
+@login_required
+def shoppers():
+    redir = _admin_required()
+    if redir:
+        return redir
+    all_shoppers = Shopper.query.order_by(Shopper.nickname).all()
+    for s in all_shoppers:
+        s.receipt_count = Receipt.query.filter_by(shopper_id=s.id, status="confirmed").count()
+    return render_template("shoppers.html", shoppers=all_shoppers)
+
+
+@main.route("/shoppers/new", methods=["GET", "POST"])
+@login_required
+def shopper_new():
+    redir = _admin_required()
+    if redir:
+        return redir
+    if request.method == "POST":
+        email     = request.form.get("email", "").strip().lower()
+        full_name = request.form.get("full_name", "").strip()
+        nickname  = request.form.get("nickname", "").strip()
+        password  = request.form.get("password", "")
+        is_admin  = bool(request.form.get("is_admin"))
+        if not email or not full_name or not nickname or not password:
+            flash("All fields are required.", "error")
+            return render_template("shopper_edit.html", shopper=None)
+        if Shopper.query.filter(db.func.lower(Shopper.email) == email).first():
+            flash(f"Email '{email}' is already registered.", "error")
+            return render_template("shopper_edit.html", shopper=None)
+        s = Shopper(email=email, full_name=full_name, nickname=nickname,
+                    is_admin=is_admin, is_active=True)
+        s.set_password(password)
+        db.session.add(s)
+        db.session.commit()
+        log.info(f"SHOPPER ADD  {email} ({nickname}) by {current_user.nickname}")
+        flash(f"Shopper '{nickname}' added.", "success")
+        return redirect(url_for("main.shoppers"))
+    return render_template("shopper_edit.html", shopper=None)
+
+
+@main.route("/shoppers/<int:shopper_id>/edit", methods=["GET", "POST"])
+@login_required
+def shopper_edit(shopper_id):
+    redir = _admin_required()
+    if redir:
+        return redir
+    s = Shopper.query.get_or_404(shopper_id)
+    if request.method == "POST":
+        email     = request.form.get("email", "").strip().lower()
+        full_name = request.form.get("full_name", "").strip()
+        nickname  = request.form.get("nickname", "").strip()
+        is_admin  = bool(request.form.get("is_admin"))
+        new_pw    = request.form.get("password", "").strip()
+        # Check for email conflict with another shopper
+        conflict = Shopper.query.filter(
+            db.func.lower(Shopper.email) == email,
+            Shopper.id != s.id
+        ).first()
+        if conflict:
+            flash(f"Email '{email}' is already in use.", "error")
+            return render_template("shopper_edit.html", shopper=s)
+        s.email     = email
+        s.full_name = full_name
+        s.nickname  = nickname
+        s.is_admin  = is_admin
+        if new_pw:
+            s.set_password(new_pw)
+        db.session.commit()
+        flash(f"Shopper '{s.nickname}' updated.", "success")
+        return redirect(url_for("main.shoppers"))
+    return render_template("shopper_edit.html", shopper=s)
+
+
+@main.route("/shoppers/<int:shopper_id>/toggle-active", methods=["POST"])
+@login_required
+def shopper_toggle_active(shopper_id):
+    redir = _admin_required()
+    if redir:
+        return redir
+    s = Shopper.query.get_or_404(shopper_id)
+    if s.id == current_user.id:
+        flash("You cannot deactivate your own account.", "error")
+        return redirect(url_for("main.shoppers"))
+    s.is_active = not s.is_active
+    db.session.commit()
+    status = "activated" if s.is_active else "deactivated"
+    log.info(f"SHOPPER {status.upper()}  {s.email} ({s.nickname}) by {current_user.nickname}")
+    flash(f"Shopper '{s.nickname}' {status}.", "success")
+    return redirect(url_for("main.shoppers"))
+
+
+# ---------------------------------------------------------------------------
+# View-as — admin switches whose receipts they're viewing
+# ---------------------------------------------------------------------------
+
+@main.route("/view-as", methods=["POST"])
+@login_required
+def set_view_as():
+    if not current_user.is_admin:
+        return redirect(url_for("main.index"))
+    session["view_as"] = request.form.get("view_as", "all")
+    return redirect(request.referrer or url_for("main.index"))

@@ -1,24 +1,48 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 import os
 import sys
+import logging
+from logging.handlers import RotatingFileHandler
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
 db = SQLAlchemy()
+login_manager = LoginManager()
 
 
 def create_app():
     app = Flask(__name__)
 
+    # Logging — console + rotating file
+    log_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'app.log')
+    fmt = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    file_handler = RotatingFileHandler(log_path, maxBytes=1_000_000, backupCount=3, encoding='utf-8')
+    file_handler.setFormatter(fmt)
+    file_handler.setLevel(logging.INFO)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(fmt)
+    console_handler.setLevel(logging.INFO)
+    logging.getLogger().setLevel(logging.INFO)
+    logging.getLogger().addHandler(file_handler)
+    logging.getLogger().addHandler(console_handler)
+    # Suppress noisy werkzeug request log at INFO — keep WARNING+
+    logging.getLogger('werkzeug').setLevel(logging.WARNING)
+
     app.config["SQLALCHEMY_DATABASE_URI"] = config.SQLALCHEMY_DATABASE_URI
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["MAX_CONTENT_LENGTH"] = config.MAX_UPLOAD_SIZE_MB * 1024 * 1024
     app.config["UPLOAD_FOLDER"] = config.RECEIPTS_FOLDER
-    app.secret_key = os.urandom(24)
+    app.config["SECRET_KEY"] = config.SECRET_KEY
 
     db.init_app(app)
+
+    login_manager.init_app(app)
+    login_manager.login_view = "main.login"
+    login_manager.login_message = "Please log in to access this page."
+    login_manager.login_message_category = "error"
 
     from .routes import main
     app.register_blueprint(main)
@@ -32,11 +56,31 @@ def create_app():
         except (ValueError, TypeError):
             return {}
 
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models import Shopper
+        return Shopper.query.get(int(user_id))
+
+    @app.context_processor
+    def inject_globals():
+        from flask_login import current_user
+        ctx = {}
+        if current_user.is_authenticated and current_user.is_admin:
+            from .models import Shopper
+            try:
+                ctx['all_shoppers'] = Shopper.query.filter_by(is_active=True).order_by(Shopper.nickname).all()
+            except Exception:
+                ctx['all_shoppers'] = []
+        else:
+            ctx['all_shoppers'] = []
+        return ctx
+
     with app.app_context():
         from . import models  # noqa: F401 — ensures tables are registered
         db.create_all()
         _migrate_db(db)
         _seed_list_items(db)
+        _seed_admin_shopper(db)
 
     return app
 
@@ -52,6 +96,30 @@ def _migrate_db(db):
         if "account_id" not in cols:
             conn.execute(db.text("ALTER TABLE receipts ADD COLUMN account_id INTEGER REFERENCES accounts(id)"))
             conn.commit()
+        if "shopper_id" not in cols:
+            conn.execute(db.text("ALTER TABLE receipts ADD COLUMN shopper_id INTEGER REFERENCES shoppers(id)"))
+            conn.commit()
+
+
+def _seed_admin_shopper(db):
+    """Create the admin shopper if none exist, then assign all orphaned receipts to them."""
+    from .models import Shopper
+    if Shopper.query.first():
+        return
+    admin = Shopper(
+        email=config.ADMIN_EMAIL,
+        full_name=config.ADMIN_FULL_NAME,
+        nickname=config.ADMIN_NICKNAME,
+        is_admin=True,
+        is_active=True,
+    )
+    admin.set_password(config.ADMIN_PASSWORD)
+    db.session.add(admin)
+    db.session.flush()
+    db.session.execute(
+        db.text(f"UPDATE receipts SET shopper_id = {admin.id} WHERE shopper_id IS NULL")
+    )
+    db.session.commit()
 
 
 def _seed_list_items(db):

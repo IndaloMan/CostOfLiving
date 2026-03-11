@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Shoppers — Cost of Living Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Shoppers</h1>
+    <a href="/shoppers/new" class="btn btn-primary">+ Add Shopper</a>
+</div>
+
+<table class="data-table sortable">
+    <thead>
+        <tr>
+            <th>Nickname</th>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Receipts</th>
+            <th>Admin</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for s in shoppers %}
+        <tr class="{{ 'row-inactive' if not s.is_active else '' }}">
+            <td>{{ s.nickname }}</td>
+            <td>{{ s.full_name }}</td>
+            <td>{{ s.email }}</td>
+            <td>{{ s.receipt_count }}</td>
+            <td>{{ 'Yes' if s.is_admin else 'No' }}</td>
+            <td>{{ 'Active' if s.is_active else 'Inactive' }}</td>
+            <td class="actions-cell">
+                <a href="/shoppers/{{ s.id }}/edit" class="btn btn-sm">Edit</a>
+                {% if s.id != current_user.id %}
+                <form method="POST" action="/shoppers/{{ s.id }}/toggle-active" style="display:inline">
+                    <button type="submit" class="btn btn-sm {{ 'btn-warning' if s.is_active else 'btn-success' }}">
+                        {{ 'Deactivate' if s.is_active else 'Activate' }}
+                    </button>
+                </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:#888">No shoppers found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
