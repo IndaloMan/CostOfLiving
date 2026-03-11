@@ -122,8 +122,9 @@ cameraInput.addEventListener('change', function() { onFileSelected(this); });
 uploadInput.addEventListener('change', function() { onFileSelected(this); });
 
 qsForm.addEventListener('submit', function () {
-    // Copy the selected file to the form — only one input can have name="file"
-    // Whichever input has files wins; the other is empty so no conflict
+    // Disable whichever input is empty so Flask only receives the one with a file
+    if (!cameraInput.files.length) cameraInput.disabled = true;
+    if (!uploadInput.files.length) uploadInput.disabled = true;
     qsSubmit.disabled = true;
     qsSubmit.style.opacity = '0.6';
     qsLoad.style.display = 'block';
