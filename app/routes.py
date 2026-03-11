@@ -137,7 +137,7 @@ def login():
 
 @main.route("/logout")
 def logout():
-    log.info(f"LOGOUT {current_user.email if current_user.is_authenticated else "?"} from {request.remote_addr}")
+    log.info(f"LOGOUT {current_user.email if current_user.is_authenticated else '?'} from {request.remote_addr}")
     logout_user()
     return redirect(url_for("main.login"))
 
