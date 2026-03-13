@@ -24,6 +24,16 @@ nav {
 .nav-brand {
     font-size: 1.1rem;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.nav-logo {
+    height: 32px;
+    width: 32px;
+    object-fit: contain;
+    filter: invert(1);
+    flex-shrink: 0;
 }
 
 .nav-links {
@@ -474,6 +484,7 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
 
 /* Hamburger — hidden on desktop */
 .nav-hamburger { display: none; }
+.nav-id-item { display: none; }  /* hidden on desktop */
 
 /* =========================================================
    Mobile — 768px and below
@@ -672,7 +683,7 @@ body.login-page {
 }
 
 /* Nav user info */
-.nav-id-item { display: none; }
+
 
 /* Inactive shopper row */
 .row-inactive td { opacity: 0.5; }

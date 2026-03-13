@@ -186,6 +186,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.66 — 13 March 2026
+- **Nav bar logo** — app icon displayed to left of "Cost of Living Tracker" title in nav bar (white via CSS invert)
+- **Login ID visibility fix** — CSS ordering bug resolved; login ID now correctly shown in mobile dropdown menu
+
 ### v1.65 — 13 March 2026
 - **Mobile nav** — login ID shown at top of dropdown menu (right-aligned, below hamburger when opened); removed from nav bar
 
