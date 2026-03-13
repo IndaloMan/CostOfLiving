@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.53 — 13 March 2026
+- **Cancel button bug fix** — Cancel on the review screen was submitting the confirm form instead of deleting the receipt due to invalid nested forms; fixed by associating the button with the external deleteForm
+
 ### v1.52 — 13 March 2026
 - app/static/css/style.css, app/templates/review.html
 
