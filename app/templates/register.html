@@ -140,25 +140,22 @@
                    value="{{ form.nickname if form else login_id }}">
         </div>
 
-        <!-- Optional: custom password -->
-        <div class="form-group">
-            <label for="custom_password">Choose your own password <small style="font-weight:400; text-transform:none;">(optional — leave blank to use the generated one above)</small></label>
-            <div class="password-wrap">
-                <input type="password" id="custom_password" name="custom_password"
-                       autocomplete="new-password" minlength="6"
-                       >
-                <button type="button" class="pw-toggle" onclick="togglePw(this)" tabindex="-1">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-            </div>
-        </div>
-
         <!-- Optional fields -->
         <p class="section-label">Optional Information</p>
         <div class="form-group">
             <label for="email">Email <small style="font-weight:400; text-transform:none;">(for password recovery and reports)</small></label>
             <input type="email" id="email" name="email" autocomplete="email"
                    value="{{ form.email if form else '' }}">
+        </div>
+        <div class="form-group">
+            <label for="custom_password">Choose your own password <small style="font-weight:400; text-transform:none;">(optional — leave blank to use the generated one above)</small></label>
+            <div class="password-wrap">
+                <input type="password" id="custom_password" name="custom_password"
+                       autocomplete="new-password" minlength="6">
+                <button type="button" class="pw-toggle" onclick="togglePw(this)" tabindex="-1">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+            </div>
         </div>
         <div class="form-group">
             <label for="gender">Gender</label>
