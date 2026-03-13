@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.62 — 13 March 2026
+- **Back button polish** — hidden on home/landing page; reduced whitespace; colour changed to black
+
 ### v1.61 — 13 March 2026
 - **Back button** — every page now has an in-app Back button (top of content area) using browser history; important for mobile users where browser chrome may be hidden
 - **Cancel renamed Delete** — the Cancel button on the Review screen now correctly labelled Delete (red) since it permanently removes the unconfirmed receipt
