@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.71 — 13 March 2026
+- **Account page** — new /account page lets users edit Full Name, Email, Gender, Age Range and change password in one place; nav 'Change Password' link replaced with 'Account'
+
 ### v1.70 — 13 March 2026
 - **Nav login ID** — fixed right-alignment (align-items:stretch on mobile nav), removed italics and outline borders
 

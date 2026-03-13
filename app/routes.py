@@ -356,11 +356,11 @@ def register_welcome():
 def account_delete():
     if current_user.is_admin:
         flash("Admin accounts cannot be self-deleted. Ask another admin to deactivate your account.", "error")
-        return redirect(url_for("main.change_password"))
+        return redirect(url_for("main.account"))
     confirm = request.form.get("confirm_delete", "").strip()
     if confirm.lower() != current_user.nickname.lower():
         flash("Confirmation did not match your nickname. Account not deleted.", "error")
-        return redirect(url_for("main.change_password"))
+        return redirect(url_for("main.account"))
     shopper = Shopper.query.get(current_user.id)
     shopper.is_active = False
     db.session.commit()
@@ -1999,6 +1999,74 @@ def shopper_delete(shopper_id):
 # ---------------------------------------------------------------------------
 # Change password — self-service for all logged-in users
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Account — view and edit own profile
+# ---------------------------------------------------------------------------
+
+@main.route("/account", methods=["GET", "POST"])
+@login_required
+def account():
+    if request.method == "POST":
+        action = request.form.get("action", "profile")
+
+        if action == "profile":
+            full_name = request.form.get("full_name", "").strip() or None
+            email     = request.form.get("email", "").strip().lower() or None
+            gender    = request.form.get("gender", "").strip() or None
+            age_range = request.form.get("age_range", "").strip() or None
+
+            # Check email uniqueness (exclude self)
+            if email:
+                clash = Shopper.query.filter(
+                    db.func.lower(Shopper.email) == email,
+                    Shopper.id != current_user.id
+                ).first()
+                if clash:
+                    flash("That email address is already registered to another account.", "error")
+                    return render_template("account.html",
+                                           gender_options=_GENDER_OPTIONS,
+                                           age_range_options=_AGE_RANGE_OPTIONS)
+
+            shopper = Shopper.query.get(current_user.id)
+            shopper.full_name = full_name
+            shopper.email     = email
+            shopper.gender    = gender
+            shopper.age_range = age_range
+            db.session.commit()
+            log.info(f"ACCOUNT UPDATE  {current_user.display_id} ({current_user.nickname})")
+            flash("Profile updated.", "success")
+            return redirect(url_for("main.account"))
+
+        elif action == "password":
+            current_pw = request.form.get("current_password", "")
+            new_pw     = request.form.get("new_password", "")
+            confirm_pw = request.form.get("confirm_password", "")
+            if not current_user.check_password(current_pw):
+                flash("Current password is incorrect.", "error")
+                return render_template("account.html",
+                                       gender_options=_GENDER_OPTIONS,
+                                       age_range_options=_AGE_RANGE_OPTIONS)
+            if new_pw != confirm_pw:
+                flash("New passwords do not match.", "error")
+                return render_template("account.html",
+                                       gender_options=_GENDER_OPTIONS,
+                                       age_range_options=_AGE_RANGE_OPTIONS)
+            if len(new_pw) < 6:
+                flash("Password must be at least 6 characters.", "error")
+                return render_template("account.html",
+                                       gender_options=_GENDER_OPTIONS,
+                                       age_range_options=_AGE_RANGE_OPTIONS)
+            current_user.set_password(new_pw)
+            db.session.commit()
+            log.info(f"PASSWORD CHANGED  {current_user.display_id} ({current_user.nickname})")
+            flash("Password changed successfully.", "success")
+            return redirect(url_for("main.account"))
+
+    return render_template("account.html",
+                           gender_options=_GENDER_OPTIONS,
+                           age_range_options=_AGE_RANGE_OPTIONS)
 
 @main.route("/change-password", methods=["GET", "POST"])
 @login_required
