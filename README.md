@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.70 — 13 March 2026
+- **Nav login ID** — fixed right-alignment (align-items:stretch on mobile nav), removed italics and outline borders
+
 ### v1.69 — 13 March 2026
 - **Nav login ID** — right-aligned, italic, smaller/muted, non-tappable with separator line to distinguish from menu links
 

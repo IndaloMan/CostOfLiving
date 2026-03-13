@@ -528,6 +528,7 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
     }
 
     .nav-links.open { display: flex; }
+    .nav-links { align-items: stretch; }
 
     .nav-links li { border-top: 1px solid rgba(255,255,255,0.07); }
 
@@ -543,14 +544,12 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
         color: rgba(255,255,255,0.45);
         font-size: 0.75rem;
         font-weight: 400;
-        font-style: italic;
-        text-align: right !important;
+        text-align: right;
         padding: 0.5rem 1.5rem 0.5rem;
         letter-spacing: 0.02em;
         pointer-events: none;
         cursor: default;
-        border-bottom: 1px solid rgba(255,255,255,0.12);
-        margin-bottom: 0.25rem;
+        border-top: none;
     }
 
     /* --- Layout --- */
