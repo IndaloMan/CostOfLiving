@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.38 — 13 March 2026
+- **Registration welcome page layout fix** — Login ID and Password labels moved above their values so fields are full-width and don't wrap on mobile
+
 ### v1.37 — 13 March 2026
 - **Welcome email on registration** — if a new user provides an email address during self-registration, they are automatically sent a welcome email containing their login ID and password; uses Gmail SMTP via Flask-Mail; silently skips if mail is not configured
 
