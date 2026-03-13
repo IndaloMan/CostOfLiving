@@ -133,8 +133,11 @@ async function doSearch() {
     initTableSort(document.getElementById('resultsTable'));
 }
 
-const _qs = new URLSearchParams(window.location.search).get('q');
-if (_qs) { document.getElementById('itemQuery').value = _qs; doSearch(); }
+const _params = new URLSearchParams(window.location.search);
+const _qs = _params.get('q');
+const _co = _params.get('company_id');
+if (_co) document.getElementById('companyFilter').value = _co;
+if (_qs !== null) { document.getElementById('itemQuery').value = _qs; doSearch(); }
 
 document.getElementById('itemQuery').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doSearch();

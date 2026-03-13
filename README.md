@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.36 — 13 March 2026
+- **Item Analysis click-to-search passes company** — clicking a description also passes the active company filter to Item Search, pre-selecting the company dropdown and filtering results accordingly
+
 ### v1.35 — 13 March 2026
 - **Item Analysis click-to-search fix** — Item Search page now reads the q= URL param on load, populates the description box and auto-runs the search
 

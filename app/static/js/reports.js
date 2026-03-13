@@ -277,7 +277,7 @@ async function loadItemAnalysis() {
                 pctHtml = `<span style="color:${color};font-weight:600">${sign}${row.pct_diff.toFixed(1)}%</span>`;
             }
             tr.innerHTML = `
-                <td style="padding-right:0.5rem"><a href="/items/search?q=${encodeURIComponent(row.description)}" target="_blank" style="color:inherit;text-decoration:none;border-bottom:1px dashed #aaa;">${row.description}</a></td>
+                <td style="padding-right:0.5rem"><a href="/items/search?q=${encodeURIComponent(row.description)}${(()=>{const c=document.getElementById("companyFilter").value;return c?"&company_id="+c:"";})()}" target="_blank" style="color:inherit;text-decoration:none;border-bottom:1px dashed #aaa;">${row.description}</a></td>
                 <td style="text-align:center;padding-right:0.5rem">${row.qty}</td>
                 <td style="text-align:right;padding-right:0.5rem">${row.price_low  != null ? '€' + row.price_low.toFixed(2)  : '—'}</td>
                 <td style="text-align:right;padding-right:0.5rem">${row.price_high != null ? '€' + row.price_high.toFixed(2) : '—'}</td>
