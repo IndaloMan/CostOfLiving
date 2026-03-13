@@ -84,7 +84,7 @@ def _get_categories():
     """Return sorted list of category values from the DB."""
     return [
         item.value for item in
-        ListItem.query.filter_by(list_name="categories").order_by(ListItem.sort_order, ListItem.value).all()
+        ListItem.query.filter_by(list_name="categories").order_by(ListItem.value).all()
     ]
 
 
@@ -92,14 +92,14 @@ def _get_company_types():
     """Return sorted list of company type values from the DB."""
     return [
         item.value for item in
-        ListItem.query.filter_by(list_name="company_types").order_by(ListItem.sort_order, ListItem.value).all()
+        ListItem.query.filter_by(list_name="company_types").order_by(ListItem.value).all()
     ]
 
 
 def _get_type_categories():
     """Return dict of {company_type: [categories]} for types that have a non-empty meta_list."""
     result = {}
-    for item in ListItem.query.filter_by(list_name="company_types").order_by(ListItem.sort_order).all():
+    for item in ListItem.query.filter_by(list_name="company_types").order_by(ListItem.value).all():
         cats = item.meta_list
         if cats:
             result[item.value] = cats
@@ -1149,25 +1149,25 @@ def settings():
     company_types = (
         ListItem.query
         .filter_by(list_name="company_types")
-        .order_by(ListItem.sort_order, ListItem.value)
+        .order_by(ListItem.value)
         .all()
     )
     categories = (
         ListItem.query
         .filter_by(list_name="categories")
-        .order_by(ListItem.sort_order, ListItem.value)
+        .order_by(ListItem.value)
         .all()
     )
     income_categories = (
         ListItem.query
         .filter_by(list_name="income_categories")
-        .order_by(ListItem.sort_order, ListItem.value)
+        .order_by(ListItem.value)
         .all()
     )
     account_types = (
         ListItem.query
         .filter_by(list_name="account_types")
-        .order_by(ListItem.sort_order, ListItem.value)
+        .order_by(ListItem.value)
         .all()
     )
     return render_template(
@@ -1347,14 +1347,14 @@ def _float_or(lst, i, default):
 def _get_income_categories():
     return [
         item.value for item in
-        ListItem.query.filter_by(list_name="income_categories").order_by(ListItem.sort_order, ListItem.value).all()
+        ListItem.query.filter_by(list_name="income_categories").order_by(ListItem.value).all()
     ]
 
 
 def _get_account_types():
     return [
         item.value for item in
-        ListItem.query.filter_by(list_name="account_types").order_by(ListItem.sort_order, ListItem.value).all()
+        ListItem.query.filter_by(list_name="account_types").order_by(ListItem.value).all()
     ]
 
 

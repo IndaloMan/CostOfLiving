@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.59 — 13 March 2026
+- **Alphabetical dropdowns** — all DB-driven dropdowns (company types, categories, account types, income categories) now sorted alphabetically
+
 ### v1.58 — 13 March 2026
 - **Date picker min extended** — From date now allows back to 01/01/2015 (was limited to 4 years ago)
 
