@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.72 — 13 March 2026
+- **Account page** — renamed 'Full Name' to 'Nickname' to match register form; now edits the nickname field
+
 ### v1.71 — 13 March 2026
 - **Account page** — new /account page lets users edit Full Name, Email, Gender, Age Range and change password in one place; nav 'Change Password' link replaced with 'Account'
 

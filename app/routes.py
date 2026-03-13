@@ -2012,10 +2012,15 @@ def account():
         action = request.form.get("action", "profile")
 
         if action == "profile":
-            full_name = request.form.get("full_name", "").strip() or None
+            nickname  = request.form.get("nickname", "").strip()
             email     = request.form.get("email", "").strip().lower() or None
             gender    = request.form.get("gender", "").strip() or None
             age_range = request.form.get("age_range", "").strip() or None
+            if not nickname:
+                flash("Nickname cannot be empty.", "error")
+                return render_template("account.html",
+                                       gender_options=_GENDER_OPTIONS,
+                                       age_range_options=_AGE_RANGE_OPTIONS)
 
             # Check email uniqueness (exclude self)
             if email:
@@ -2030,7 +2035,7 @@ def account():
                                            age_range_options=_AGE_RANGE_OPTIONS)
 
             shopper = Shopper.query.get(current_user.id)
-            shopper.full_name = full_name
+            shopper.nickname  = nickname
             shopper.email     = email
             shopper.gender    = gender
             shopper.age_range = age_range
