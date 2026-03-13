@@ -83,7 +83,7 @@
             margin-bottom: 1rem;
         }
         .password-wrap { position: relative; display: flex; align-items: center; width: 100%; box-sizing: border-box; }
-        .password-wrap input { flex: 1; padding-right: 2.5rem; }
+        .password-wrap input { flex: 1; padding-right: 2.5rem; min-width: 0; }
         .pw-toggle {
             position: absolute; right: 0.5rem;
             background: none; border: none; cursor: pointer;
@@ -156,7 +156,7 @@
         <!-- Optional fields -->
         <p class="section-label">Optional Information</p>
         <div class="form-group">
-            <label for="email">Email <small style="font-weight:400; text-transform:none;">(for password recovery only)</small></label>
+            <label for="email">Email <small style="font-weight:400; text-transform:none;">(for password recovery and reports)</small></label>
             <input type="email" id="email" name="email" autocomplete="email"
                    value="{{ form.email if form else '' }}">
         </div>

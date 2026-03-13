@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.47 — 13 March 2026
+- app/templates/register.html
+
 ### v1.46 — 13 March 2026
 - app/templates/register.html
 
