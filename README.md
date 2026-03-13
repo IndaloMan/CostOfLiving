@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.45 — 13 March 2026
+- **Register page** — fixed custom password field overflowing on mobile
+
 ### v1.44 — 13 March 2026
 - **Register page** — removed placeholder text from custom password field to prevent overflow on mobile
 
