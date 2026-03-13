@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.74 — 13 March 2026
+- **Nav brand** — clicking the icon or app title navigates to the home page
+
 ### v1.73 — 13 March 2026
 - **Account page** — Nickname label now matches register form exactly: 'Nickname (shown in the app — defaults to your Login ID)'
 
