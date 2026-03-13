@@ -117,28 +117,189 @@ def _allowed_file(filename):
 # Auth — login / logout
 # ---------------------------------------------------------------------------
 
+_PASSPHRASE_WORDS = [
+    "apple", "beach", "brick", "cloud", "coral", "crane", "creek", "crown",
+    "delta", "dunes", "eagle", "falls", "field", "flame", "flint", "frost",
+    "grove", "haven", "heron", "hills", "ivory", "jewel", "karma", "knoll",
+    "lakes", "lemon", "light", "lotus", "lunar", "maple", "marsh", "mirth",
+    "misty", "moose", "mount", "night", "noble", "north", "oasis", "ocean",
+    "olive", "onyx", "orbit", "otter", "pearl", "petal", "pilot", "pines",
+    "pixel", "plaza", "plume", "polar", "poppy", "prism", "quail", "quest",
+    "quiet", "raven", "reeds", "ridge", "rivet", "robin", "rocky", "rover",
+    "royal", "rusty", "sable", "saint", "sandy", "shark", "shore", "sigma",
+    "silky", "skies", "slate", "snowy", "solar", "sonic", "spark", "spire",
+    "spray", "storm", "stone", "sunny", "surge", "swamp", "swirl", "swift",
+    "talon", "thorn", "tiger", "titan", "torch", "tower", "trail", "trout",
+    "tulip", "ultra", "umbra", "unity", "valor", "vapor", "vault", "verde",
+    "villa", "viola", "vivid", "volta", "waltz", "whirl", "white", "winds",
+    "woods", "xenon", "yacht", "zebra", "zesty", "zippy",
+]
+
+
+def _generate_login_id():
+    """Return a unique anon-NNNNNN identifier."""
+    import random
+    for _ in range(100):
+        candidate = f"anon-{random.randint(100000, 999999)}"
+        if not Shopper.query.filter_by(login_id=candidate).first():
+            return candidate
+    raise RuntimeError("Could not generate a unique login ID after 100 attempts")
+
+
+def _generate_passphrase():
+    """Return a memorable two-word passphrase: word-word-NN."""
+    import random
+    w1, w2 = random.sample(_PASSPHRASE_WORDS, 2)
+    return f"{w1}-{w2}-{random.randint(10, 99)}"
+
+
 @main.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
     if request.method == "POST":
-        email    = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        shopper  = Shopper.query.filter(db.func.lower(Shopper.email) == email).first()
+        identifier = request.form.get("identifier", "").strip().lower()
+        password   = request.form.get("password", "")
+        # Accept anon-NNNNNN login_id or legacy email
+        shopper = Shopper.query.filter(
+            db.func.lower(Shopper.login_id) == identifier
+        ).first()
+        if not shopper:
+            shopper = Shopper.query.filter(
+                db.func.lower(Shopper.email) == identifier
+            ).first()
         if shopper and shopper.is_active and shopper.check_password(password):
             login_user(shopper, remember=True)
-            log.info(f"LOGIN  {shopper.email} ({shopper.nickname}) from {request.remote_addr}")
+            log.info(f"LOGIN  {shopper.display_id} ({shopper.nickname}) from {request.remote_addr}")
             next_page = request.args.get("next")
             return redirect(next_page or url_for("main.index"))
-        log.warning(f"LOGIN FAILED  {email} from {request.remote_addr}")
-        flash("Invalid email or password.", "error")
+        log.warning(f"LOGIN FAILED  {identifier} from {request.remote_addr}")
+        flash("Invalid login ID or password.", "error")
     return render_template("login.html")
 
 
 @main.route("/logout")
 def logout():
-    log.info(f"LOGOUT {current_user.email if current_user.is_authenticated else '?'} from {request.remote_addr}")
+    log.info(f"LOGOUT {current_user.display_id if current_user.is_authenticated else '?'} from {request.remote_addr}")
     logout_user()
+    return redirect(url_for("main.login"))
+
+
+# ---------------------------------------------------------------------------
+# Self-registration
+# ---------------------------------------------------------------------------
+
+_GENDER_OPTIONS    = ["Male", "Female"]
+_AGE_RANGE_OPTIONS = ["Under 18", "18–24", "25–34", "35–44", "45–54", "55–64", "65–74", "75–84", "85+"]
+
+
+@main.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+
+    if request.method == "GET":
+        return render_template(
+            "register.html",
+            login_id=_generate_login_id(),
+            passphrase=_generate_passphrase(),
+            gender_options=_GENDER_OPTIONS,
+            age_range_options=_AGE_RANGE_OPTIONS,
+        )
+
+    # POST — create account
+    login_id        = request.form.get("login_id", "").strip()
+    passphrase      = request.form.get("passphrase", "").strip()
+    custom_password = request.form.get("custom_password", "").strip()
+    nickname        = request.form.get("nickname", "").strip()
+    email           = request.form.get("email", "").strip().lower() or None
+    gender          = request.form.get("gender", "").strip() or None
+    age_range       = request.form.get("age_range", "").strip() or None
+    consent         = request.form.get("consent")
+    # Use custom password if provided and long enough, otherwise fall back to generated passphrase
+    password_to_use = custom_password if len(custom_password) >= 6 else passphrase
+
+    def _redisplay(error):
+        flash(error, "error")
+        return render_template(
+            "register.html",
+            login_id=login_id,
+            passphrase=passphrase,
+            gender_options=_GENDER_OPTIONS,
+            age_range_options=_AGE_RANGE_OPTIONS,
+            form=request.form,
+        )
+
+    if not consent:
+        return _redisplay("You must accept the data usage terms to create an account.")
+    if custom_password and len(custom_password) < 6:
+        return _redisplay("Your chosen password must be at least 6 characters.")
+    if not nickname:
+        return _redisplay("Please choose a nickname.")
+    if len(nickname) > 50:
+        return _redisplay("Nickname must be 50 characters or fewer.")
+
+    # Ensure login_id is still unique (race condition guard)
+    if Shopper.query.filter_by(login_id=login_id).first():
+        login_id   = _generate_login_id()
+        passphrase = _generate_passphrase()
+        return _redisplay("A collision occurred — new credentials have been generated. Please review and submit again.")
+
+    if email and Shopper.query.filter(db.func.lower(Shopper.email) == email).first():
+        return _redisplay("That email address is already registered.")
+
+    shopper = Shopper(
+        login_id=login_id,
+        nickname=nickname,
+        email=email,
+        gender=gender,
+        age_range=age_range,
+        is_admin=False,
+        is_active=True,
+    )
+    shopper.set_password(password_to_use)
+    db.session.add(shopper)
+    db.session.commit()
+
+    login_user(shopper, remember=True)
+    log.info(f"REGISTER  {login_id} ({nickname}) from {request.remote_addr}")
+
+    # Store credentials in session for one-time display on welcome page
+    session["new_creds"] = {"login_id": login_id, "passphrase": password_to_use}
+    return redirect(url_for("main.register_welcome"))
+
+
+@main.route("/register/welcome")
+@login_required
+def register_welcome():
+    creds = session.pop("new_creds", None)
+    if not creds:
+        return redirect(url_for("main.index"))
+    return render_template("register_welcome.html",
+                           login_id=creds["login_id"],
+                           passphrase=creds["passphrase"])
+
+
+# ---------------------------------------------------------------------------
+# Account self-deletion (GDPR Article 17 — soft delete)
+# ---------------------------------------------------------------------------
+
+@main.route("/account/delete", methods=["POST"])
+@login_required
+def account_delete():
+    if current_user.is_admin:
+        flash("Admin accounts cannot be self-deleted. Ask another admin to deactivate your account.", "error")
+        return redirect(url_for("main.change_password"))
+    confirm = request.form.get("confirm_delete", "").strip()
+    if confirm.lower() != current_user.nickname.lower():
+        flash("Confirmation did not match your nickname. Account not deleted.", "error")
+        return redirect(url_for("main.change_password"))
+    shopper = Shopper.query.get(current_user.id)
+    shopper.is_active = False
+    db.session.commit()
+    log.info(f"ACCOUNT DEACTIVATED (self)  {shopper.display_id} ({shopper.nickname})")
+    logout_user()
+    flash("Your account has been deactivated. Contact an admin if you change your mind.", "info")
     return redirect(url_for("main.login"))
 
 
@@ -1714,26 +1875,35 @@ def shopper_new():
     if redir:
         return redir
     if request.method == "POST":
-        email     = request.form.get("email", "").strip().lower()
-        full_name = request.form.get("full_name", "").strip()
+        email     = request.form.get("email", "").strip().lower() or None
+        full_name = request.form.get("full_name", "").strip() or None
         nickname  = request.form.get("nickname", "").strip()
         password  = request.form.get("password", "")
         is_admin  = bool(request.form.get("is_admin"))
-        if not email or not full_name or not nickname or not password:
-            flash("All fields are required.", "error")
-            return render_template("shopper_edit.html", shopper=None)
-        if Shopper.query.filter(db.func.lower(Shopper.email) == email).first():
+        gender    = request.form.get("gender", "").strip() or None
+        age_range = request.form.get("age_range", "").strip() or None
+        if not nickname or not password:
+            flash("Nickname and password are required.", "error")
+            return render_template("shopper_edit.html", shopper=None,
+                                   gender_options=_GENDER_OPTIONS,
+                                   age_range_options=_AGE_RANGE_OPTIONS)
+        if email and Shopper.query.filter(db.func.lower(Shopper.email) == email).first():
             flash(f"Email '{email}' is already registered.", "error")
-            return render_template("shopper_edit.html", shopper=None)
+            return render_template("shopper_edit.html", shopper=None,
+                                   gender_options=_GENDER_OPTIONS,
+                                   age_range_options=_AGE_RANGE_OPTIONS)
         s = Shopper(email=email, full_name=full_name, nickname=nickname,
+                    gender=gender, age_range=age_range,
                     is_admin=is_admin, is_active=True)
         s.set_password(password)
         db.session.add(s)
         db.session.commit()
-        log.info(f"SHOPPER ADD  {email} ({nickname}) by {current_user.nickname}")
+        log.info(f"SHOPPER ADD  {email or nickname} ({nickname}) by {current_user.nickname}")
         flash(f"Shopper '{nickname}' added.", "success")
         return redirect(url_for("main.shoppers"))
-    return render_template("shopper_edit.html", shopper=None)
+    return render_template("shopper_edit.html", shopper=None,
+                           gender_options=_GENDER_OPTIONS,
+                           age_range_options=_AGE_RANGE_OPTIONS)
 
 
 @main.route("/shoppers/<int:shopper_id>/edit", methods=["GET", "POST"])
@@ -1744,29 +1914,44 @@ def shopper_edit(shopper_id):
         return redir
     s = Shopper.query.get_or_404(shopper_id)
     if request.method == "POST":
-        email     = request.form.get("email", "").strip().lower()
-        full_name = request.form.get("full_name", "").strip()
+        email     = request.form.get("email", "").strip().lower() or None
+        full_name = request.form.get("full_name", "").strip() or None
         nickname  = request.form.get("nickname", "").strip()
         is_admin  = bool(request.form.get("is_admin"))
         new_pw    = request.form.get("password", "").strip()
-        # Check for email conflict with another shopper
-        conflict = Shopper.query.filter(
-            db.func.lower(Shopper.email) == email,
-            Shopper.id != s.id
-        ).first()
-        if conflict:
-            flash(f"Email '{email}' is already in use.", "error")
-            return render_template("shopper_edit.html", shopper=s)
+        gender    = request.form.get("gender", "").strip() or None
+        age_range = request.form.get("age_range", "").strip() or None
+        if not nickname:
+            flash("Nickname is required.", "error")
+            return render_template("shopper_edit.html", shopper=s,
+                                   gender_options=_GENDER_OPTIONS,
+                                   age_range_options=_AGE_RANGE_OPTIONS)
+        # Check for email conflict with another shopper (only if email provided)
+        if email:
+            conflict = Shopper.query.filter(
+                db.func.lower(Shopper.email) == email,
+                Shopper.id != s.id
+            ).first()
+            if conflict:
+                flash(f"Email '{email}' is already in use.", "error")
+                return render_template("shopper_edit.html", shopper=s,
+                                       gender_options=_GENDER_OPTIONS,
+                                       age_range_options=_AGE_RANGE_OPTIONS)
         s.email     = email
         s.full_name = full_name
         s.nickname  = nickname
         s.is_admin  = is_admin
+        s.gender    = gender
+        s.age_range = age_range
         if new_pw:
             s.set_password(new_pw)
         db.session.commit()
+        log.info(f"SHOPPER UPDATED  {s.display_id} ({s.nickname}) by {current_user.nickname}")
         flash(f"Shopper '{s.nickname}' updated.", "success")
         return redirect(url_for("main.shoppers"))
-    return render_template("shopper_edit.html", shopper=s)
+    return render_template("shopper_edit.html", shopper=s,
+                           gender_options=_GENDER_OPTIONS,
+                           age_range_options=_AGE_RANGE_OPTIONS)
 
 
 @main.route("/shoppers/<int:shopper_id>/toggle-active", methods=["POST"])
@@ -1810,7 +1995,7 @@ def change_password():
         return render_template("change_password.html")
     current_user.set_password(new_pw)
     db.session.commit()
-    log.info(f"PASSWORD CHANGED {current_user.email} ({current_user.nickname})")
+    log.info(f"PASSWORD CHANGED {current_user.display_id} ({current_user.nickname})")
     flash("Password changed successfully.", "success")
     return redirect(url_for("main.index"))
 

@@ -259,8 +259,16 @@ async function loadItemAnalysis() {
             return;
         }
 
+        const hideZero = document.getElementById('iaHideZero') && document.getElementById('iaHideZero').checked;
+        const filtered = hideZero ? data.filter(row => row.pct_diff == null || row.pct_diff !== 0) : data;
+
+        if (!filtered.length) {
+            empty.style.display = 'block';
+            return;
+        }
+
         tbody.innerHTML = '';
-        data.forEach(row => {
+        filtered.forEach(row => {
             const tr = document.createElement('tr');
             let pctHtml = '—';
             if (row.pct_diff != null) {

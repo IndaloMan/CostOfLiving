@@ -9,15 +9,23 @@ class Shopper(db.Model, UserMixin):
     __tablename__ = "shoppers"
 
     id            = db.Column(db.Integer,     primary_key=True)
-    email         = db.Column(db.String(200), nullable=False, unique=True)
-    full_name     = db.Column(db.String(200), nullable=False)
+    login_id      = db.Column(db.String(20),  nullable=True,  unique=True)   # anon-NNNNNN for self-registered
+    email         = db.Column(db.String(200), nullable=True,  unique=True)   # optional for anonymous users
+    full_name     = db.Column(db.String(200), nullable=True)                 # optional for anonymous users
     nickname      = db.Column(db.String(50),  nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     is_admin      = db.Column(db.Boolean,     default=False, nullable=False)
     is_active     = db.Column(db.Boolean,     default=True,  nullable=False)
+    gender        = db.Column(db.String(20),  nullable=True)
+    age_range     = db.Column(db.String(20),  nullable=True)
     created_at    = db.Column(db.DateTime,    default=datetime.now)
 
     receipts = db.relationship("Receipt", back_populates="shopper")
+
+    @property
+    def display_id(self):
+        """The identifier shown in logs — login_id for anon users, email for admin-created."""
+        return self.login_id or self.email or f"shopper-{self.id}"
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -26,7 +34,7 @@ class Shopper(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        return f"<Shopper {self.email}>"
+        return f"<Shopper {self.display_id}>"
 
 
 class Company(db.Model):

@@ -11,6 +11,7 @@
     <thead>
         <tr>
             <th>Nickname</th>
+            <th>Login ID</th>
             <th>Full Name</th>
             <th>Email</th>
             <th>Receipts</th>
@@ -23,8 +24,9 @@
         {% for s in shoppers %}
         <tr class="{{ 'row-inactive' if not s.is_active else '' }}">
             <td>{{ s.nickname }}</td>
-            <td>{{ s.full_name }}</td>
-            <td>{{ s.email }}</td>
+            <td style="font-family:monospace; font-size:0.85rem; color:#555;">{{ s.login_id or '' }}</td>
+            <td>{{ s.full_name or '' }}</td>
+            <td>{{ s.email or '' }}</td>
             <td>{{ s.receipt_count }}</td>
             <td>{{ 'Yes' if s.is_admin else 'No' }}</td>
             <td>{{ 'Active' if s.is_active else 'Inactive' }}</td>
@@ -40,7 +42,7 @@
             </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" style="text-align:center;color:#888">No shoppers found.</td></tr>
+        <tr><td colspan="8" style="text-align:center;color:#888">No shoppers found.</td></tr>
         {% endfor %}
     </tbody>
 </table>

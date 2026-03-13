@@ -14,20 +14,45 @@ function togglePw(btn) {
 <h1>{{ 'Edit Shopper' if shopper else 'Add Shopper' }}</h1>
 
 <form method="POST" class="edit-form">
+    {% if shopper and shopper.login_id %}
     <div class="form-group">
-        <label for="full_name">Full Name</label>
-        <input type="text" id="full_name" name="full_name"
-               value="{{ shopper.full_name if shopper else '' }}" required>
+        <label>Login ID <small>(system-generated, read-only)</small></label>
+        <input type="text" value="{{ shopper.login_id }}" disabled
+               style="background:#f5f6fa; color:#888; font-family:monospace;">
     </div>
+    {% endif %}
     <div class="form-group">
         <label for="nickname">Nickname <small>(shown in nav and reports)</small></label>
         <input type="text" id="nickname" name="nickname"
                value="{{ shopper.nickname if shopper else '' }}" required>
     </div>
     <div class="form-group">
-        <label for="email">Email <small>(used to log in)</small></label>
+        <label for="full_name">Full Name <small>(optional)</small></label>
+        <input type="text" id="full_name" name="full_name"
+               value="{{ shopper.full_name if shopper else '' }}">
+    </div>
+    <div class="form-group">
+        <label for="email">Email <small>(optional — used for login and password recovery)</small></label>
         <input type="email" id="email" name="email"
-               value="{{ shopper.email if shopper else '' }}" required>
+               value="{{ shopper.email if shopper else '' }}">
+    </div>
+    <div class="form-group">
+        <label for="gender">Gender</label>
+        <select id="gender" name="gender">
+            <option value="">— select —</option>
+            {% for g in gender_options %}
+            <option value="{{ g }}" {% if shopper and shopper.gender == g %}selected{% endif %}>{{ g }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="age_range">Age Range</label>
+        <select id="age_range" name="age_range">
+            <option value="">— select —</option>
+            {% for a in age_range_options %}
+            <option value="{{ a }}" {% if shopper and shopper.age_range == a %}selected{% endif %}>{{ a }}</option>
+            {% endfor %}
+        </select>
     </div>
     {% if not shopper %}
     <div class="form-group">

@@ -95,6 +95,51 @@ def _migrate_db(db):
             conn.execute(db.text("UPDATE companies SET alias = name WHERE alias IS NULL"))
             conn.commit()
 
+        # shoppers table — add new columns
+        for col_name, col_def in [
+            ("login_id", "VARCHAR(20)"),
+            ("gender",   "VARCHAR(20)"),
+            ("age_range","VARCHAR(20)"),
+        ]:
+            cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(shoppers)"))]
+            if col_name not in cols:
+                conn.execute(db.text(f"ALTER TABLE shoppers ADD COLUMN {col_name} {col_def}"))
+                conn.commit()
+
+        # shoppers table — drop NOT NULL on email and full_name (SQLite requires table rebuild)
+        create_sql = conn.execute(
+            db.text("SELECT sql FROM sqlite_master WHERE type='table' AND name='shoppers'")
+        ).scalar() or ""
+        if "email VARCHAR(200) NOT NULL" in create_sql or "full_name VARCHAR(200) NOT NULL" in create_sql:
+            conn.execute(db.text("PRAGMA foreign_keys=OFF"))
+            conn.execute(db.text("""
+                CREATE TABLE shoppers_new (
+                    id            INTEGER       PRIMARY KEY AUTOINCREMENT,
+                    login_id      VARCHAR(20)   UNIQUE,
+                    email         VARCHAR(200)  UNIQUE,
+                    full_name     VARCHAR(200),
+                    nickname      VARCHAR(50)   NOT NULL,
+                    password_hash VARCHAR(256)  NOT NULL,
+                    is_admin      BOOLEAN       NOT NULL DEFAULT 0,
+                    is_active     BOOLEAN       NOT NULL DEFAULT 1,
+                    gender        VARCHAR(20),
+                    age_range     VARCHAR(20),
+                    created_at    DATETIME
+                )
+            """))
+            conn.execute(db.text("""
+                INSERT INTO shoppers_new
+                    (id, login_id, email, full_name, nickname, password_hash,
+                     is_admin, is_active, gender, age_range, created_at)
+                SELECT id, login_id, email, full_name, nickname, password_hash,
+                       is_admin, is_active, gender, age_range, created_at
+                FROM shoppers
+            """))
+            conn.execute(db.text("DROP TABLE shoppers"))
+            conn.execute(db.text("ALTER TABLE shoppers_new RENAME TO shoppers"))
+            conn.execute(db.text("PRAGMA foreign_keys=ON"))
+            conn.commit()
+
         # receipts table
         cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(receipts)"))]
         if "updated_at" not in cols:

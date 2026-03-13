@@ -186,6 +186,13 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.33 — 13 March 2026
+- **Self-registration** — new /register page lets anyone create an account; generates a unique anon-NNNNNN login ID and a memorable two-word passphrase; users can optionally set a custom password, email, gender and age range
+- **Anonymous login IDs** — login now accepts anon-NNNNNN login IDs as well as email addresses; Shopper model gains login_id, gender and age_range columns; email and full name are now optional
+- **Account self-deletion** — non-admin users can deactivate their own account from the Change Password page (GDPR Article 17 soft-delete); confirms by typing nickname
+- **Shopper edit improvements** — gender and age range dropdowns added to add/edit shopper form; email and full name now optional
+- **Item Analysis — hide zero % diff** — checkbox on Reports page to filter out items with no price change
+
 ### v1.32 — 11 March 2026
 - **Item Search** — admin-only page to search line items across all receipts; blank search finds items with no description; results show company, date, qty, unit price, total, category, and a link to the receipt; sortable columns
 - **Weighed items extraction** — extraction prompt now correctly handles supermarket weighed items (e.g. "0,362 kg  2,50 €/kg  0,91"), extracting weight as qty and price-per-kg as unit_price

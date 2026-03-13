@@ -95,7 +95,12 @@
 <div class="card" style="margin-top:1.5rem;">
     <h2>Item Analysis</h2>
     <div id="iaDateLabel" style="font-size:0.85rem; color:#888; margin-bottom:0.75rem;"></div>
-    <button class="btn" onclick="loadItemAnalysis()" style="margin-bottom:1rem;">Analyse</button>
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+        <button class="btn" onclick="loadItemAnalysis()">Analyse</button>
+        <label style="font-size:0.88rem;color:#555;cursor:pointer;">
+            <input type="checkbox" id="iaHideZero" style="margin-right:0.3rem;"> Hide zero % diff
+        </label>
+    </div>
     <div id="iaEmpty"   class="chart-empty" style="display:none">No items found for this period.</div>
     <div id="iaLoading" class="chart-empty" style="display:none">Loading…</div>
     <div class="table-wrap" id="iaTableWrap" style="display:none">
