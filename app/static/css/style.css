@@ -525,48 +525,18 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
         font-size: 1rem;
     }
 
-    /* --- Account / nav-user section --- */
-    .nav-user {
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-        padding: 0;
-    }
-    .nav-acct-label {
+    /* --- Login ID in nav bar --- */
+    .nav-mobile-id {
         display: block;
-        font-size: 1rem;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.75rem;
         font-weight: 600;
-        color: #fff;
-        padding: 0.75rem 1.5rem 0.2rem;
-        width: 100%;
-        text-align: center;
-    }
-    .nav-user .nav-nickname {
-        font-size: 0.82rem;
-        opacity: 0.7;
-        padding: 0.1rem 1.5rem 0.5rem;
-    }
-    .nav-user .nav-change-pw {
-        border: none;
-        border-radius: 0;
-        font-size: 1rem;
-        padding: 0.75rem 1.5rem;
-        opacity: 1;
-        width: 100%;
-        text-align: center;
-        display: block;
-    }
-    .nav-user .nav-logout-btn {
-        border: none;
-        border-radius: 0;
-        border-top: 1px solid rgba(255,255,255,0.15);
-        font-size: 1rem;
-        padding: 0.75rem 1.5rem;
-        opacity: 0.85;
-        width: 100%;
-        text-align: center;
-        display: block;
-        margin-top: 0.25rem;
+        margin-left: auto;
+        margin-right: 0.75rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 140px;
     }
 
     /* --- Layout --- */
@@ -705,26 +675,9 @@ body.login-page {
 }
 
 /* Nav user info */
-.nav-user {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+.nav-mobile-id {
+    display: none;
 }
-.nav-acct-label { display: none; }
-.nav-nickname {
-    font-weight: 600;
-    color: #fff;
-    opacity: 0.9;
-}
-.nav-logout {
-    font-size: 0.82rem;
-    color: #fff !important;
-    opacity: 0.75;
-    border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 4px;
-    padding: 0.15rem 0.5rem;
-}
-.nav-logout:hover { opacity: 1; }
 
 /* Inactive shopper row */
 .row-inactive td { opacity: 0.5; }

@@ -11,6 +11,7 @@
 <body>
     <nav>
         <div class="nav-brand">Cost of Living Tracker</div>
+        {% if current_user.is_authenticated %}<span class="nav-mobile-id">{{ current_user.nickname }}</span>{% endif %}
         <button class="nav-hamburger" id="navToggle" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
@@ -29,12 +30,8 @@
             <li><a href="/shoppers">Shoppers</a></li>
             <li><a href="/items/search">Item Search</a></li>
             {% endif %}
-            <li class="nav-user">
-                <span class="nav-acct-label">Account</span>
-                <span class="nav-nickname">{{ current_user.nickname }}</span>
-                <a href="/change-password" class="nav-logout nav-change-pw">Change Password</a>
-                <a href="/logout" class="nav-logout nav-logout-btn">Logout</a>
-            </li>
+            <li><a href="/change-password">Change Password</a></li>
+            <li><a href="/logout">Logout</a></li>
             {% endif %}
         </ul>
     </nav>

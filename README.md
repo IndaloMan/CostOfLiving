@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.64 — 13 March 2026
+- **Mobile nav** — login ID shown in nav bar top-right next to hamburger; Change Password and Logout styled as plain nav links matching Expenditure/Scan/Reports
+
 ### v1.63 — 13 March 2026
 - **Mobile nav menu** — Account section added below Reports showing login ID and Change Password link; Logout centred at bottom; fixed overflow on small screens
 
