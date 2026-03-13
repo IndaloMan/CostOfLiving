@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.44 — 13 March 2026
+- **Register page** — removed placeholder text from custom password field to prevent overflow on mobile
+
 ### v1.43 — 13 March 2026
 - **Login page label** — field label changed from "Login ID or Email" to "Login ID" to reinforce anonymity
 
