@@ -11,12 +11,12 @@
 <body>
     <nav>
         <div class="nav-brand">Cost of Living Tracker</div>
-        {% if current_user.is_authenticated %}<span class="nav-mobile-id">{{ current_user.nickname }}</span>{% endif %}
         <button class="nav-hamburger" id="navToggle" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
         <ul class="nav-links" id="navLinks">
             {% if current_user.is_authenticated %}
+            <li class="nav-id-item">{{ current_user.nickname }}</li>
             <li><a href="/">Expenditure</a></li>
             {% if current_user.is_admin %}
             <li><a href="/scan">Scan</a></li>
