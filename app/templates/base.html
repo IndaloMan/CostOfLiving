@@ -136,6 +136,7 @@
     </script>
 
     <main>
+        <button onclick="history.back()" class="back-btn" aria-label="Go back">&#8592; Back</button>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 <div class="alert alert-{{ category }}">{{ message }}</div>

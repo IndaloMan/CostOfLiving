@@ -186,6 +186,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.61 — 13 March 2026
+- **Back button** — every page now has an in-app Back button (top of content area) using browser history; important for mobile users where browser chrome may be hidden
+- **Cancel renamed Delete** — the Cancel button on the Review screen now correctly labelled Delete (red) since it permanently removes the unconfirmed receipt
+
 ### v1.60 — 13 March 2026
 - **Delete from grouped view** — deleting a receipt while in Group by Company view now correctly returns to the grouped receipts page
 

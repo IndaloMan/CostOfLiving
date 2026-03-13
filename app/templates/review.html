@@ -177,7 +177,7 @@
         <button type="button" class="btn btn-danger" onclick="deleteReceipt()">&#x2715; Delete</button>
         {% else %}
         <a href="{{ url_for('main.scan') }}" class="btn btn-secondary">&#8592; Scan Another</a>
-        <button type="submit" form="deleteForm" class="btn btn-secondary" onclick="return confirm('Discard this receipt?')">&#x2715; Cancel</button>
+        <button type="submit" form="deleteForm" class="btn btn-danger" onclick="return confirm('Delete this receipt? This cannot be undone.')">&#x2715; Delete</button>
         {% endif %}
         <span id="savingIndicator" style="display:none; align-items:center; gap:0.5rem; color:#2980b9; font-size:0.9rem;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"

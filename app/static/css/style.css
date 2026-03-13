@@ -715,3 +715,19 @@ body.login-page {
     align-items: center;
 }
 .pw-toggle:hover { color: #333; }
+
+/* Back button — shown on every page, top of content area */
+.back-btn {
+    display: inline-block;
+    margin-bottom: 0.75rem;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.4rem 0;
+    text-decoration: none;
+    min-height: 44px;
+    line-height: 44px;
+}
+.back-btn:hover { color: #333; }
