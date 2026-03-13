@@ -215,6 +215,35 @@
 
 
 <script>
+(function () {
+    var dirty = false;
+
+    // For each category checkbox form, wire up checkbox changes
+    document.querySelectorAll('form[action*="/categories"]').forEach(function (form) {
+        var btn = form.querySelector('button[type="submit"]');
+        form.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                dirty = true;
+                btn.classList.remove('btn-secondary');
+                btn.style.background = '';
+                btn.classList.add('btn-primary');
+                btn.textContent = 'Save categories ⚠';
+            });
+        });
+        form.addEventListener('submit', function () {
+            dirty = false;
+        });
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (dirty) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+})();
+</script>
+<script>
 var _sortDirs = {};
 function sortList(tableId, col, iconId) {
     var key = tableId + "_" + col;

@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.56 — 13 March 2026
+- **Unsaved changes warning** — on the Settings page, the Save categories button turns blue when checkboxes are changed; navigating away with unsaved changes shows a browser warning
+
 ### v1.55 — 13 March 2026
 - **Scan routing fix** — "Scan New" and empty-state links on the Receipts page now correctly route non-admin users to /quick-scan instead of /scan
 - **PDF upload on mobile** — quick-scan upload button now accepts PDF files in addition to images
