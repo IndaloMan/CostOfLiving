@@ -186,6 +186,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.55 — 13 March 2026
+- **Scan routing fix** — "Scan New" and empty-state links on the Receipts page now correctly route non-admin users to /quick-scan instead of /scan
+- **PDF upload on mobile** — quick-scan upload button now accepts PDF files in addition to images
+
 ### v1.54 — 13 March 2026
 - **Tax category** — new "tax" category added; extraction prompt automatically assigns it to any line item with VAT, IVA or impuesto in the description
 

@@ -12,7 +12,7 @@
         {% else %}
             <a href="{{ url_for('main.receipts', view='grouped') }}" class="btn btn-secondary">&#9783; Group by Company</a>
         {% endif %}
-        <a href="{{ url_for('main.scan') }}" class="btn">+ Scan New</a>
+        <a href="{{ url_for('main.scan') if current_user.is_admin else url_for('main.quick_scan') }}" class="btn">+ Scan New</a>
     </div>
 </div>
 
@@ -177,7 +177,7 @@
 
 {% else %}
 <div class="card empty-state">
-    <p>No receipts yet. <a href="{{ url_for('main.scan') }}">Scan your first receipt.</a></p>
+    <p>No receipts yet. <a href="{{ url_for('main.scan') if current_user.is_admin else url_for('main.quick_scan') }}">Scan your first receipt.</a></p>
 </div>
 {% endif %}
 
