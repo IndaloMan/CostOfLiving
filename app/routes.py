@@ -269,7 +269,7 @@ def register():
         send_welcome_email(current_app._get_current_object(), email, nickname, login_id, password_to_use)
 
     # Store credentials in session for one-time display on welcome page
-    session["new_creds"] = {"login_id": login_id, "passphrase": password_to_use}
+    session["new_creds"] = {"login_id": login_id, "passphrase": password_to_use, "email": email}
     return redirect(url_for("main.register_welcome"))
 
 
@@ -281,7 +281,8 @@ def register_welcome():
         return redirect(url_for("main.index"))
     return render_template("register_welcome.html",
                            login_id=creds["login_id"],
-                           passphrase=creds["passphrase"])
+                           passphrase=creds["passphrase"],
+                           email_sent_to=creds.get("email"))
 
 
 # ---------------------------------------------------------------------------

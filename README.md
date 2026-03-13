@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.49 — 13 March 2026
+- app/routes.py, app/templates/register_welcome.html
+
 ### v1.48 — 13 March 2026
 - app/templates/register.html
 

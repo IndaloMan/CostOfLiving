@@ -4,9 +4,15 @@
 {% block content %}
 <div style="max-width:480px; margin:0 auto;">
     <h1>Welcome!</h1>
+    {% if email_sent_to %}
+    <p style="color:#666; font-size:0.9rem; margin-bottom:1.5rem;">
+        Your account has been created and your credentials have been emailed to <strong>{{ email_sent_to }}</strong>. Keep them somewhere safe — this is the last time they will be shown here.
+    </p>
+    {% else %}
     <p style="color:#666; font-size:0.9rem; margin-bottom:1.5rem;">
         Your account has been created. Keep your credentials somewhere safe — this is the last time they will be shown.
     </p>
+    {% endif %}
 
     <div class="card" style="background:#eaf4fb; border:1px solid #aed6f1; margin-bottom:1.5rem;">
         <h2 style="color:#1a5276; margin-bottom:1rem; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.04em;">Your Credentials</h2>
