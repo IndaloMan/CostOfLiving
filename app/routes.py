@@ -671,6 +671,8 @@ def delete_receipt(receipt_id):
     db.session.delete(receipt)
     db.session.commit()
     flash(f"Receipt '{receipt.filename}' deleted.", "success")
+    if request.form.get("from_grouped"):
+        return redirect(url_for("main.receipts", view="grouped"))
     return redirect(url_for("main.receipts"))
 
 

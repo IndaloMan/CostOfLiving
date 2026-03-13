@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.60 — 13 March 2026
+- **Delete from grouped view** — deleting a receipt while in Group by Company view now correctly returns to the grouped receipts page
+
 ### v1.59 — 13 March 2026
 - **Alphabetical dropdowns** — all DB-driven dropdowns (company types, categories, account types, income categories) now sorted alphabetically
 

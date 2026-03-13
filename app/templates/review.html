@@ -191,7 +191,7 @@
 
 </form>
 
-<form id="deleteForm" method="POST" action="{{ url_for('main.delete_receipt', receipt_id=receipt.id) }}" style="display:none;"></form>
+<form id="deleteForm" method="POST" action="{{ url_for('main.delete_receipt', receipt_id=receipt.id) }}" style="display:none;">{% if from_grouped %}<input type="hidden" name="from_grouped" value="1">{% endif %}</form>
 
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
