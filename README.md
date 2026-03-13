@@ -186,6 +186,12 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.57 — 13 March 2026
+- **Mercadona analysis removed** — replaced by the generic company analysis page
+- **Generic electricity analyser** — any company with type "Utility - Electric" now gets deep bill analysis (P1/P2/P3 consumption, contracted power, energy price trends, bill component breakdown); extracts text from all PDF pages
+- **Utility - Electric company type added** — new type in Settings with categories: electricity, tax, other
+- **Old /analysis/energy-nordic URL redirects** to the new per-company electricity analysis page
+
 ### v1.56 — 13 March 2026
 - **Unsaved changes warning** — on the Settings page, the Save categories button turns blue when checkboxes are changed; navigating away with unsaved changes shows a browser warning
 

@@ -149,6 +149,16 @@ def _migrate_db(db):
             conn.execute(db.text("PRAGMA foreign_keys=ON"))
             conn.commit()
 
+        # company_types list -- add Utility - Electric if not present
+        from .models import ListItem as LI2
+        if not db.session.query(LI2).filter_by(list_name="company_types", value="Utility - Electric").first():
+            import json as _json
+            max_order = db.session.query(db.func.max(LI2.sort_order)).filter_by(list_name="company_types").scalar() or 0
+            db.session.add(LI2(list_name="company_types", value="Utility - Electric",
+                               sort_order=max_order + 1,
+                               meta=_json.dumps(["electricity", "tax", "other"])))
+            db.session.commit()
+
         # categories list — add 'tax' if not already present
         from .models import ListItem as LI
         if not db.session.query(LI).filter_by(list_name='categories', value='tax').first():
@@ -219,6 +229,7 @@ def _seed_list_items(db):
                         "household", "cleaning", "personal_care", "pet", "tax", "other"],
         "Petrol":      ["petrol", "odometer", "other"],
         "Utility":     ["electricity", "water", "gas", "internet", "phone", "tax", "other"],
+        "Utility - Electric": ["electricity", "tax", "other"],
         "Restaurant":  ["food", "drink", "other"],
         "Pharmacy":    ["personal_care", "other"],
         "Household":   ["household", "cleaning", "other"],

@@ -17,7 +17,7 @@ from .template_manager import (
     update_template, set_template_items
 )
 from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate, Income, Account, Transaction, Shopper
-from .company_analysers import get_analyser_key, canonical_name, get_analysis_endpoint
+from .company_analysers import get_analyser_key, canonical_name
 from .reports_data import (
     parse_date, default_start,
     get_summary, get_spending_over_time,
@@ -609,9 +609,9 @@ def confirm(receipt_id):
 
     # Run company-specific analysis if one exists for this company
     if company:
-        analyser_key = get_analyser_key(company.name)
-        if analyser_key == "energy_nordic":
-            from .company_analysers.energy_nordic import analyse, AnalysisError
+        analyser_key = get_analyser_key(company.name, company.type)
+        if analyser_key == "electricity":
+            from .company_analysers.electricity import analyse, AnalysisError
             filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], receipt.filename)
             if os.path.exists(filepath):
                 try:
@@ -621,7 +621,7 @@ def confirm(receipt_id):
                     else:
                         db.session.add(ReceiptAnalysis(
                             receipt_id=receipt.id,
-                            analyser="energy_nordic",
+                            analyser="electricity",
                             data=json.dumps(data),
                         ))
                     db.session.commit()
@@ -707,9 +707,9 @@ def process_all_pending():
 
         # Run company-specific analysis
         if company:
-            analyser_key = get_analyser_key(company.name)
-            if analyser_key == "energy_nordic":
-                from .company_analysers.energy_nordic import analyse, AnalysisError
+            analyser_key = get_analyser_key(company.name, company.type)
+            if analyser_key == "electricity":
+                from .company_analysers.electricity import analyse, AnalysisError
                 filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], receipt.filename)
                 if os.path.exists(filepath):
                     try:
@@ -719,7 +719,7 @@ def process_all_pending():
                         else:
                             db.session.add(ReceiptAnalysis(
                                 receipt_id=receipt.id,
-                                analyser="energy_nordic",
+                                analyser="electricity",
                                 data=json.dumps(data),
                             ))
                         db.session.commit()
@@ -782,7 +782,6 @@ def companies():
     return render_template(
         "companies.html",
         companies=all_companies,
-        get_analysis_endpoint=get_analysis_endpoint,
     )
 
 
@@ -920,115 +919,6 @@ def api_item_suggestions():
     return jsonify(get_item_suggestions(q, shopper_id=_view_as_shopper_id()))
 
 
-# ---------------------------------------------------------------------------
-# Company-specific analysis — Mercadona
-# ---------------------------------------------------------------------------
-
-def _get_mercadona():
-    """Return the Mercadona company record or 404."""
-    company = Company.query.filter(
-        db.func.lower(Company.name).like("%mercadona%")
-    ).first_or_404()
-    return company
-
-
-@main.route("/analysis/mercadona")
-@login_required
-@admin_required
-def analysis_mercadona():
-    company = _get_mercadona()
-    return render_template("analysis_mercadona.html", company=company)
-
-
-@main.route("/api/item-analysis")
-@login_required
-def api_item_analysis():
-    start      = parse_date(request.args.get("start"), default_start())
-    end        = parse_date(request.args.get("end"),   date.today())
-    company_id = request.args.get("company_id", type=int)
-    return jsonify(get_item_analysis(start, end, company_id, shopper_id=_view_as_shopper_id()))
-
-
-@main.route("/api/analysis/mercadona/summary")
-@login_required
-@admin_required
-def api_mercadona_summary():
-    company = _get_mercadona()
-    start = parse_date(request.args.get("start"), default_start())
-    end   = parse_date(request.args.get("end"),   date.today())
-    base  = get_summary(start, end, company.id)
-
-    # Add visit count and total items
-    from .models import LineItem as LI
-    total_items = (
-        db.session.query(db.func.count(LI.id))
-        .join(Receipt, LI.receipt_id == Receipt.id)
-        .filter(
-            Receipt.company_id == company.id,
-            Receipt.status == "confirmed",
-            Receipt.receipt_date >= start,
-            Receipt.receipt_date <= end,
-        )
-        .scalar() or 0
-    )
-    base["total_items"] = total_items
-    return jsonify(base)
-
-
-@main.route("/api/analysis/mercadona/per-visit")
-@login_required
-@admin_required
-def api_mercadona_per_visit():
-    company = _get_mercadona()
-    start = parse_date(request.args.get("start"), default_start())
-    end   = parse_date(request.args.get("end"),   date.today())
-    return jsonify(get_spend_per_visit(start, end, company.id))
-
-
-@main.route("/api/analysis/mercadona/by-category")
-@login_required
-@admin_required
-def api_mercadona_by_category():
-    company = _get_mercadona()
-    start = parse_date(request.args.get("start"), default_start())
-    end   = parse_date(request.args.get("end"),   date.today())
-    return jsonify(get_by_category(start, end, company.id))
-
-
-@main.route("/api/analysis/mercadona/top-items")
-@login_required
-@admin_required
-def api_mercadona_top_items():
-    company = _get_mercadona()
-    start = parse_date(request.args.get("start"), default_start())
-    end   = parse_date(request.args.get("end"),   date.today())
-    limit = int(request.args.get("limit", 15))
-    return jsonify(get_top_items(start, end, company.id, limit))
-
-
-@main.route("/api/analysis/mercadona/price-trend")
-@login_required
-@admin_required
-def api_mercadona_price_trend():
-    company     = _get_mercadona()
-    description = request.args.get("description", "").strip()
-    start = parse_date(request.args.get("start"), default_start())
-    end   = parse_date(request.args.get("end"),   date.today())
-    if not description:
-        return jsonify({"labels": [], "values": [], "description": ""})
-    return jsonify(get_price_trend(description, start, end, company.id))
-
-
-@main.route("/api/analysis/mercadona/item-suggestions")
-@login_required
-@admin_required
-def api_mercadona_item_suggestions():
-    company = _get_mercadona()
-    q = request.args.get("q", "").strip()
-    if len(q) < 2:
-        return jsonify([])
-    return jsonify(get_item_suggestions(q, company_id=company.id))
-
 
 
 # ---------------------------------------------------------------------------
@@ -1118,18 +1008,15 @@ def api_item_search():
 
 
 # ---------------------------------------------------------------------------
-# Company-specific analysis — Energy Nordic
+# Electricity analysis — works for any "Utility - Electric" company
 # ---------------------------------------------------------------------------
 
-@main.route("/analysis/energy-nordic")
+@main.route("/analysis/electricity/<int:company_id>")
 @login_required
 @admin_required
-def analysis_energy_nordic():
-    company = Company.query.filter(
-        db.func.lower(Company.name) == "energy nordic"
-    ).first_or_404()
+def analysis_electricity(company_id):
+    company = Company.query.get_or_404(company_id)
 
-    # Date range — default last 12 months
     today = date.today()
     start_str = request.args.get("start", default_start().isoformat())
     end_str   = request.args.get("end",   today.isoformat())
@@ -1143,10 +1030,8 @@ def analysis_energy_nordic():
         .all()
     )
 
-    # Pending = any confirmed receipt across ALL dates that has no analysis
     pending = [r for r in all_receipts if not r.analysis]
 
-    # Apply date filter for stats, table and charts
     receipts = [
         r for r in all_receipts
         if r.receipt_date and start_date <= r.receipt_date <= end_date
@@ -1166,7 +1051,7 @@ def analysis_energy_nordic():
                 pass
 
     return render_template(
-        "analysis_energy_nordic.html",
+        "analysis_electricity.html",
         company=company,
         analysed=analysed,
         pending=pending,
@@ -1176,16 +1061,12 @@ def analysis_energy_nordic():
     )
 
 
-@main.route("/analysis/energy-nordic/run", methods=["POST"])
+@main.route("/analysis/electricity/<int:company_id>/run", methods=["POST"])
 @login_required
 @admin_required
-def analysis_energy_nordic_run():
-    """Run (or re-run) analysis on all Energy Nordic receipts that lack it."""
-    from .company_analysers.energy_nordic import analyse, AnalysisError
-
-    company = Company.query.filter(
-        db.func.lower(Company.name) == "energy nordic"
-    ).first_or_404()
+def analysis_electricity_run(company_id):
+    from .company_analysers.electricity import analyse, AnalysisError
+    company = Company.query.get_or_404(company_id)
 
     receipts = Receipt.query.filter_by(
         company_id=company.id, status="confirmed"
@@ -1197,7 +1078,7 @@ def analysis_energy_nordic_run():
     for r in receipts:
         filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], r.filename)
         if not os.path.exists(filepath):
-            errors.append(f"{r.filename}: file not found in Receipts folder")
+            errors.append(f"{r.filename}: file not found")
             continue
 
         try:
@@ -1206,17 +1087,14 @@ def analysis_energy_nordic_run():
             errors.append(f"{r.filename}: {e}")
             continue
 
-        # Upsert analysis record
         if r.analysis:
             r.analysis.data = json.dumps(data)
         else:
-            ra = ReceiptAnalysis(
+            db.session.add(ReceiptAnalysis(
                 receipt_id=r.id,
-                analyser="energy_nordic",
+                analyser="electricity",
                 data=json.dumps(data),
-            )
-            db.session.add(ra)
-
+            ))
         done += 1
 
     db.session.commit()
@@ -1225,7 +1103,28 @@ def analysis_energy_nordic_run():
         for err in errors:
             flash(err, "error")
     flash(f"Analysis complete: {done} bill(s) processed.", "success")
-    return redirect(url_for("main.analysis_energy_nordic"))
+    return redirect(url_for("main.analysis_electricity", company_id=company_id))
+
+
+# Backward-compat redirects for old /analysis/energy-nordic URLs
+@main.route("/analysis/energy-nordic")
+@login_required
+@admin_required
+def analysis_energy_nordic():
+    company = Company.query.filter(
+        db.func.lower(Company.name) == "energy nordic"
+    ).first_or_404()
+    return redirect(url_for("main.analysis_electricity", company_id=company.id))
+
+
+@main.route("/analysis/energy-nordic/run", methods=["POST"])
+@login_required
+@admin_required
+def analysis_energy_nordic_run():
+    company = Company.query.filter(
+        db.func.lower(Company.name) == "energy nordic"
+    ).first_or_404()
+    return redirect(url_for("main.analysis_electricity", company_id=company.id))
 
 
 # ---------------------------------------------------------------------------

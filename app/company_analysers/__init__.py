@@ -1,24 +1,12 @@
 # Company-specific analysers
 ANALYSER_MAP = {
-    "energy nordic": "energy_nordic",
-    "energía nórdica gas y electricidad s.l.u": "energy_nordic",
-    "energia nordica gas y electricidad s.l.u": "energy_nordic",
-    "energy nordic (energía nórdica gas y electricidad s.l.u)": "energy_nordic",
+    "energy nordic": "electricity",
+    "energía nórdica gas y electricidad s.l.u": "electricity",
+    "energia nordica gas y electricidad s.l.u": "electricity",
+    "energy nordic (energía nórdica gas y electricidad s.l.u)": "electricity",
 }
 
-# Maps canonical company name (lowercase) → Flask endpoint for its analysis page
-ANALYSIS_ENDPOINTS = {
-    "energy nordic": ("main.analysis_energy_nordic", "⚡"),
-    "mercadona, s.a.": ("main.analysis_mercadona",   "🛒"),
-    "mercadona":       ("main.analysis_mercadona",   "🛒"),
-}
-
-
-def get_analysis_endpoint(company_name: str):
-    """Return (endpoint, icon) for a company's analysis page, or None."""
-    return ANALYSIS_ENDPOINTS.get(company_name.lower().strip())
-
-# Maps known aliases to the preferred display name stored in the DB
+# Maps known name aliases -> preferred display name stored in the DB
 CANONICAL_NAMES = {
     "energía nórdica gas y electricidad s.l.u": "Energy Nordic",
     "energia nordica gas y electricidad s.l.u": "Energy Nordic",
@@ -26,8 +14,10 @@ CANONICAL_NAMES = {
 }
 
 
-def get_analyser_key(company_name: str):
-    """Return the analyser module key for a company name, or None."""
+def get_analyser_key(company_name: str, company_type: str = None):
+    """Return the analyser module key for a company, or None."""
+    if company_type == "Utility - Electric":
+        return "electricity"
     return ANALYSER_MAP.get(company_name.lower().strip())
 
 

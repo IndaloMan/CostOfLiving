@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}{{ company.name }} — Electricity Analysis{% endblock %}
+
+{% block content %}
+<div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+    <a href="{{ url_for('main.companies') }}" style="color:#888; text-decoration:none;">&#8592; Companies</a>
+    <h1 style="margin:0">{{ company.name }} — Electricity Analysis</h1>
+    <form method="POST" action="{{ url_for('main.analysis_electricity_run', company_id=company.id) }}" style="margin-left:auto;">
+        <button type="submit" class="btn btn-secondary">
+            &#9654; {% if pending %}Run Analysis ({{ pending|length }} pending){% else %}Re-run All{% endif %}
+        </button>
+    </form>
+</div>
+
+<!-- Filters -->
+<div class="filters-bar card">
+    <form method="GET" action="{{ url_for('main.analysis_electricity', company_id=company.id) }}" class="filters-inner" id="filterForm">
+        <div class="filter-group">
+            <label>From</label>
+            <input type="date" name="start" id="startDate" value="{{ start }}">
+        </div>
+        <div class="filter-group">
+            <label>To</label>
+            <input type="date" name="end" id="endDate" value="{{ end }}">
+        </div>
+        <div class="preset-group">
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('month'); document.getElementById('filterForm').submit();">Month</button>
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('qtr'); document.getElementById('filterForm').submit();">Qtr</button>
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('ytd'); document.getElementById('filterForm').submit();">YTD</button>
+            <button type="button" class="btn btn-preset" onclick="setDatePreset('prevyr'); document.getElementById('filterForm').submit();">Prev Yr</button>
+        </div>
+        <button type="submit" class="btn">Apply</button>
+    </form>
+    <div id="dateError" class="alert alert-error" style="display:none; margin-top:0.75rem;">'From' date must be before 'To' date.</div>
+</div>
+
+{% if pending and not analysed %}
+<div class="card empty-state">
+    <p>No analysis data yet. Click <strong>Run Analysis</strong> to extract detailed data from your bills.</p>
+</div>
+{% endif %}
+
+{% if analysed %}
+
+{# ── Summary stats ─────────────────────────────────────────────────── #}
+{% set p1_kwh   = analysed | sum(attribute='data.energy.P1.kwh') %}
+{% set p2_kwh   = analysed | sum(attribute='data.energy.P2.kwh') %}
+{% set p3_kwh   = analysed | sum(attribute='data.energy.P3.kwh') %}
+{% set total_kwh = p1_kwh + p2_kwh + p3_kwh %}
+{% set p1_cost  = analysed | sum(attribute='data.energy.P1.total') %}
+{% set p2_cost  = analysed | sum(attribute='data.energy.P2.total') %}
+{% set p3_cost  = analysed | sum(attribute='data.energy.P3.total') %}
+{% set energy_cost = p1_cost + p2_cost + p3_cost %}
+{% set total_cost = analysed | sum(attribute='data.total') %}
+
+<div class="stats-row" style="margin-bottom:1.5rem;">
+    <div class="stat-box">
+        <div class="stat-num">{{ analysed|length }}</div>
+        <div class="stat-label">Bills Analysed</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">{{ "%.0f"|format(total_kwh) }}</div>
+        <div class="stat-label">Total kWh</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(total_cost) }}</div>
+        <div class="stat-label">Total Cost</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(energy_cost / total_kwh) if total_kwh else '—' }}</div>
+        <div class="stat-label">Avg Cost/kWh</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(p1_cost / p1_kwh) if p1_kwh else '—' }}</div>
+        <div class="stat-label">P1 Avg €/kWh</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(p2_cost / p2_kwh) if p2_kwh else '—' }}</div>
+        <div class="stat-label">P2 Avg €/kWh</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-num">€{{ "%.2f"|format(p3_cost / p3_kwh) if p3_kwh else '—' }}</div>
+        <div class="stat-label">P3 Avg €/kWh</div>
+    </div>
+</div>
+
+{# ── Detailed breakdown table ──────────────────────────────────────── #}
+<div class="card" style="margin-bottom:1.5rem;">
+    <h2>Bill Breakdown</h2>
+    <div class="table-wrap">
+        <table class="data-table" id="billTable" style="font-size:0.82rem; min-width:900px;">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th data-col="1" class="sortable" style="white-space:nowrap">Date <span class="sort-icon"></span></th>
+                    <th data-col="2" class="sortable">Days <span class="sort-icon"></span></th>
+                    <th data-col="3" class="sortable" style="text-align:right">P1 kWh <span class="sort-icon"></span></th>
+                    <th data-col="4" class="sortable" style="text-align:right">P2 kWh <span class="sort-icon"></span></th>
+                    <th data-col="5" class="sortable" style="text-align:right">P3 kWh <span class="sort-icon"></span></th>
+                    <th data-col="6" class="sortable" style="text-align:right">Total kWh <span class="sort-icon"></span></th>
+                    <th data-col="7" class="sortable" style="text-align:right">P1 €/kWh <span class="sort-icon"></span></th>
+                    <th data-col="8" class="sortable" style="text-align:right">P2 €/kWh <span class="sort-icon"></span></th>
+                    <th data-col="9" class="sortable" style="text-align:right">P3 €/kWh <span class="sort-icon"></span></th>
+                    <th data-col="10" class="sortable" style="text-align:right">Energy <span class="sort-icon"></span></th>
+                    <th data-col="11" class="sortable" style="text-align:right">Standing <span class="sort-icon"></span></th>
+                    <th data-col="12" class="sortable" style="text-align:right">Tax+VAT <span class="sort-icon"></span></th>
+                    <th data-col="13" class="sortable" style="text-align:right"><strong>Total</strong> <span class="sort-icon"></span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in analysed %}
+                {% set d = row.data %}
+                {% set e = d.energy %}
+                {% set kwh_total = (e.P1.kwh or 0) + (e.P2.kwh or 0) + (e.P3.kwh or 0) %}
+                {% set standing = ((d.contracted_power.P1.total or 0) + (d.contracted_power.P2.total or 0) + (d.handle_fee or 0) + (d.meter_hire.total or 0)) %}
+                {% set tax_vat  = ((d.electricity_tax.amount or 0) + (d.vat.amount or 0)) %}
+                {% set energy_total = ((e.P1.total or 0) + (e.P2.total or 0) + (e.P3.total or 0)) %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('main.edit_receipt', receipt_id=row.receipt_id) }}"
+                           class="btn btn-secondary btn-sm">Edit</a>
+                    </td>
+                    <td style="white-space:nowrap">{{ row.date }}</td>
+                    <td style="text-align:center">{{ d.billing_period.days }}</td>
+                    <td style="text-align:right">{{ "%.2f"|format(e.P1.kwh or 0) }}</td>
+                    <td style="text-align:right">{{ "%.2f"|format(e.P2.kwh or 0) }}</td>
+                    <td style="text-align:right">{{ "%.2f"|format(e.P3.kwh or 0) }}</td>
+                    <td style="text-align:right"><strong>{{ "%.2f"|format(kwh_total) }}</strong></td>
+                    <td style="text-align:right">{{ "%.4f"|format((e.P1.energy_price or 0) + (e.P1.toll or 0)) }}</td>
+                    <td style="text-align:right">{{ "%.4f"|format((e.P2.energy_price or 0) + (e.P2.toll or 0)) }}</td>
+                    <td style="text-align:right">{{ "%.4f"|format((e.P3.energy_price or 0) + (e.P3.toll or 0)) }}</td>
+                    <td style="text-align:right">€{{ "%.2f"|format(energy_total) }}</td>
+                    <td style="text-align:right">€{{ "%.2f"|format(standing) }}</td>
+                    <td style="text-align:right">€{{ "%.2f"|format(tax_vat) }}</td>
+                    <td style="text-align:right"><strong>€{{ "%.2f"|format(d.total or 0) }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ── Charts ────────────────────────────────────────────────────────── #}
+<div class="card chart-card" style="margin-bottom:1.5rem;">
+    <h2>Consumption per Period (kWh)</h2>
+    <div class="chart-container tall"><canvas id="consumptionChart"></canvas></div>
+</div>
+
+<div class="charts-row">
+    <div class="card chart-card">
+        <h2>Energy Price Trend (€/kWh incl. toll)</h2>
+        <div class="chart-container"><canvas id="priceChart"></canvas></div>
+    </div>
+    <div class="card chart-card">
+        <h2>Bill Component Breakdown (€)</h2>
+        <div class="chart-container"><canvas id="breakdownChart"></canvas></div>
+    </div>
+</div>
+
+{# Pass data to JS as a JSON variable #}
+<script>
+const billData = {{ analysed | tojson }};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/analysis_electricity.js') }}"></script>
+
+{% endif %}
+
+<script>
+(function () {
+    const S = 'filter_electricity_{{ company.id }}_start';
+    const E = 'filter_electricity_{{ company.id }}_end';
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('start') || params.has('end')) {
+        // User just applied a filter — save it
+        if (params.get('start')) localStorage.setItem(S, params.get('start'));
+        if (params.get('end'))   localStorage.setItem(E, params.get('end'));
+    } else {
+        // Fresh page load — restore saved filter if available
+        const s = localStorage.getItem(S);
+        const e = localStorage.getItem(E);
+        if (s || e) {
+            const p = new URLSearchParams();
+            if (s) p.set('start', s);
+            if (e) p.set('end', e);
+            window.location.search = p.toString();
+        }
+    }
+
+})();
+</script>
+<script>
+(function () {
+    const table = document.getElementById('billTable');
+    if (!table) return;
+    let sortCol = null, sortAsc = true;
+
+    table.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const col = parseInt(th.dataset.col);
+            sortAsc = (sortCol === col) ? !sortAsc : true;
+            sortCol = col;
+
+            const tbody = table.querySelector('tbody');
+            const rows  = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                const av = a.cells[col] ? a.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const bv = b.cells[col] ? b.cells[col].textContent.replace(/[€,]/g, '').trim() : '';
+                const an = parseFloat(av), bn = parseFloat(bv);
+                const cmp = (!isNaN(an) && !isNaN(bn)) ? an - bn : av.localeCompare(bv);
+                return sortAsc ? cmp : -cmp;
+            });
+
+            rows.forEach(r => tbody.appendChild(r));
+
+            // Update sort icons
+            table.querySelectorAll('th.sortable .sort-icon').forEach(ic => ic.textContent = '');
+            th.querySelector('.sort-icon').textContent = sortAsc ? ' ▲' : ' ▼';
+        });
+    });
+})();
+</script>
+
+{% endblock %}
