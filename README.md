@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.40 — 13 March 2026
+- **Register page credentials layout fix** — Login ID and Password labels now above their values, full-width on mobile; Copy buttons removed
+
 ### v1.39 — 13 March 2026
 - **Welcome page credentials layout** — Login ID and Password display full-width with label above; Copy buttons removed
 

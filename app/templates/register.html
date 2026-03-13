@@ -34,19 +34,17 @@
             letter-spacing: 0.04em;
         }
         .cred-row {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.65rem;
         }
         .cred-label {
+            display: block;
             font-size: 0.78rem;
             font-weight: 600;
             color: #555;
-            width: 80px;
-            flex-shrink: 0;
+            margin-bottom: 0.3rem;
         }
         .cred-value {
+            display: block;
             font-family: monospace;
             font-size: 1rem;
             font-weight: 700;
@@ -55,19 +53,9 @@
             border: 1px solid #aed6f1;
             border-radius: 4px;
             padding: 0.3rem 0.6rem;
-            flex: 1;
+            width: 100%;
+            box-sizing: border-box;
         }
-        .btn-copy {
-            background: white;
-            color: #2980b9;
-            border: 1px solid #2980b9;
-            border-radius: 5px;
-            padding: 0.25rem 0.6rem;
-            font-size: 0.78rem;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .btn-copy:hover { background: #eaf4fb; }
         .warn-text {
             font-size: 0.82rem;
             color: #922b21;
@@ -134,13 +122,11 @@
             <h2>Your Credentials</h2>
             <div class="cred-row">
                 <span class="cred-label">Login ID</span>
-                <span class="cred-value" id="val-login-id">{{ login_id }}</span>
-                <button type="button" class="btn-copy" onclick="copyVal('val-login-id', this)">Copy</button>
+                <span class="cred-value">{{ login_id }}</span>
             </div>
             <div class="cred-row">
                 <span class="cred-label">Password</span>
-                <span class="cred-value" id="val-passphrase">{{ passphrase }}</span>
-                <button type="button" class="btn-copy" onclick="copyVal('val-passphrase', this)">Copy</button>
+                <span class="cred-value">{{ passphrase }}</span>
             </div>
             <p class="warn-text">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0; margin-top:2px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -219,13 +205,6 @@
 </div>
 
 <script>
-function copyVal(id, btn) {
-    const text = document.getElementById(id).textContent.trim();
-    navigator.clipboard.writeText(text).then(() => {
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy', 1800);
-    });
-}
 function togglePw(btn) {
     const inp = btn.closest('.password-wrap').querySelector('input');
     const show = inp.type === 'password';
