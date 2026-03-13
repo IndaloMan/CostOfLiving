@@ -487,7 +487,6 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
 
 /* Hamburger — hidden on desktop */
 .nav-hamburger { display: none; }
-.nav-id-item { display: none; }  /* hidden on desktop */
 
 /* =========================================================
    Mobile — 768px and below

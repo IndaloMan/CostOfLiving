@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.75 — 13 March 2026
+- **Nav login ID** — reinstated on desktop nav bar
+
 ### v1.74 — 13 March 2026
 - **Nav brand** — clicking the icon or app title navigates to the home page
 
