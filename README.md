@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.73 — 13 March 2026
+- **Account page** — Nickname label now matches register form exactly: 'Nickname (shown in the app — defaults to your Login ID)'
+
 ### v1.72 — 13 March 2026
 - **Account page** — renamed 'Full Name' to 'Nickname' to match register form; now edits the nickname field
 

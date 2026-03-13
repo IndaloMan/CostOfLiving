@@ -16,7 +16,7 @@
         <form method="POST">
             <input type="hidden" name="action" value="profile">
             <div class="form-group">
-                <label for="nickname">Nickname</label>
+                <label for="nickname">Nickname <small style="font-weight:400;">(shown in the app — defaults to your Login ID)</small></label>
                 <input type="text" id="nickname" name="nickname"
                        value="{{ current_user.nickname or '' }}" maxlength="50" required
                        autocomplete="nickname">
