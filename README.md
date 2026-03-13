@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.35 — 13 March 2026
+- **Item Analysis click-to-search fix** — Item Search page now reads the q= URL param on load, populates the description box and auto-runs the search
+
 ### v1.34 — 13 March 2026
 - **Item Analysis clickable descriptions** — clicking a description in the Item Analysis table opens Item Search pre-filtered to that item in a new tab
 

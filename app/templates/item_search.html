@@ -133,6 +133,9 @@ async function doSearch() {
     initTableSort(document.getElementById('resultsTable'));
 }
 
+const _qs = new URLSearchParams(window.location.search).get('q');
+if (_qs) { document.getElementById('itemQuery').value = _qs; doSearch(); }
+
 document.getElementById('itemQuery').addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doSearch();
 });
