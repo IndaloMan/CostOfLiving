@@ -51,8 +51,7 @@ def create_app():
 
     login_manager.init_app(app)
     login_manager.login_view = "main.login"
-    login_manager.login_message = "Please log in to access this page."
-    login_manager.login_message_category = "error"
+    login_manager.login_message = ""
 
     from .routes import main
     app.register_blueprint(main)

@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.42 — 13 March 2026
+- **Remove login redirect message** — suppressed the red "Please log in" flash message shown on the login page
+
 ### v1.41 — 13 March 2026
 - **Register page copy update** — removed subtitle; updated intro to reference Mojacar residents
 
