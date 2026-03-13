@@ -1,0 +1,178 @@
+[2026-03-11 12:47:12] WARNING -  * Debugger is active!
+[2026-03-11 12:47:29] WARNING -  * Debugger is active!
+[2026-03-11 12:47:29] WARNING -  * Debugger is active!
+[2026-03-11 12:50:35] INFO - LOGIN  online@ego2.net (Boss) from 100.102.114.30
+[2026-03-11 12:52:11] INFO - SHOPPER ADD  maretiarowe@yahoo.co.uk (Maretia) by Boss
+[2026-03-11 12:57:11] INFO - LOGOUT online@ego2.net from 100.102.114.30
+[2026-03-11 12:57:21] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.102.114.30
+[2026-03-11 13:01:14] WARNING -  * Debugger is active!
+[2026-03-11 13:04:21] WARNING -  * Debugger is active!
+[2026-03-11 13:07:09] WARNING -  * Debugger is active!
+[2026-03-11 13:07:09] WARNING -  * Debugger is active!
+[2026-03-11 13:07:36] WARNING -  * Debugger is active!
+[2026-03-11 13:10:41] WARNING -  * Debugger is active!
+[2026-03-11 13:10:41] WARNING -  * Debugger is active!
+[2026-03-11 13:10:59] WARNING -  * Debugger is active!
+[2026-03-11 13:11:00] WARNING -  * Debugger is active!
+[2026-03-11 13:13:05] WARNING -  * Debugger is active!
+[2026-03-11 13:16:01] WARNING -  * Debugger is active!
+[2026-03-11 13:16:01] WARNING -  * Debugger is active!
+[2026-03-11 13:19:58] INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+[2026-03-11 13:19:58] INFO - UPLOAD  receipt#25 M1receipt.jpeg by Maretia
+[2026-03-11 13:20:10] INFO - CONFIRM receipt#25 M1receipt.jpeg by Maretia
+[2026-03-11 13:22:06] INFO - LOGOUT maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 13:22:08] INFO - LOGIN  online@ego2.net (Boss) from 100.102.114.30
+[2026-03-11 13:24:19] WARNING -  * Debugger is active!
+[2026-03-11 13:24:19] WARNING -  * Debugger is active!
+[2026-03-11 13:35:55] WARNING -  * Debugger is active!
+[2026-03-11 13:35:56] WARNING -  * Debugger is active!
+[2026-03-11 13:40:44] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.96.213.102
+[2026-03-11 13:43:31] WARNING -  * Debugger is active!
+[2026-03-11 14:00:26] WARNING -  * Debugger is active!
+[2026-03-11 14:00:26] WARNING -  * Debugger is active!
+[2026-03-11 14:00:31] WARNING -  * Debugger is active!
+[2026-03-11 14:00:31] WARNING -  * Debugger is active!
+[2026-03-11 14:25:24] WARNING -  * Debugger is active!
+[2026-03-11 14:25:24] WARNING -  * Debugger is active!
+[2026-03-11 14:35:26] WARNING -  * Debugger is active!
+[2026-03-11 14:35:26] WARNING -  * Debugger is active!
+[2026-03-11 15:15:27] WARNING -  * Debugger is active!
+[2026-03-11 15:15:28] WARNING -  * Debugger is active!
+[2026-03-11 15:15:33] WARNING -  * Debugger is active!
+[2026-03-11 15:15:33] WARNING -  * Debugger is active!
+[2026-03-11 15:27:22] INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+[2026-03-11 15:27:22] INFO - UPLOAD  receipt#26 17732392374204293874246034983546.jpg by Maretia (quick-scan)
+[2026-03-11 15:28:16] INFO - DELETE  receipt#26 17732392374204293874246034983546.jpg by Maretia
+[2026-03-11 15:46:52] WARNING -  * Debugger is active!
+[2026-03-11 15:46:53] WARNING -  * Debugger is active!
+[2026-03-11 15:50:00] WARNING -  * Debugger is active!
+[2026-03-11 15:50:00] WARNING -  * Debugger is active!
+[2026-03-11 15:50:43] WARNING -  * Debugger is active!
+[2026-03-11 15:51:43] INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+[2026-03-11 15:51:43] INFO - UPLOAD  receipt#26 20260311155131.jpeg by Boss (quick-scan)
+[2026-03-11 15:51:53] INFO - CONFIRM receipt#26 20260311155131.jpeg by Boss
+[2026-03-11 15:54:17] WARNING -  * Debugger is active!
+[2026-03-11 15:54:18] WARNING -  * Debugger is active!
+[2026-03-11 16:02:40] INFO - LOGOUT online@ego2.net from 100.102.114.30
+[2026-03-11 16:03:06] WARNING - LOGIN FAILED  maretia@yahoo.co.uk from 100.102.114.30
+[2026-03-11 16:03:39] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.102.114.30
+[2026-03-11 16:04:09] INFO - PASSWORD CHANGED maretiarowe@yahoo.co.uk (Maretia)
+[2026-03-11 16:07:44] WARNING -  * Debugger is active!
+[2026-03-11 16:07:45] WARNING -  * Debugger is active!
+[2026-03-11 16:21:37] INFO - LOGOUT maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 16:21:41] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.102.114.30
+[2026-03-11 16:21:54] INFO - LOGOUT maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 16:21:59] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.102.114.30
+[2026-03-11 16:35:24] INFO - LOGOUT maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 16:35:28] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.102.114.30
+[2026-03-11 16:35:31] INFO - LOGOUT maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 16:35:36] WARNING - LOGIN FAILED  maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 16:35:42] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.102.114.30
+[2026-03-11 16:40:59] WARNING -  * Debugger is active!
+[2026-03-11 16:40:59] WARNING -  * Debugger is active!
+[2026-03-11 18:42:06] WARNING -  * Debugger is active!
+[2026-03-11 18:42:07] WARNING -  * Debugger is active!
+[2026-03-11 18:46:34] WARNING -  * Debugger is active!
+[2026-03-11 18:46:35] WARNING -  * Debugger is active!
+[2026-03-11 18:52:05] INFO - LOGOUT maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 18:52:44] INFO - LOGIN  online@ego2.net (Boss) from 100.102.114.30
+[2026-03-11 20:41:39] WARNING -  * Debugger is active!
+[2026-03-11 20:41:39] WARNING -  * Debugger is active!
+[2026-03-11 20:49:14] INFO - LOGOUT online@ego2.net from 100.102.114.30
+[2026-03-11 20:49:17] INFO - LOGIN  maretiarowe@yahoo.co.uk (Maretia) from 100.102.114.30
+[2026-03-11 20:56:07] WARNING -  * Debugger is active!
+[2026-03-11 20:56:07] WARNING -  * Debugger is active!
+[2026-03-11 20:56:12] WARNING -  * Debugger is active!
+[2026-03-11 20:56:12] WARNING -  * Debugger is active!
+[2026-03-11 21:03:19] WARNING -  * Debugger is active!
+[2026-03-11 21:03:19] WARNING -  * Debugger is active!
+[2026-03-11 21:05:37] WARNING -  * Debugger is active!
+[2026-03-11 21:05:37] WARNING -  * Debugger is active!
+[2026-03-11 21:07:14] INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+[2026-03-11 21:07:14] INFO - UPLOAD  receipt#27 20260311210705.jpeg by Maretia
+[2026-03-11 21:15:24] WARNING -  * Debugger is active!
+[2026-03-11 21:15:25] WARNING -  * Debugger is active!
+[2026-03-11 21:16:34] INFO - CONFIRM receipt#27 20260311210705.jpeg by Maretia
+[2026-03-11 21:16:46] INFO - DELETE  receipt#27 20260311210705.jpeg by Maretia
+[2026-03-11 21:17:18] INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+[2026-03-11 21:17:18] INFO - UPLOAD  receipt#27 20260311211709.jpeg by Maretia (quick-scan)
+[2026-03-11 21:17:30] INFO - CONFIRM receipt#27 20260311211709.jpeg by Maretia
+[2026-03-11 21:32:26] WARNING -  * Debugger is active!
+[2026-03-11 21:32:26] WARNING -  * Debugger is active!
+[2026-03-11 21:32:30] WARNING -  * Debugger is active!
+[2026-03-11 21:32:31] WARNING -  * Debugger is active!
+[2026-03-11 21:32:39] WARNING -  * Debugger is active!
+[2026-03-11 21:32:39] WARNING -  * Debugger is active!
+[2026-03-11 21:33:25] WARNING -  * Debugger is active!
+[2026-03-11 21:33:25] WARNING -  * Debugger is active!
+[2026-03-11 21:34:58] WARNING -  * Debugger is active!
+[2026-03-11 21:36:08] INFO - LOGOUT maretiarowe@yahoo.co.uk from 100.102.114.30
+[2026-03-11 21:36:13] INFO - LOGIN  online@ego2.net (Boss) from 100.102.114.30
+[2026-03-11 21:41:04] WARNING -  * Debugger is active!
+[2026-03-11 21:41:04] WARNING -  * Debugger is active!
+[2026-03-11 21:53:34] WARNING -  * Debugger is active!
+[2026-03-11 21:53:34] WARNING -  * Debugger is active!
+[2026-03-11 21:55:36] WARNING -  * Debugger is active!
+[2026-03-11 22:08:13] WARNING -  * Debugger is active!
+[2026-03-11 22:21:58] WARNING -  * Debugger is active!
+[2026-03-11 22:21:59] WARNING -  * Debugger is active!
+[2026-03-11 22:22:45] WARNING -  * Debugger is active!
+[2026-03-11 22:35:00] WARNING -  * Debugger is active!
+[2026-03-11 22:35:00] WARNING -  * Debugger is active!
+[2026-03-11 22:36:01] INFO - CONFIRM receipt#24 17729044980427098800374773316240.jpg by Boss
+[2026-03-11 22:40:25] WARNING -  * Debugger is active!
+[2026-03-11 22:40:25] WARNING -  * Debugger is active!
+[2026-03-11 22:47:16] WARNING -  * Debugger is active!
+[2026-03-11 22:47:16] WARNING -  * Debugger is active!
+[2026-03-11 22:51:13] WARNING -  * Debugger is active!
+[2026-03-11 22:51:13] WARNING -  * Debugger is active!
+[2026-03-11 22:52:00] WARNING -  * Debugger is active!
+[2026-03-11 22:55:21] INFO - CONFIRM receipt#5 Receipt_2026-03-01_114203.pdf by Boss
+[2026-03-11 22:56:27] INFO - CONFIRM receipt#1 Receipt_2026-03-01_111320.pdf by Boss
+[2026-03-12 08:25:53] WARNING -  * Debugger is active!
+[2026-03-12 11:13:23] INFO - CONFIRM receipt#24 17729044980427098800374773316240.jpg by Boss
+[2026-03-12 11:13:55] INFO - CONFIRM receipt#24 17729044980427098800374773316240.jpg by Boss
+[2026-03-12 14:22:50] WARNING -  * Debugger is active!
+[2026-03-12 14:23:42] WARNING -  * Debugger is active!
+[2026-03-12 14:24:30] WARNING -  * Debugger is active!
+[2026-03-12 14:25:03] INFO - LOGOUT online@ego2.net from 100.102.114.30
+[2026-03-12 14:25:06] INFO - LOGIN  online@ego2.net (Boss) from 100.102.114.30
+[2026-03-12 14:30:18] INFO - LOGIN  online@ego2.net (Boss) from 100.102.114.30
+[2026-03-12 14:32:06] WARNING -  * Debugger is active!
+[2026-03-12 14:32:06] WARNING -  * Debugger is active!
+[2026-03-12 14:42:58] WARNING -  * Debugger is active!
+[2026-03-12 14:43:03] WARNING -  * Debugger is active!
+[2026-03-12 14:43:03] WARNING -  * Debugger is active!
+[2026-03-12 14:43:15] WARNING -  * Debugger is active!
+[2026-03-12 14:43:15] WARNING -  * Debugger is active!
+[2026-03-12 14:43:17] WARNING - LOGIN FAILED  anon-772289 from 100.102.114.30
+[2026-03-12 14:43:17] WARNING - LOGIN FAILED  anon-772289 from 100.102.114.30
+[2026-03-12 14:44:00] WARNING -  * Debugger is active!
+[2026-03-12 14:44:00] WARNING -  * Debugger is active!
+[2026-03-12 14:45:28] WARNING -  * Debugger is active!
+[2026-03-12 14:45:38] INFO - REGISTER  anon-156029 (TestUser) from 100.102.114.30
+[2026-03-12 14:45:38] INFO - LOGIN  anon-156029 (TestUser) from 100.102.114.30
+[2026-03-12 14:45:38] INFO - LOGIN  anon-156029 (TestUser) from 100.102.114.30
+[2026-03-12 14:45:38] INFO - REGISTER  anon-338854 (TestUser2) from 100.102.114.30
+[2026-03-12 14:45:47] INFO - REGISTER  anon-817871 (DelTest) from 100.102.114.30
+[2026-03-12 14:46:04] WARNING -  * Debugger is active!
+[2026-03-12 14:46:09] INFO - REGISTER  anon-408399 (TestUser) from 100.102.114.30
+[2026-03-12 14:46:09] INFO - LOGIN  anon-408399 (TestUser) from 100.102.114.30
+[2026-03-12 14:46:10] INFO - ACCOUNT DEACTIVATED (self)  anon-408399 (TestUser)
+[2026-03-12 14:46:10] WARNING - LOGIN FAILED  anon-408399 from 100.102.114.30
+[2026-03-12 14:46:10] INFO - REGISTER  anon-609992 (TestUser2) from 100.102.114.30
+[2026-03-12 14:46:10] INFO - ACCOUNT DEACTIVATED (self)  anon-609992 (TestUser2)
+[2026-03-12 14:48:15] INFO - REGISTER  anon-304999 (Nickname 1) from 100.102.114.30
+[2026-03-12 14:49:42] INFO - LOGOUT anon-304999 from 100.102.114.30
+[2026-03-12 14:50:16] INFO - LOGIN  anon-304999 (Nickname 1) from 100.102.114.30
+[2026-03-12 14:50:36] INFO - LOGOUT anon-304999 from 100.102.114.30
+[2026-03-12 14:50:41] INFO - LOGOUT ? from 100.102.114.30
+[2026-03-12 14:58:14] WARNING -  * Debugger is active!
+[2026-03-12 14:58:20] WARNING -  * Debugger is active!
+[2026-03-12 14:58:25] WARNING -  * Debugger is active!
+[2026-03-13 07:18:07] WARNING -  * Debugger is active!
+[2026-03-13 11:19:38] WARNING -  * Debugger is active!
+[2026-03-13 11:31:26] WARNING -  * Debugger is active!
+[2026-03-13 11:33:22] WARNING -  * Debugger is active!
+[2026-03-13 11:35:13] WARNING -  * Debugger is active!
+[2026-03-13 12:21:30] WARNING -  * Debugger is active!

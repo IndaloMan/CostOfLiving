@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.77 — 13 March 2026
+- test_registration.py
+
 ### v1.76 — 13 March 2026
 - **Item Analysis** — restored /api/item-analysis route accidentally removed during Mercadona cleanup in v1.57
 
