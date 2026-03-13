@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.34 — 13 March 2026
+- **Item Analysis clickable descriptions** — clicking a description in the Item Analysis table opens Item Search pre-filtered to that item in a new tab
+
 ### v1.33 — 13 March 2026
 - **Self-registration** — new /register page lets anyone create an account; generates a unique anon-NNNNNN login ID and a memorable two-word passphrase; users can optionally set a custom password, email, gender and age range
 - **Anonymous login IDs** — login now accepts anon-NNNNNN login IDs as well as email addresses; Shopper model gains login_id, gender and age_range columns; email and full name are now optional
