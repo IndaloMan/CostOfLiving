@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.41 — 13 March 2026
+- **Register page copy update** — removed subtitle; updated intro to reference Mojacar residents
+
 ### v1.40 — 13 March 2026
 - **Register page credentials layout fix** — Login ID and Password labels now above their values, full-width on mobile; Copy buttons removed
 
