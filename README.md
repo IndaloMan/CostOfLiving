@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.63 — 13 March 2026
+- **Mobile nav menu** — Account section added below Reports showing login ID and Change Password link; Logout centred at bottom; fixed overflow on small screens
+
 ### v1.62 — 13 March 2026
 - **Back button polish** — hidden on home/landing page; reduced whitespace; colour changed to black
 

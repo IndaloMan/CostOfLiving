@@ -30,9 +30,10 @@
             <li><a href="/items/search">Item Search</a></li>
             {% endif %}
             <li class="nav-user">
+                <span class="nav-acct-label">Account</span>
                 <span class="nav-nickname">{{ current_user.nickname }}</span>
-                <a href="/change-password" class="nav-logout">Password</a>
-                <a href="/logout" class="nav-logout">Logout</a>
+                <a href="/change-password" class="nav-logout nav-change-pw">Change Password</a>
+                <a href="/logout" class="nav-logout nav-logout-btn">Logout</a>
             </li>
             {% endif %}
         </ul>
