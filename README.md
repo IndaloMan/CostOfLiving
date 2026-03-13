@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.43 — 13 March 2026
+- **Login page label** — field label changed from "Login ID or Email" to "Login ID" to reinforce anonymity
+
 ### v1.42 — 13 March 2026
 - **Remove login redirect message** — suppressed the red "Please log in" flash message shown on the login page
 
