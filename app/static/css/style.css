@@ -33,6 +33,7 @@ nav {
     width: 32px;
     object-fit: contain;
     filter: invert(1);
+    mix-blend-mode: screen;
     flex-shrink: 0;
 }
 

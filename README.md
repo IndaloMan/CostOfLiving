@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.68 — 13 March 2026
+- **Nav logo** — removed black background from icon using mix-blend-mode: screen
+
 ### v1.67 — 13 March 2026
 - **Upload notification** — admin receives an email with a Review link each time a non-admin shopper uploads a receipt
 - **Forgot password** — login screen has a "Forgot password?" link; sends a 1-hour reset link to the shopper's registered email; graceful message if no email on file
