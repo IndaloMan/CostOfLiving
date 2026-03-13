@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.50 — 13 March 2026
+- **Hard-delete shoppers** — admin can permanently delete a non-admin shopper and all their receipts, line items, analysis records and uploaded files; confirmation dialog required; admin accounts protected from deletion
+
 ### v1.49 — 13 March 2026
 - app/routes.py, app/templates/register_welcome.html
 

@@ -1977,6 +1977,36 @@ def shopper_toggle_active(shopper_id):
     return redirect(url_for("main.shoppers"))
 
 
+@main.route('/shoppers/<int:shopper_id>/delete', methods=['POST'])
+@login_required
+def shopper_delete(shopper_id):
+    redir = _admin_required()
+    if redir:
+        return redir
+    s = Shopper.query.get_or_404(shopper_id)
+    if s.id == current_user.id:
+        flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('main.shoppers'))
+    if s.is_admin:
+        flash('Admin accounts cannot be hard-deleted. Deactivate instead.', 'error')
+        return redirect(url_for('main.shoppers'))
+    nickname = s.nickname
+    # Delete uploaded receipt files then receipts (LineItems + ReceiptAnalysis cascade)
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    for r in s.receipts:
+        if r.filename:
+            try:
+                os.remove(os.path.join(upload_folder, r.filename))
+            except OSError:
+                pass
+        db.session.delete(r)
+    db.session.delete(s)
+    db.session.commit()
+    log.info(f'SHOPPER DELETED  {s.display_id} ({nickname}) by {current_user.nickname}')
+    flash(f"Shopper '{nickname}' and all their data have been permanently deleted.", 'success')
+    return redirect(url_for('main.shoppers'))
+
+
 # ---------------------------------------------------------------------------
 # Change password — self-service for all logged-in users
 # ---------------------------------------------------------------------------

@@ -38,6 +38,12 @@
                         {{ 'Deactivate' if s.is_active else 'Activate' }}
                     </button>
                 </form>
+                {% if not s.is_admin %}
+                <form method="POST" action="/shoppers/{{ s.id }}/delete" style="display:inline"
+                      onsubmit="return confirm('Permanently delete {{ s.nickname }} and ALL their receipts and data? This cannot be undone.')">
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+                {% endif %}
                 {% endif %}
             </td>
         </tr>
