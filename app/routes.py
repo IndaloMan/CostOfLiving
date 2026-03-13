@@ -1015,6 +1015,15 @@ def api_item_suggestions():
 # Generic company analysis — works for any company
 # ---------------------------------------------------------------------------
 
+@main.route("/api/item-analysis")
+@login_required
+def api_item_analysis():
+    start      = parse_date(request.args.get("start"), default_start())
+    end        = parse_date(request.args.get("end"),   date.today())
+    company_id = request.args.get("company_id", type=int)
+    return jsonify(get_item_analysis(start, end, company_id, shopper_id=_view_as_shopper_id()))
+
+
 @main.route('/analysis/company/<int:company_id>')
 @login_required
 @admin_required

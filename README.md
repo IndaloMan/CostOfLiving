@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.76 — 13 March 2026
+- **Item Analysis** — restored /api/item-analysis route accidentally removed during Mercadona cleanup in v1.57
+
 ### v1.75 — 13 March 2026
 - **Nav login ID** — reinstated on desktop nav bar
 
