@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.58 — 13 March 2026
+- **Date picker min extended** — From date now allows back to 01/01/2015 (was limited to 4 years ago)
+
 ### v1.57 — 13 March 2026
 - **Mercadona analysis removed** — replaced by the generic company analysis page
 - **Generic electricity analyser** — any company with type "Utility - Electric" now gets deep bill analysis (P1/P2/P3 consumption, contracted power, energy price trends, bill component breakdown); extracts text from all PDF pages

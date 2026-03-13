@@ -70,12 +70,10 @@
         const endEl   = document.getElementById('endDate');
         if (!startEl || !endEl) return;
 
-        // Restrict picker to current year and 4 previous years — no future dates
+        // No future dates; allow back to 01/01/2015
         const today = new Date();
         const todayStr = localISO(today);
-        const minDate  = new Date(today);
-        minDate.setFullYear(minDate.getFullYear() - 4);
-        const minStr = minDate.toISOString().split('T')[0];
+        const minStr = '2015-01-01';
         startEl.max = todayStr; startEl.min = minStr;
         endEl.max   = todayStr; endEl.min   = minStr;
 
