@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.37 — 13 March 2026
+- **Welcome email on registration** — if a new user provides an email address during self-registration, they are automatically sent a welcome email containing their login ID and password; uses Gmail SMTP via Flask-Mail; silently skips if mail is not configured
+
 ### v1.36 — 13 March 2026
 - **Item Analysis click-to-search passes company** — clicking a description also passes the active company filter to Item Search, pre-selecting the company dropdown and filtering results accordingly
 

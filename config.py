@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-APP_VERSION = "1.36"
+APP_VERSION = "1.37"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,3 +22,12 @@ ADMIN_EMAIL     = os.getenv("ADMIN_EMAIL",     "admin@example.com")
 ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "Administrator")
 ADMIN_NICKNAME  = os.getenv("ADMIN_NICKNAME",  "Admin")
 ADMIN_PASSWORD  = os.getenv("ADMIN_PASSWORD",  "changeme")
+
+# Email (Flask-Mail via Gmail SMTP) — set in .env to enable
+MAIL_SERVER   = os.getenv('MAIL_SERVER',   'smtp.gmail.com')
+MAIL_PORT     = int(os.getenv('MAIL_PORT', '587'))
+MAIL_USE_TLS  = os.getenv('MAIL_USE_TLS',  'true').lower() == 'true'
+MAIL_USERNAME = os.getenv('MAIL_USERNAME', '')
+MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')
+MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', MAIL_USERNAME)
+MAIL_ENABLED  = bool(MAIL_USERNAME and MAIL_PASSWORD)

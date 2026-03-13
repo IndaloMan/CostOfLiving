@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_mail import Mail
 import os
 import sys
 import logging
@@ -11,6 +12,7 @@ import config
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+mail = Mail()
 
 
 def create_app():
@@ -37,7 +39,15 @@ def create_app():
     app.config["UPLOAD_FOLDER"] = config.RECEIPTS_FOLDER
     app.config["SECRET_KEY"] = config.SECRET_KEY
 
+    app.config["MAIL_SERVER"]         = config.MAIL_SERVER
+    app.config["MAIL_PORT"]           = config.MAIL_PORT
+    app.config["MAIL_USE_TLS"]        = config.MAIL_USE_TLS
+    app.config["MAIL_USERNAME"]       = config.MAIL_USERNAME
+    app.config["MAIL_PASSWORD"]       = config.MAIL_PASSWORD
+    app.config["MAIL_DEFAULT_SENDER"] = config.MAIL_DEFAULT_SENDER
+
     db.init_app(app)
+    mail.init_app(app)
 
     login_manager.init_app(app)
     login_manager.login_view = "main.login"

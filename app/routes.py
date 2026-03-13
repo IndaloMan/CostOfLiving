@@ -264,6 +264,10 @@ def register():
     login_user(shopper, remember=True)
     log.info(f"REGISTER  {login_id} ({nickname}) from {request.remote_addr}")
 
+    if email:
+        from .mailer import send_welcome_email
+        send_welcome_email(current_app._get_current_object(), email, nickname, login_id, password_to_use)
+
     # Store credentials in session for one-time display on welcome page
     session["new_creds"] = {"login_id": login_id, "passphrase": password_to_use}
     return redirect(url_for("main.register_welcome"))
