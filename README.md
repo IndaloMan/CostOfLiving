@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.54 — 13 March 2026
+- **Tax category** — new "tax" category added; extraction prompt automatically assigns it to any line item with VAT, IVA or impuesto in the description
+
 ### v1.53 — 13 March 2026
 - **Cancel button bug fix** — Cancel on the review screen was submitting the confirm form instead of deleting the receipt due to invalid nested forms; fixed by associating the button with the external deleteForm
 

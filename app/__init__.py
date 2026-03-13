@@ -149,6 +149,13 @@ def _migrate_db(db):
             conn.execute(db.text("PRAGMA foreign_keys=ON"))
             conn.commit()
 
+        # categories list — add 'tax' if not already present
+        from .models import ListItem as LI
+        if not db.session.query(LI).filter_by(list_name='categories', value='tax').first():
+            max_order = db.session.query(db.func.max(LI.sort_order)).filter_by(list_name='categories').scalar() or 0
+            db.session.add(LI(list_name='categories', value='tax', sort_order=max_order + 1))
+            db.session.commit()
+
         # receipts table
         cols = [row[1] for row in conn.execute(db.text("PRAGMA table_info(receipts)"))]
         if "updated_at" not in cols:
@@ -204,14 +211,14 @@ def _seed_list_items(db):
         "household", "cleaning", "personal_care", "pet",
         "electricity", "water", "gas", "internet", "phone",
         "petrol", "odometer",
-        "restaurant", "takeaway", "other",
+        "restaurant", "takeaway", "tax", "other",
     ]
 
     default_type_categories = {
         "Supermarket": ["food", "drink", "dairy", "meat", "fish", "bakery", "produce", "frozen",
-                        "household", "cleaning", "personal_care", "pet", "other"],
+                        "household", "cleaning", "personal_care", "pet", "tax", "other"],
         "Petrol":      ["petrol", "odometer", "other"],
-        "Utility":     ["electricity", "water", "gas", "internet", "phone", "other"],
+        "Utility":     ["electricity", "water", "gas", "internet", "phone", "tax", "other"],
         "Restaurant":  ["food", "drink", "other"],
         "Pharmacy":    ["personal_care", "other"],
         "Household":   ["household", "cleaning", "other"],
