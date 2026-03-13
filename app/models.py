@@ -18,7 +18,9 @@ class Shopper(db.Model, UserMixin):
     is_active     = db.Column(db.Boolean,     default=True,  nullable=False)
     gender        = db.Column(db.String(20),  nullable=True)
     age_range     = db.Column(db.String(20),  nullable=True)
-    created_at    = db.Column(db.DateTime,    default=datetime.now)
+    created_at           = db.Column(db.DateTime,    default=datetime.now)
+    password_reset_token  = db.Column(db.String(64),  nullable=True)
+    reset_token_expiry    = db.Column(db.DateTime,    nullable=True)
 
     receipts = db.relationship("Receipt", back_populates="shopper")
 

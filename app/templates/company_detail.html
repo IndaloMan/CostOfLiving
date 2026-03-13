@@ -16,6 +16,7 @@
     whenever you confirm a receipt from this company. You can also edit it manually below.
 </p>
 
+{% if current_user.is_admin %}
 <form method="POST">
     <div class="card" style="margin-bottom:1.5rem;">
         <h2 style="margin-bottom:1rem;">Company Details</h2>
@@ -99,6 +100,14 @@
         <a href="{{ url_for('main.companies') }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
+{% else %}
+<div class="card" style="margin-bottom:1.5rem;">
+    <p><strong>Type:</strong> {{ company.type or '— not set —' }}</p>
+    {% if template_items %}
+    <p><strong>Known items:</strong> {{ template_items | length }}</p>
+    {% endif %}
+</div>
+{% endif %}
 
 <script>
 const categories = {{ categories | tojson }};

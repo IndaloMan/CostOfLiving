@@ -149,6 +149,16 @@ def _migrate_db(db):
             conn.execute(db.text("PRAGMA foreign_keys=ON"))
             conn.commit()
 
+        # shoppers table — add password reset columns
+        cols = [row[1] for row in conn.execute(db.text('PRAGMA table_info(shoppers)'))]
+        for col_name, col_def in [
+            ('password_reset_token', 'VARCHAR(64)'),
+            ('reset_token_expiry',   'DATETIME'),
+        ]:
+            if col_name not in cols:
+                conn.execute(db.text(f'ALTER TABLE shoppers ADD COLUMN {col_name} {col_def}'))
+                conn.commit()
+
         # company_types list -- add Utility - Electric if not present
         from .models import ListItem as LI2
         if not db.session.query(LI2).filter_by(list_name="company_types", value="Utility - Electric").first():

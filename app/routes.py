@@ -186,6 +186,68 @@ def logout():
 
 
 # ---------------------------------------------------------------------------
+# Forgot / Reset password
+# ---------------------------------------------------------------------------
+
+@main.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+    if request.method == "POST":
+        identifier = request.form.get("identifier", "").strip().lower()
+        shopper = Shopper.query.filter(
+            db.func.lower(Shopper.email) == identifier
+        ).first()
+        if not shopper:
+            shopper = Shopper.query.filter(
+                db.func.lower(Shopper.login_id) == identifier
+            ).first()
+        if shopper and shopper.email:
+            import secrets
+            token = secrets.token_urlsafe(32)
+            shopper.password_reset_token = token
+            shopper.reset_token_expiry = datetime.now() + __import__("datetime").timedelta(hours=1)
+            db.session.commit()
+            try:
+                from .mailer import send_password_reset_email
+                send_password_reset_email(current_app._get_current_object(),
+                                          shopper.email, shopper.nickname, token)
+            except Exception as e:
+                log.error(f"Password reset email error: {e}")
+        # Always show the same message to avoid user enumeration
+        flash("If that account has an email address on file, a reset link has been sent.", "info")
+        return redirect(url_for("main.login"))
+    return render_template("forgot_password.html")
+
+
+@main.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+    shopper = Shopper.query.filter_by(password_reset_token=token).first()
+    if not shopper or not shopper.reset_token_expiry or shopper.reset_token_expiry < datetime.now():
+        flash("This reset link is invalid or has expired. Please request a new one.", "error")
+        return redirect(url_for("main.forgot_password"))
+    if request.method == "POST":
+        pw1 = request.form.get("password", "")
+        pw2 = request.form.get("password2", "")
+        if len(pw1) < 8:
+            flash("Password must be at least 8 characters.", "error")
+            return render_template("reset_password.html", token=token)
+        if pw1 != pw2:
+            flash("Passwords do not match.", "error")
+            return render_template("reset_password.html", token=token)
+        shopper.set_password(pw1)
+        shopper.password_reset_token = None
+        shopper.reset_token_expiry = None
+        db.session.commit()
+        log.info(f"PASSWORD RESET  {shopper.display_id}")
+        flash("Your password has been reset. Please log in.", "success")
+        return redirect(url_for("main.login"))
+    return render_template("reset_password.html", token=token)
+
+
+# ---------------------------------------------------------------------------
 # Self-registration
 # ---------------------------------------------------------------------------
 
@@ -435,6 +497,13 @@ def scan():
 
     db.session.commit()
     log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
+    if not current_user.is_admin:
+        try:
+            from .mailer import send_upload_notification
+            send_upload_notification(current_app._get_current_object(), receipt,
+                                     current_user.nickname, config.ADMIN_EMAIL)
+        except Exception as _e:
+            log.error(f'Upload notify failed: {_e}')
     flash("Receipt scanned. Review and confirm the details below.", "info")
     return redirect(url_for("main.review", receipt_id=receipt.id))
 
@@ -456,6 +525,12 @@ def quick_scan():
 
     db.session.commit()
     log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname} (quick-scan)")
+    try:
+        from .mailer import send_upload_notification
+        send_upload_notification(current_app._get_current_object(), receipt,
+                                 current_user.nickname, config.ADMIN_EMAIL)
+    except Exception as _e:
+        log.error(f'Upload notify failed: {_e}')
     return redirect(url_for("main.review", receipt_id=receipt.id))
 
 
@@ -480,6 +555,16 @@ def scan_batch():
         })
 
     db.session.commit()
+
+    if not current_user.is_admin:
+        for r in results:
+            if r['receipt'] and not r['error']:
+                try:
+                    from .mailer import send_upload_notification
+                    send_upload_notification(current_app._get_current_object(), r['receipt'],
+                                             current_user.nickname, config.ADMIN_EMAIL)
+                except Exception as _e:
+                    log.error(f'Upload notify failed: {_e}')
 
     ok_count      = sum(1 for r in results if r["receipt"] and not r["error"])
     pending_count = sum(1 for r in results if r["receipt"] and r["error"])
@@ -797,6 +882,9 @@ def company_detail(company_id):
     company = Company.query.get_or_404(company_id)
 
     if request.method == "POST":
+        if not current_user.is_admin:
+            flash("Only admins can edit company details.", "error")
+            return redirect(url_for("main.company_detail", company_id=company.id))
         # Save company type and alias
         company.type = request.form.get("company_type", "").strip() or None
         company.alias = request.form.get("company_alias", "").strip() or None
