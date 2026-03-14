@@ -56,6 +56,18 @@ nav {
     color: white;
 }
 
+.nav-id-item {
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 4px;
+    pointer-events: none;
+    cursor: default;
+    line-height: 1;
+}
+
 /* Main content */
 main {
     max-width: 1100px;

@@ -16,7 +16,6 @@
         </button>
         <ul class="nav-links" id="navLinks">
             {% if current_user.is_authenticated %}
-            <li class="nav-id-item">{{ current_user.nickname }}</li>
             <li><a href="/">Expenditure</a></li>
             {% if current_user.is_admin %}
             <li><a href="/scan">Scan</a></li>
@@ -31,6 +30,7 @@
             <li><a href="/items/search">Item Search</a></li>
             {% endif %}
             <li><a href="/account">Account</a></li>
+            <li class="nav-id-item">{{ current_user.nickname }}</li>
             <li><a href="/logout">Logout</a></li>
             {% endif %}
         </ul>
