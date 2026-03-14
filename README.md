@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v2.4 — 14 March 2026
+- Account: update Delete Account warning text
+
 ### v2.3 — 14 March 2026
 - Settings: add checkbox to enable/disable new company email notification
 
