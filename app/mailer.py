@@ -174,3 +174,52 @@ def send_password_reset_email(app, email, nickname, token):
     except Exception as e:
         log.error("PASSWORD RESET EMAIL failed for {}: {}".format(email, e))
         return False
+
+
+def send_new_company_email(app, company, shopper_nickname, admin_email):
+    """Notify admin that a new company has been created."""
+    if not config.MAIL_ENABLED:
+        log.info("MAIL not configured - skipping new company notification")
+        return
+    try:
+        from flask_mail import Message
+        from . import mail
+        NL = chr(10)
+        company_name = company.display_name
+        company_type = company.type or "Unknown"
+        companies_url = "https://receipts.ego2.net/companies"
+
+        body = (
+            "A new company has been added by {shopper}.{nl}{nl}"
+            "  Company : {company}{nl}"
+            "  Type    : {ctype}{nl}{nl}"
+            "View companies here: {url}{nl}"
+        ).format(shopper=shopper_nickname, company=company_name,
+                 ctype=company_type, url=companies_url, nl=NL)
+
+        html = (
+            "<div style='font-family:Arial,sans-serif;font-size:14px;color:#333;max-width:480px;'>"
+            "<p><strong>{shopper}</strong> confirmed a receipt with a new company.</p>"
+            "<table style='border-collapse:collapse;margin:1em 0;'>"
+            "<tr><td style='padding:4px 12px 4px 0;font-weight:600;color:#555;'>Company</td>"
+            "<td style='padding:4px 0;'>{company}</td></tr>"
+            "<tr><td style='padding:4px 12px 4px 0;font-weight:600;color:#555;'>Type</td>"
+            "<td style='padding:4px 0;'>{ctype}</td></tr>"
+            "</table>"
+            "<p><a href='{url}' style='background:#2980b9;color:white;padding:8px 18px;"
+            "border-radius:5px;text-decoration:none;font-weight:600;'>View Companies</a></p>"
+            "</div>"
+        ).format(shopper=shopper_nickname, company=company_name,
+                 ctype=company_type, url=companies_url)
+
+        msg = Message(
+            subject="New company added: {}".format(company_name),
+            recipients=[admin_email],
+            body=body,
+            html=html,
+        )
+        with app.app_context():
+            mail.send(msg)
+        log.info("NEW COMPANY NOTIFY sent to {} for company '{}'".format(admin_email, company_name))
+    except Exception as e:
+        log.error("NEW COMPANY NOTIFY failed for '{}': {}".format(company.display_name, e))

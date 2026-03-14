@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v2.2 — 14 March 2026
+- Email admin when a new company is created on receipt confirm
+
 ### v2.1 — 14 March 2026
 - see commit
 

@@ -604,6 +604,12 @@ def confirm(receipt_id):
             company = Company(name=company_name, type=company_type)
             db.session.add(company)
             db.session.flush()
+            try:
+                from .mailer import send_new_company_email
+                send_new_company_email(current_app._get_current_object(), company,
+                                       current_user.nickname, config.ADMIN_EMAIL)
+            except Exception as _e:
+                log.error(f'New company notify failed: {_e}')
         else:
             company.type = company_type
         receipt.company = company
