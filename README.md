@@ -186,8 +186,11 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.90 — 14 March 2026
+- Extraction prompt: unit_price and total_price always populated as numbers — zero-value items use 0 instead of null; eliminates blank fields on Edit Receipt form
+
 ### v1.89 — 14 March 2026
-- app/mailer.py, app/routes.py
+- Remove electricity data error checking — extraction is reliable; keep upload notification
 
 ### v1.87 — 14 March 2026
 - Receipts list: admin view now shows Login ID column between File and Modified — visible in both flat and grouped views; sortable in flat view

@@ -20,8 +20,8 @@ Use this exact structure:
     {
       "description": "string",
       "quantity": number,
-      "unit_price": number or null,
-      "total_price": number or null,
+      "unit_price": number,
+      "total_price": number,
       "category": "string or null"
     }
   ]
@@ -37,6 +37,7 @@ Rules:
 - For Spanish supermarket receipts (e.g. Aldi, Mercadona, Consum), items are listed as "ITEM NAME   PRICE € VAT_CODE" where the trailing single digit (2, 3, 4 etc.) is a VAT rate code — ignore it, do NOT treat it as a quantity or price
 - When a line shows "N x PRICE €" immediately before or above an item, N is the quantity and PRICE is the unit price for that item; otherwise quantity defaults to 1
 - Discounts appear as negative prices — include them as line items with negative unit_price and total_price
+- unit_price and total_price must always be a number — use 0 for zero-value items, never null for these fields
 - When quantity is 1 and no unit price is shown on the receipt, set unit_price equal to total_price
 - For weighed items on supermarket receipts, the line below the item name shows "X,XXX kg  Y,YY €/kg  TOTAL" — extract quantity=X.XXX (in kg), unit_price=Y.YY (price per kg), total_price=TOTAL
 - For category, pick the most appropriate from:
