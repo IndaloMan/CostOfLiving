@@ -1135,6 +1135,12 @@ def analysis_electricity(company_id):
                 data = json.loads(r.analysis.data)
                 energy = data.get('energy') if isinstance(data, dict) else None
                 if not isinstance(energy, dict) or not all(energy.get(p) for p in ('P1', 'P2', 'P3')):
+                    try:
+                        from .mailer import send_data_error_notification
+                        send_data_error_notification(current_app._get_current_object(), r,
+                                                     company.display_name, config.ADMIN_EMAIL)
+                    except Exception as _me:
+                        log.error(f'Data error notify failed: {_me}')
                     continue
                 analysed.append({
                     "receipt_id": r.id,

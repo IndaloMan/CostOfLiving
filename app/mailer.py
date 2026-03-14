@@ -129,6 +129,57 @@ def send_upload_notification(app, receipt, shopper_nickname, admin_email):
         log.error("UPLOAD NOTIFY failed for receipt#{}: {}".format(receipt.id, e))
 
 
+def send_data_error_notification(app, receipt, company_name, admin_email):
+    """Notify admin that a receipt was skipped due to incomplete/corrupt analysis data."""
+    if not config.MAIL_ENABLED:
+        log.info("MAIL not configured - skipping data error notification")
+        return
+    try:
+        from flask_mail import Message
+        from . import mail
+        NL = chr(10)
+        shopper = receipt.shopper.nickname if receipt.shopper else "Unknown"
+        receipt_date = receipt.receipt_date.strftime("%d %b %Y") if receipt.receipt_date else "unknown date"
+        edit_url = "https://receipts.ego2.net/receipts/{}/edit".format(receipt.id)
+
+        subject = "Receipt data error: {} by {}".format(company_name, shopper)
+
+        body = (
+            "A receipt was skipped in the electricity analysis due to incomplete or corrupt data.{nl}{nl}"
+            "  Company : {company}{nl}"
+            "  Shopper : {shopper}{nl}"
+            "  Date    : {date}{nl}"
+            "  Receipt : #{rid}{nl}{nl}"
+            "Review it here: {url}{nl}"
+        ).format(company=company_name, shopper=shopper, date=receipt_date,
+                 rid=receipt.id, url=edit_url, nl=NL)
+
+        html = (
+            "<div style='font-family:Arial,sans-serif;font-size:14px;color:#333;max-width:480px;'>"
+            "<p>A receipt was skipped in the electricity analysis due to <strong>incomplete or corrupt data</strong>.</p>"
+            "<table style='border-collapse:collapse;margin:1em 0;'>"
+            "<tr><td style='padding:4px 12px 4px 0;font-weight:600;color:#555;'>Company</td>"
+            "<td style='padding:4px 0;'>{company}</td></tr>"
+            "<tr><td style='padding:4px 12px 4px 0;font-weight:600;color:#555;'>Shopper</td>"
+            "<td style='padding:4px 0;'>{shopper}</td></tr>"
+            "<tr><td style='padding:4px 12px 4px 0;font-weight:600;color:#555;'>Date</td>"
+            "<td style='padding:4px 0;'>{date}</td></tr>"
+            "<tr><td style='padding:4px 12px 4px 0;font-weight:600;color:#555;'>Receipt</td>"
+            "<td style='padding:4px 0;'>#{rid}</td></tr>"
+            "</table>"
+            "<p><a href='{url}' style='background:#c0392b;color:white;padding:8px 18px;"
+            "border-radius:5px;text-decoration:none;font-weight:600;'>Review Receipt</a></p>"
+            "</div>"
+        ).format(company=company_name, shopper=shopper, date=receipt_date,
+                 rid=receipt.id, url=edit_url)
+
+        msg = Message(subject=subject, recipients=[admin_email], body=body, html=html)
+        with app.app_context():
+            mail.send(msg)
+        log.info("DATA ERROR NOTIFY sent to {} for receipt#{}".format(admin_email, receipt.id))
+    except Exception as e:
+        log.error("DATA ERROR NOTIFY failed for receipt#{}: {}".format(receipt.id, e))
+
 def send_password_reset_email(app, email, nickname, token):
     """Send a password reset link to the user."""
     if not config.MAIL_ENABLED:

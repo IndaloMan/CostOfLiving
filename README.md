@@ -186,6 +186,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.86 — 14 March 2026
+- Email alert sent to admin when a receipt is skipped in electricity analysis due to incomplete/corrupt energy data
+- New `send_data_error_notification()` in `mailer.py` — red 'Review Receipt' button, always fires regardless of notify_on_upload setting
+
 ### v1.85 — 14 March 2026
 - Fix electricity analysis 500 error: skip receipts where analysis `energy` data is None or missing P1/P2/P3 — prevents Jinja2 UndefinedError in template
 
