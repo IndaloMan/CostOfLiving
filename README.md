@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.79 — 14 March 2026
+- Add `app.log`, `access.log`, `error.log` to `.gitignore` and untrack `app.log` from git — runtime logs committed to repo caused root-owned file on VM, breaking gunicorn startup with PermissionError
+
 ### v1.78 — 14 March 2026
 - Nav login ID moved to between Account and Logout; styled as white bold text in a rounded outline box to distinguish it from menu links
 

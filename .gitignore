@@ -37,3 +37,8 @@ Thumbs.db
 
 # Docs
 README.pdf
+
+# Runtime logs — created by the app, must not be committed
+app.log
+access.log
+error.log
