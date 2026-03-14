@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}About{% endblock %}
+
+{% block content %}
+<h1>About</h1>
+
+<div class="card" style="max-width:640px;">
+    <h2 style="font-size:1.1rem; margin-top:0;">Cost of Living Tracker</h2>
+    <p>A private household expense tracker designed to make capturing and reviewing receipts quick and easy — especially on mobile.</p>
+
+    <h2 style="font-size:1.1rem;">How It Works</h2>
+    <p>Photograph or upload a receipt and the app uses AI to extract the line items, date, and total automatically. You review, correct if needed, and confirm.</p>
+
+    <h2 style="font-size:1.1rem;">Privacy</h2>
+    <p>All data is stored privately and is only accessible to members of your household. No data is shared with third parties.</p>
+
+    <h2 style="font-size:1.1rem;">Version</h2>
+    <p style="font-family:monospace; color:#555;">v{{ app_version }}</p>
+</div>
+{% endblock %}

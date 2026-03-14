@@ -2143,3 +2143,20 @@ def set_view_as():
         return redirect(url_for("main.index"))
     session["view_as"] = request.form.get("view_as", "all")
     return redirect(request.referrer or url_for("main.index"))
+
+
+# ---------------------------------------------------------------------------
+# Help / About
+# ---------------------------------------------------------------------------
+
+@main.route("/help")
+@login_required
+def help_page():
+    return render_template("help.html")
+
+
+@main.route("/about")
+@login_required
+def about_page():
+    import config as _cfg
+    return render_template("about.html", app_version=_cfg.APP_VERSION)
