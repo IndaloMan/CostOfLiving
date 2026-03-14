@@ -563,6 +563,7 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
         font-size: 0.78rem;
         color: rgba(255,255,255,0.5);
         font-weight: 400;
+        padding-right: 1.5rem;
     }
 
     /* --- Layout --- */

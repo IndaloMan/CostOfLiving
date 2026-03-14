@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.97 — 14 March 2026
+- Nav: add right padding to login ID badge on mobile to match left padding of Logout
+
 ### v1.96 — 14 March 2026
 - Nav: Login ID now shown inline to the right of Logout on both desktop and mobile — removed as separate nav item
 
