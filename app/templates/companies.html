@@ -38,8 +38,10 @@
                         {% endif %}
                     </td>
                     <td style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        {% if current_user.is_admin %}
                         <a href="{{ url_for('main.company_detail', company_id=c.id) }}"
                            class="btn btn-secondary btn-sm">Edit Template</a>
+                        {% endif %}
                         <a href="{{ url_for('main.analysis_company', company_id=c.id) }}"
                            class="btn btn-sm" style="background:#16a085;">&#128200; Analysis</a>
                         {% if c.type == 'Utility - Electric' %}

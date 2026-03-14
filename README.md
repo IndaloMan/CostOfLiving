@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.83 — 14 March 2026
+- Companies page: restrict Edit Template button to admin; Analysis buttons visible to all users
+
 ### v1.82 — 14 March 2026
 - Upload notification email now sent on Confirm & Save, not on upload — prevents emails for receipts the user deletes at review
 
