@@ -186,6 +186,10 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.81 — 14 March 2026
+- Fix upload notification: add missing `from . import mail` in `send_upload_notification()` — caused NameError on every notification attempt
+- Add `AppSetting` check to `/quick-scan` upload handler (was only gated in `/scan`)
+
 ### v1.80 — 14 March 2026
 - New Notifications section at top of Settings page: checkbox to enable/disable upload email alerts
 - New `AppSetting` model (key/value store) for admin-controlled app settings

@@ -525,12 +525,13 @@ def quick_scan():
 
     db.session.commit()
     log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname} (quick-scan)")
-    try:
-        from .mailer import send_upload_notification
-        send_upload_notification(current_app._get_current_object(), receipt,
-                                 current_user.nickname, config.ADMIN_EMAIL)
-    except Exception as _e:
-        log.error(f'Upload notify failed: {_e}')
+    if AppSetting.get('notify_on_upload') == 'true':
+        try:
+            from .mailer import send_upload_notification
+            send_upload_notification(current_app._get_current_object(), receipt,
+                                     current_user.nickname, config.ADMIN_EMAIL)
+        except Exception as _e:
+            log.error(f'Upload notify failed: {_e}')
     return redirect(url_for("main.review", receipt_id=receipt.id))
 
 

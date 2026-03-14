@@ -83,6 +83,7 @@ def send_upload_notification(app, receipt, shopper_nickname, admin_email):
         return
     try:
         from flask_mail import Message
+        from . import mail
         NL = chr(10)
         company_name = receipt.company.display_name if receipt.company else "Unknown company"
         receipt_date = receipt.receipt_date.strftime("%d %b %Y") if receipt.receipt_date else "unknown date"
