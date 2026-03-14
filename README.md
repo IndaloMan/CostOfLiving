@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.96 — 14 March 2026
+- Nav: Login ID now shown inline to the right of Logout on both desktop and mobile — removed as separate nav item
+
 ### v1.95 — 14 March 2026
 - Quick Scan: remove vertical centering — content now starts near top, eliminating gap between Back link and title
 

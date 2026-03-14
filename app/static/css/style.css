@@ -56,16 +56,17 @@ nav {
     color: white;
 }
 
-.nav-id-item {
-    color: white;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border: 1px solid rgba(255,255,255,0.5);
-    border-radius: 4px;
+.nav-logout-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.nav-id-badge {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.78rem;
+    font-weight: 400;
     pointer-events: none;
-    cursor: default;
-    line-height: 1;
+    white-space: nowrap;
 }
 
 /* Main content */
@@ -551,18 +552,17 @@ details[open] .receipt-group-chevron { transform: rotate(180deg); }
         font-size: 1rem;
     }
 
-    /* --- Login ID at top of dropdown --- */
-    .nav-id-item {
-        display: block !important;
-        color: rgba(255,255,255,0.45);
-        font-size: 0.75rem;
+    /* --- Logout + nickname --- */
+    .nav-logout-wrap {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    .nav-id-badge {
+        font-size: 0.78rem;
+        color: rgba(255,255,255,0.5);
         font-weight: 400;
-        text-align: right;
-        padding: 0.5rem 1.5rem 0.5rem;
-        letter-spacing: 0.02em;
-        pointer-events: none;
-        cursor: default;
-        border-top: none;
     }
 
     /* --- Layout --- */
