@@ -1020,7 +1020,6 @@ def api_item_analysis():
 
 @main.route('/analysis/company/<int:company_id>')
 @login_required
-@admin_required
 def analysis_company(company_id):
     company = Company.query.get_or_404(company_id)
     return render_template('analysis_company.html', company=company)
@@ -1106,7 +1105,6 @@ def api_item_search():
 
 @main.route("/analysis/electricity/<int:company_id>")
 @login_required
-@admin_required
 def analysis_electricity(company_id):
     company = Company.query.get_or_404(company_id)
 
