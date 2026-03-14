@@ -186,18 +186,11 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
-### v1.88 — 14 March 2026
-- Data error email now also fires on Confirm & Save if electricity analysis data is incomplete — no need to run analysis to be notified
+### v1.89 — 14 March 2026
+- app/mailer.py, app/routes.py
 
 ### v1.87 — 14 March 2026
 - Receipts list: admin view now shows Login ID column between File and Modified — visible in both flat and grouped views; sortable in flat view
-
-### v1.86 — 14 March 2026
-- Email alert sent to admin when a receipt is skipped in electricity analysis due to incomplete/corrupt energy data
-- New `send_data_error_notification()` in `mailer.py` — red 'Review Receipt' button, always fires regardless of notify_on_upload setting
-
-### v1.85 — 14 March 2026
-- Fix electricity analysis 500 error: skip receipts where analysis `energy` data is None or missing P1/P2/P3 — prevents Jinja2 UndefinedError in template
 
 ### v1.84 — 14 March 2026
 - Allow non-admin users to access Analysis pages — remove `@admin_required` from `analysis_company` and `analysis_electricity` view routes

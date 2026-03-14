@@ -701,19 +701,6 @@ def confirm(receipt_id):
                 except AnalysisError as e:
                     flash(f"Analysis could not run: {e}", "error")
 
-    # Email admin if electricity analysis data is incomplete
-    if receipt.analysis and receipt.analysis.analyser == 'electricity':
-        try:
-            _adata = json.loads(receipt.analysis.data)
-            _energy = _adata.get('energy') if isinstance(_adata, dict) else None
-            if not isinstance(_energy, dict) or not all(_energy.get(p) for p in ('P1', 'P2', 'P3')):
-                from .mailer import send_data_error_notification
-                _cname = receipt.company.display_name if receipt.company else 'Unknown'
-                send_data_error_notification(current_app._get_current_object(), receipt,
-                                             _cname, config.ADMIN_EMAIL)
-        except Exception as _e:
-            log.error(f'Data error notify on confirm failed: {_e}')
-
     log.info(f"CONFIRM receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
     if not current_user.is_admin and AppSetting.get('notify_on_upload') == 'true':
         try:
@@ -1146,15 +1133,6 @@ def analysis_electricity(company_id):
         if r.analysis:
             try:
                 data = json.loads(r.analysis.data)
-                energy = data.get('energy') if isinstance(data, dict) else None
-                if not isinstance(energy, dict) or not all(energy.get(p) for p in ('P1', 'P2', 'P3')):
-                    try:
-                        from .mailer import send_data_error_notification
-                        send_data_error_notification(current_app._get_current_object(), r,
-                                                     company.display_name, config.ADMIN_EMAIL)
-                    except Exception as _me:
-                        log.error(f'Data error notify failed: {_me}')
-                    continue
                 analysed.append({
                     "receipt_id": r.id,
                     "date": r.receipt_date.isoformat() if r.receipt_date else None,
