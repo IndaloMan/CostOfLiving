@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.88 — 14 March 2026
+- Data error email now also fires on Confirm & Save if electricity analysis data is incomplete — no need to run analysis to be notified
+
 ### v1.87 — 14 March 2026
 - Receipts list: admin view now shows Login ID column between File and Modified — visible in both flat and grouped views; sortable in flat view
 

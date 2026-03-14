@@ -701,6 +701,19 @@ def confirm(receipt_id):
                 except AnalysisError as e:
                     flash(f"Analysis could not run: {e}", "error")
 
+    # Email admin if electricity analysis data is incomplete
+    if receipt.analysis and receipt.analysis.analyser == 'electricity':
+        try:
+            _adata = json.loads(receipt.analysis.data)
+            _energy = _adata.get('energy') if isinstance(_adata, dict) else None
+            if not isinstance(_energy, dict) or not all(_energy.get(p) for p in ('P1', 'P2', 'P3')):
+                from .mailer import send_data_error_notification
+                _cname = receipt.company.display_name if receipt.company else 'Unknown'
+                send_data_error_notification(current_app._get_current_object(), receipt,
+                                             _cname, config.ADMIN_EMAIL)
+        except Exception as _e:
+            log.error(f'Data error notify on confirm failed: {_e}')
+
     log.info(f"CONFIRM receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
     if not current_user.is_admin and AppSetting.get('notify_on_upload') == 'true':
         try:
