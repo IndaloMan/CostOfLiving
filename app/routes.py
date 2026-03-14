@@ -604,12 +604,13 @@ def confirm(receipt_id):
             company = Company(name=company_name, type=company_type)
             db.session.add(company)
             db.session.flush()
-            try:
-                from .mailer import send_new_company_email
-                send_new_company_email(current_app._get_current_object(), company,
-                                       current_user.nickname, config.ADMIN_EMAIL)
-            except Exception as _e:
-                log.error(f'New company notify failed: {_e}')
+            if AppSetting.get('notify_on_new_company') == 'true':
+                try:
+                    from .mailer import send_new_company_email
+                    send_new_company_email(current_app._get_current_object(), company,
+                                           current_user.nickname, config.ADMIN_EMAIL)
+                except Exception as _e:
+                    log.error(f'New company notify failed: {_e}')
         else:
             company.type = company_type
         receipt.company = company
@@ -1269,6 +1270,7 @@ def settings():
         .all()
     )
     notify_on_upload = AppSetting.get('notify_on_upload') == 'true'
+    notify_on_new_company = AppSetting.get('notify_on_new_company') == 'true'
     return render_template(
         "settings.html",
         company_types=company_types,
@@ -1277,6 +1279,7 @@ def settings():
         account_types=account_types,
         app_version=config.APP_VERSION,
         notify_on_upload=notify_on_upload,
+        notify_on_new_company=notify_on_new_company,
     )
 
 
@@ -1285,6 +1288,7 @@ def settings():
 @admin_required
 def settings_app():
     AppSetting.set('notify_on_upload', 'true' if request.form.get('notify_on_upload') else 'false')
+    AppSetting.set('notify_on_new_company', 'true' if request.form.get('notify_on_new_company') else 'false')
     flash("Settings saved.", "success")
     return redirect(url_for("main.settings"))
 
