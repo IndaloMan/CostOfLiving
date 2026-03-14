@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.93 — 14 March 2026
+- Quick Scan: filename now displays below Extract Data button with whitespace, not above it
+
 ### v1.92 — 14 March 2026
 - Fix review.html: zero unit_price/total_price values now display as 0.00 instead of blank — template was treating 0 as falsy
 
