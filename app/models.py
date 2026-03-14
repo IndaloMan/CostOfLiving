@@ -214,3 +214,25 @@ class Transaction(db.Model):
 
     def __repr__(self):
         return f'<Transaction {self.date} {self.description} {self.amount}>'
+
+
+class AppSetting(db.Model):
+    """Key/value store for admin-controlled app settings."""
+    __tablename__ = 'app_settings'
+
+    key   = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.String(500), nullable=False, default='')
+
+    @staticmethod
+    def get(key, default=''):
+        row = AppSetting.query.get(key)
+        return row.value if row else default
+
+    @staticmethod
+    def set(key, value):
+        row = AppSetting.query.get(key)
+        if row:
+            row.value = value
+        else:
+            db.session.add(AppSetting(key=key, value=value))
+        db.session.commit()

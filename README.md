@@ -186,6 +186,12 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.80 — 14 March 2026
+- New Notifications section at top of Settings page: checkbox to enable/disable upload email alerts
+- New `AppSetting` model (key/value store) for admin-controlled app settings
+- Upload notification now gated on `AppSetting.get('notify_on_upload')` — off by default
+- New `POST /settings/app` route saves the checkbox value
+
 ### v1.79 — 14 March 2026
 - Add `app.log`, `access.log`, `error.log` to `.gitignore` and untrack `app.log` from git — runtime logs committed to repo caused root-owned file on VM, breaking gunicorn startup with PermissionError
 

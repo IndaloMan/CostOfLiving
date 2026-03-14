@@ -16,7 +16,7 @@ from .template_manager import (
     get_template_items, apply_template_hints,
     update_template, set_template_items
 )
-from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate, Income, Account, Transaction, Shopper
+from .models import Company, Receipt, LineItem, ReceiptAnalysis, ListItem, CompanyTemplate, Income, Account, Transaction, Shopper, AppSetting
 from .company_analysers import get_analyser_key, canonical_name
 from .reports_data import (
     parse_date, default_start,
@@ -497,7 +497,7 @@ def scan():
 
     db.session.commit()
     log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
-    if not current_user.is_admin:
+    if not current_user.is_admin and AppSetting.get('notify_on_upload') == 'true':
         try:
             from .mailer import send_upload_notification
             send_upload_notification(current_app._get_current_object(), receipt,
@@ -1269,6 +1269,7 @@ def settings():
         .order_by(ListItem.value)
         .all()
     )
+    notify_on_upload = AppSetting.get('notify_on_upload') == 'true'
     return render_template(
         "settings.html",
         company_types=company_types,
@@ -1276,7 +1277,17 @@ def settings():
         income_categories=income_categories,
         account_types=account_types,
         app_version=config.APP_VERSION,
+        notify_on_upload=notify_on_upload,
     )
+
+
+@main.route("/settings/app", methods=["POST"])
+@login_required
+@admin_required
+def settings_app():
+    AppSetting.set('notify_on_upload', 'true' if request.form.get('notify_on_upload') else 'false')
+    flash("Settings saved.", "success")
+    return redirect(url_for("main.settings"))
 
 
 @main.route("/settings/lists/<list_name>/add", methods=["POST"])
