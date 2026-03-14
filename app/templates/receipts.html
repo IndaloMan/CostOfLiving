@@ -95,6 +95,7 @@
                     <th>Items</th>
                     <th style="text-align:right">Total</th>
                     <th>File</th>
+                    {% if current_user.is_admin %}<th>Login ID</th>{% endif %}
                     <th>Modified</th>
                     <th></th>
                 </tr>
@@ -112,6 +113,7 @@
                         <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
                            target="_blank" class="file-tag" style="text-decoration:none; color:inherit;">{{ r.filename }} &#8599;</a>
                     </td>
+                    {% if current_user.is_admin %}<td style="white-space:nowrap;">{{ r.shopper.nickname if r.shopper else '—' }}</td>{% endif %}
                     <td style="color:#888; font-size:0.85rem; white-space:nowrap;">
                         {{ r.updated_at.strftime('%d %b %Y %H:%M') if r.updated_at else '—' }}
                     </td>
@@ -141,7 +143,8 @@
                     <th data-col="3" class="sortable">Items <span class="sort-icon"></span></th>
                     <th data-col="4" class="sortable" style="text-align:right">Total <span class="sort-icon"></span></th>
                     <th data-col="5" class="sortable" style="white-space:nowrap">File <span class="sort-icon"></span></th>
-                    <th data-col="6" class="sortable" style="white-space:nowrap">Modified <span class="sort-icon"></span></th>
+                    {% if current_user.is_admin %}<th data-col="6" class="sortable" style="white-space:nowrap">Login ID <span class="sort-icon"></span></th>{% endif %}
+                    <th data-col="{{ 7 if current_user.is_admin else 6 }}" class="sortable" style="white-space:nowrap">Modified <span class="sort-icon"></span></th>
                     <th></th>
                 </tr>
             </thead>
@@ -159,6 +162,7 @@
                         <a href="{{ url_for('main.uploaded_file', filename=r.filename) }}"
                            target="_blank" class="file-tag" style="text-decoration:none; color:inherit;">{{ r.filename }} &#8599;</a>
                     </td>
+                    {% if current_user.is_admin %}<td style="white-space:nowrap;">{{ r.shopper.nickname if r.shopper else '—' }}</td>{% endif %}
                     <td style="color:#888; font-size:0.85rem; white-space:nowrap;">
                         {{ r.updated_at.strftime('%d %b %Y %H:%M') if r.updated_at else '—' }}
                     </td>

@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.87 — 14 March 2026
+- Receipts list: admin view now shows Login ID column between File and Modified — visible in both flat and grouped views; sortable in flat view
+
 ### v1.86 — 14 March 2026
 - Email alert sent to admin when a receipt is skipped in electricity analysis due to incomplete/corrupt energy data
 - New `send_data_error_notification()` in `mailer.py` — red 'Review Receipt' button, always fires regardless of notify_on_upload setting
