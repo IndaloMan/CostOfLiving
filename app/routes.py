@@ -1132,11 +1132,15 @@ def analysis_electricity(company_id):
     for r in receipts:
         if r.analysis:
             try:
+                data = json.loads(r.analysis.data)
+                energy = data.get('energy') if isinstance(data, dict) else None
+                if not isinstance(energy, dict) or not all(energy.get(p) for p in ('P1', 'P2', 'P3')):
+                    continue
                 analysed.append({
                     "receipt_id": r.id,
                     "date": r.receipt_date.isoformat() if r.receipt_date else None,
                     "filename": r.filename,
-                    "data": json.loads(r.analysis.data),
+                    "data": data,
                 })
             except (ValueError, TypeError):
                 pass

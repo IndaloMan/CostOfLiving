@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.85 — 14 March 2026
+- Fix electricity analysis 500 error: skip receipts where analysis `energy` data is None or missing P1/P2/P3 — prevents Jinja2 UndefinedError in template
+
 ### v1.84 — 14 March 2026
 - Allow non-admin users to access Analysis pages — remove `@admin_required` from `analysis_company` and `analysis_electricity` view routes
 
