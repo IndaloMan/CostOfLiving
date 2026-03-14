@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.94 — 14 March 2026
+- Quick Scan: spacing above Extract Data button now matches spacing between Take Photo and Upload Image buttons
+
 ### v1.93 — 14 March 2026
 - Quick Scan: filename now displays below Extract Data button with whitespace, not above it
 
