@@ -186,11 +186,12 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
-### v1.100 — 14 March 2026
-- app/routes.py, app/templates/about.html, app/templates/base.html, app/templates/help.html
+### v2.1 — 14 March 2026
+- see commit
 
-### v2.00 — 14 March 2026
+### v2.0 — 14 March 2026
 - Nav: add Help and About pages (placeholder text) above Logout
+- Bump version to v2.0
 
 ### v1.99 — 14 March 2026
 - Companies: tighten column padding to eliminate horizontal scroll on mobile
