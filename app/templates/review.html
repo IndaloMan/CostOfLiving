@@ -151,8 +151,8 @@
                     <tr>
                         <td><input type="text"   name="description[]" value="{{ item.description }}" required></td>
                         <td><input type="number" name="quantity[]"    value="{{ '%g' % item.quantity }}"    step="0.001" min="0"></td>
-                        <td><input type="number" name="unit_price[]"  value="{{ '%.2f' % item.unit_price if item.unit_price else '' }}"  step="0.01"></td>
-                        <td><input type="number" name="total_price[]" value="{{ '%.2f' % item.total_price if item.total_price else '' }}" step="0.01"></td>
+                        <td><input type="number" name="unit_price[]"  value="{{ '%.2f' % item.unit_price if item.unit_price is not none else '' }}"  step="0.01"></td>
+                        <td><input type="number" name="total_price[]" value="{{ '%.2f' % item.total_price if item.total_price is not none else '' }}" step="0.01"></td>
                         <td>
                             <select name="category[]">
                                 <option value="">— none —</option>

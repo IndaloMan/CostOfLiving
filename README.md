@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.92 — 14 March 2026
+- Fix review.html: zero unit_price/total_price values now display as 0.00 instead of blank — template was treating 0 as falsy
+
 ### v1.91 — 14 March 2026
 - Post-process extraction output: replace null unit_price/total_price with 0 — deterministic fix for blank fields on zero-value line items
 
