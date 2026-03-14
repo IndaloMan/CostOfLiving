@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.98 — 14 March 2026
+- Companies: hide Template Items column for non-admin users
+
 ### v1.97 — 14 March 2026
 - Nav: add right padding to login ID badge on mobile to match left padding of Logout
 

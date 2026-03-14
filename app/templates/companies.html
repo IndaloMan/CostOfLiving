@@ -13,7 +13,7 @@
                     <th>Company</th>
                     <th>Type</th>
                     <th style="text-align:center">Receipts</th>
-                    <th style="text-align:center">Template Items</th>
+                    {% if current_user.is_admin %}<th style="text-align:center">Template Items</th>{% endif %}
                     <th></th>
                 </tr>
             </thead>
@@ -25,6 +25,7 @@
                     <td style="text-align:center">
                         {{ c.receipts | selectattr('status','equalto','confirmed') | list | length }}
                     </td>
+                    {% if current_user.is_admin %}
                     <td style="text-align:center">
                         {% if c.template and c.template.known_items %}
                             {% set items = c.template.known_items | fromjson %}
@@ -37,6 +38,7 @@
                             <span style="color:#aaa">—</span>
                         {% endif %}
                     </td>
+                    {% endif %}
                     <td style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                         {% if current_user.is_admin %}
                         <a href="{{ url_for('main.company_detail', company_id=c.id) }}"
