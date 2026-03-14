@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-APP_VERSION = "1.81"
+APP_VERSION = "1.82"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 

@@ -497,13 +497,6 @@ def scan():
 
     db.session.commit()
     log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
-    if not current_user.is_admin and AppSetting.get('notify_on_upload') == 'true':
-        try:
-            from .mailer import send_upload_notification
-            send_upload_notification(current_app._get_current_object(), receipt,
-                                     current_user.nickname, config.ADMIN_EMAIL)
-        except Exception as _e:
-            log.error(f'Upload notify failed: {_e}')
     flash("Receipt scanned. Review and confirm the details below.", "info")
     return redirect(url_for("main.review", receipt_id=receipt.id))
 
@@ -525,13 +518,6 @@ def quick_scan():
 
     db.session.commit()
     log.info(f"UPLOAD  receipt#{receipt.id} {receipt.filename} by {current_user.nickname} (quick-scan)")
-    if AppSetting.get('notify_on_upload') == 'true':
-        try:
-            from .mailer import send_upload_notification
-            send_upload_notification(current_app._get_current_object(), receipt,
-                                     current_user.nickname, config.ADMIN_EMAIL)
-        except Exception as _e:
-            log.error(f'Upload notify failed: {_e}')
     return redirect(url_for("main.review", receipt_id=receipt.id))
 
 
@@ -716,6 +702,13 @@ def confirm(receipt_id):
                     flash(f"Analysis could not run: {e}", "error")
 
     log.info(f"CONFIRM receipt#{receipt.id} {receipt.filename} by {current_user.nickname}")
+    if not current_user.is_admin and AppSetting.get('notify_on_upload') == 'true':
+        try:
+            from .mailer import send_upload_notification
+            send_upload_notification(current_app._get_current_object(), receipt,
+                                     current_user.nickname, config.ADMIN_EMAIL)
+        except Exception as _e:
+            log.error(f'Upload notify failed: {_e}')
     flash("Receipt confirmed and saved.", "success")
     if request.form.get("from_grouped"):
         return redirect(url_for("main.receipts", view="grouped"))

@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.82 — 14 March 2026
+- Upload notification email now sent on Confirm & Save, not on upload — prevents emails for receipts the user deletes at review
+
 ### v1.81 — 14 March 2026
 - Fix upload notification: add missing `from . import mail` in `send_upload_notification()` — caused NameError on every notification attempt
 - Add `AppSetting` check to `/quick-scan` upload handler (was only gated in `/scan`)
