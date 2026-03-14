@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.95 — 14 March 2026
+- Quick Scan: remove vertical centering — content now starts near top, eliminating gap between Back link and title
+
 ### v1.94 — 14 March 2026
 - Quick Scan: spacing above Extract Data button now matches spacing between Take Photo and Upload Image buttons
 
