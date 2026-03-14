@@ -186,8 +186,11 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.91 — 14 March 2026
+- Post-process extraction output: replace null unit_price/total_price with 0 — deterministic fix for blank fields on zero-value line items
+
 ### v1.90 — 14 March 2026
-- Extraction prompt: unit_price and total_price always populated as numbers — zero-value items use 0 instead of null; eliminates blank fields on Edit Receipt form
+- Extraction prompt: instruct AI to always populate unit_price and total_price as numbers
 
 ### v1.89 — 14 March 2026
 - Remove electricity data error checking — extraction is reliable; keep upload notification

@@ -158,6 +158,12 @@ def _parse_response(raw_text: str) -> dict:
         raise ExtractionError(f"Could not parse Claude response as JSON: {e}\n\nRaw response:\n{raw_text}")
 
     _validate(data)
+    # Ensure unit_price and total_price are always numbers, never null
+    for item in data.get('line_items', []):
+        if item.get('unit_price') is None:
+            item['unit_price'] = 0
+        if item.get('total_price') is None:
+            item['total_price'] = 0
     return data
 
 
