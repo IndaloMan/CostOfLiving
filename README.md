@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v1.99 — 14 March 2026
+- Companies: tighten column padding to eliminate horizontal scroll on mobile
+
 ### v1.98 — 14 March 2026
 - Companies: hide Template Items column for non-admin users
 

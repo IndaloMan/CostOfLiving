@@ -1,13 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Companies{% endblock %}
 
+{% block extra_head %}
+<style>
+#companiesTable td, #companiesTable th { padding: 0.4rem 0.4rem; }
+</style>
+{% endblock %}
+
 {% block content %}
 <h1>Companies</h1>
 
 {% if companies %}
 <div class="card">
     <div class="table-wrap">
-        <table class="data-table">
+        <table class="data-table" id="companiesTable">
             <thead>
                 <tr>
                     <th>Company</th>
