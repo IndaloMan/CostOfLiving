@@ -34,8 +34,21 @@
             <li><a href="/account">Account</a></li>
             <li class="nav-logout-wrap"><a href="/logout">Logout</a><span class="nav-id-badge">{{ current_user.nickname }}</span></li>
             {% endif %}
+            <li class="nav-translate-wrap">
+                <div id="google_translate_element"></div>
+            </li>
         </ul>
     </nav>
+
+    <script>
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'es',
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+    }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
     {% if current_user.is_authenticated and current_user.is_admin %}
     <div class="view-as-bar">

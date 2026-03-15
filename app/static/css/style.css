@@ -69,6 +69,21 @@ nav {
     white-space: nowrap;
 }
 
+/* Google Translate widget */
+.nav-translate-wrap { display: flex; align-items: center; }
+.goog-te-gadget { font-size: 0 !important; }
+.goog-te-gadget select {
+    background: transparent;
+    color: #ccc;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    font-size: 0.82rem;
+    padding: 2px 4px;
+    cursor: pointer;
+}
+.goog-te-gadget select:hover { color: white; border-color: rgba(255,255,255,0.6); }
+.goog-logo-link, .goog-te-gadget span { display: none !important; }
+
 /* Main content */
 main {
     max-width: 1100px;

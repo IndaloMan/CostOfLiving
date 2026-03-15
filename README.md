@@ -186,6 +186,9 @@ To access the app securely from any device (including mobile):
 
 ## Release Notes
 
+### v2.5 — 15 March 2026
+- app/static/css/style.css, app/templates/about.html, app/templates/base.html
+
 ### v2.4 — 14 March 2026
 - Account: update Delete Account warning text
 
